@@ -1,0 +1,36 @@
+
+class Dimension:
+
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+    @property
+    def scale_x(self):
+        return self.x
+
+    @property
+    def offset_x(self):
+        return self.y
+
+class Dimension2d:
+
+    def __init__(self, scale_x, offset_x, scale_y, offset_y):
+        self.x = Dimension(scale_x, offset_x)
+        self.y = Dimension(scale_y, offset_y)
+
+    @property
+    def scale_x(self):
+        return self.x.scale_x
+
+    @property
+    def offset_x(self):
+        return self.x.offset_x
+
+    @property
+    def scale_y(self):
+        return self.y.scale_x
+    
+    @property
+    def offset_y(self):
+        return self.y.offset_x
