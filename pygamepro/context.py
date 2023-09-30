@@ -32,16 +32,21 @@ class GameContext(PygameProObject):
 
     def _thread_frame_update(self):
 
+        self.callEventListeners("pre-update")
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
 
         self._thread_update_styles()
 
+        self.callEventListeners("update")
+
         pygame.display.update()
 
-        if self.listeners.get("update", None) != None:
-            self.listeners["update"]()
+        self.callEventListeners("post-update")
+
+        
 
     def _thread_self_tick(self):
         self.main = pygame.display.set_mode((self.size_x, self.size_y))

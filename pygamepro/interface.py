@@ -2,8 +2,10 @@ class Runnable:
 
     def __init__(self, function, kwargs):
         self.function = function
-        self.run_delay = kwargs.get("run_delay", 0)
+        self.run_delay = int(kwargs.get("run_delay", 0))
         self.tick = 0
+
+        
 
     def __call__(self):
         if self.tick == self.run_delay:
@@ -17,7 +19,11 @@ class PygameProObject:
 
         self.styles = kwargs.get("styles", None)
         
-        self.listeners = {}
+        self.listeners = {
+            "pre-update": set(),
+            "update": set(),
+            "post-update": set()
+        }
 
     def __repr__(self):
         return f"<{self.__class__.__name__}>"
@@ -26,9 +32,16 @@ class PygameProObject:
 
         def inner(func):
             
-            self.listeners[event] = Runnable(func, kwargs)
+            self.listeners[event].add(Runnable(func, kwargs))
         
         return inner
+
+    def callEventListeners(self, event):
+
+        for i in self.listeners[event]:
+            i()
+
+        return
 
     def updateStyles(self, styles):
         self.styles = {**self.styles, **styles}

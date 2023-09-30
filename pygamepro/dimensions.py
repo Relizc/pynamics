@@ -1,3 +1,11 @@
+class ClockResizer:
+
+    def __init__(self, value, timescale):
+        self.value = value
+        self.tick = int(round(value * 60 * timescale, 0))
+
+    def __int__(self):
+        return self.tick
 
 class Dimension:
 
