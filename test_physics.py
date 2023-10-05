@@ -2,7 +2,7 @@ import pygamepro
 import random
 
 FORCE = 2 # Change this to what force you want
-MASS = 9
+MASS = 10
 
 pygamepro.Logger.print("&ePhysics Test")
 pygamepro.Logger.print("&bIn this demo, physics is enabled for the default &aGameContext ctx.")

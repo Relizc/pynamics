@@ -13,7 +13,7 @@ class MassBody(PygameProObject):
         self.acceleration = Dimension(0, 0)
         self.netforce = Dimension(0, 0)
 
-        self.air_resistance_coefficient = 0.08
+        self.air_resistance_coefficient = 0.1
 
         @self.parent.addEventListener("update")
         def gravity(ctx):
