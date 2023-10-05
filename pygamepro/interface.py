@@ -26,7 +26,10 @@ class PygameProObject:
             "update": set(),
             "post-update": set(),
             "keyhold": set(),
-            "keyhold.framebind": set()
+            "keyhold.framebind": set(),
+            "keydown": set(),
+            "keydown.framebind": set(),
+            "keyup": set()
         }
 
     def __repr__(self):

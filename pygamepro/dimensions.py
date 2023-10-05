@@ -21,6 +21,10 @@ class Dimension:
         self.x += x
         self.y += y
 
+    def add_dim(self, dim):
+        self.x += dim.x
+        self.y += dim.y
+
     def __repr__(self):
         return f"Dimension({self.x}, {self.y})"
 

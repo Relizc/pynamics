@@ -60,6 +60,10 @@ class GameContext(PygameProObject, GameObjectCreator):
             if event.type == pygame.QUIT:
                 pygame.quit()
                 self.terminate = True
+            if event.type == pygame.KEYDOWN:
+                self.callEventListeners("keydown", lambda i: i == event.key)
+            if event.type == pygame.KEYUP:
+                self.callEventListeners("keyup", lambda i: i == event.key)
         
         pressed = pygame.key.get_pressed()
         self.callEventListeners("keyhold.framebind", lambda i: pressed[i])
@@ -74,7 +78,6 @@ class GameContext(PygameProObject, GameObjectCreator):
         self.f[0] += 1
         self._fpt += 1
         pygame.display.update()
-        self.set_title("frame: " + str(self.f[0]) + ", tick: " + str(self.f[1]) + ", fpt: " + str(self.fpt))
 
         self.callEventListeners("post-update")
 
@@ -96,6 +99,7 @@ class GameContext(PygameProObject, GameObjectCreator):
 
             pressed = pygame.key.get_pressed()
             self.callEventListeners("keyhold", lambda i: pressed[i])
+
 
             self.f[1] += 1
             self.fpt = int(self._fpt)

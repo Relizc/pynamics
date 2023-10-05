@@ -81,6 +81,10 @@ class GameBody(GameObject, pygame.sprite.Sprite):
         self.display_pos.set(self.x, self.y)
         surf.blit(self.image, (int(round(self.display_pos.x, 0)), int(round(self.display_pos.y, 0))))
 
+    def set_position(self, dim: Dimension):
+        self.x = dim.x
+        self.y = dim.y
+
     def from_fill(pos, siz, parent, *args, **kwargs):
 
         # size = None

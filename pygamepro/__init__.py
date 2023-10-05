@@ -2,6 +2,7 @@ from .gameobject import GameObject
 from .context import GameContext
 from .dimensions import Dimension, Dimension2d, ClockResizer
 from .logger import Logger
+from .physics import MassBody
 
 # ClockResizer Units
 MILISECOND  = 0.001
