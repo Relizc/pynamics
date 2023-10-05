@@ -1,5 +1,6 @@
 import pygame
 import threading
+import time
 
 from .dimensions import Dimension, Dimension2d
 from .interface import PygameProObject
@@ -13,12 +14,21 @@ class GameContext(PygameProObject, GameObjectCreator):
         self.size_y = size_y
         self.clock = pygame.time.Clock()
         self.maxfps = kwargs.get("maxfps", 0)
-
+        self.tickspeed = kwargs.get("tick", 128)
+        self.terminate = False
         self.sprites = pygame.sprite.Group()
+
+        self.smoothblit = kwargs.get("smoothdrawing", False)
+
+        self.fpt = self.maxfps / self.tickspeed
+        self._fpt = self.maxfps / self.tickspeed
+        if self.fpt == 0: self._fpt_cl = -1
+        else: self._fpt_cl = 0
+
+        self.f = [0, 0]
 
     def update(self):
         self.sprites.update()
-        print("update")
         
 
     def from_dim(scale: Dimension, *args, **kwargs):
@@ -31,11 +41,14 @@ class GameContext(PygameProObject, GameObjectCreator):
         # Color Update
         color = self.styles.get("background-color", None)
         c = (0, 0, 0)
+        
         if isinstance(color, tuple):
             c = color
         elif isinstance(color, str):
             if color == "white":
                 c = (255, 255, 255)
+            if color == "red":
+                c = (255, 0, 0)
         
         self.main.fill(c)
 
@@ -46,16 +59,22 @@ class GameContext(PygameProObject, GameObjectCreator):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
-                self.gametick.kill()
+                self.terminate = True
+        
+        pressed = pygame.key.get_pressed()
+        self.callEventListeners("keyhold.framebind", lambda i: pressed[i])
 
         self._thread_update_styles()
 
         self.callEventListeners("update")
 
-        self.sprites.draw(self.main)
+        for i in self.sprites:
+            i.draw(self, self.main)
 
+        self.f[0] += 1
+        self._fpt += 1
         pygame.display.update()
-        self.set_title("fps: " + str(self.clock.get_fps()))
+        self.set_title("frame: " + str(self.f[0]) + ", tick: " + str(self.f[1]) + ", fpt: " + str(self.fpt))
 
         self.callEventListeners("post-update")
 
@@ -67,12 +86,23 @@ class GameContext(PygameProObject, GameObjectCreator):
         while True:
             self._thread_frame_update()
             self.clock.tick(self.maxfps)
+            if self._fpt_cl == -1:
+                self.fpt = self.clock.get_fps() / self.tickspeed
 
     def _thread_self_game_tick(self):
         self.game_tick_clock = pygame.time.Clock()
         while True:
-            print("game tick")
-            self.game_tick_clock.tick(128)
+            if self.terminate: break
+
+            pressed = pygame.key.get_pressed()
+            self.callEventListeners("keyhold", lambda i: pressed[i])
+
+            self.f[1] += 1
+            self.fpt = int(self._fpt)
+            self._fpt = 0
+            
+            self.update()
+            self.game_tick_clock.tick(self.tickspeed)
 
     def start(self):
         self.tick = threading.Thread(target=self._thread_self_tick)

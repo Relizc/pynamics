@@ -13,6 +13,20 @@ class Dimension:
         self.x = x
         self.y = y
 
+    def set(self, x, y):
+        self.x = x
+        self.y = y
+
+    def add(self, x, y):
+        self.x += x
+        self.y += y
+
+    def __repr__(self):
+        return f"Dimension({self.x}, {self.y})"
+
+    def __tuple__(self):
+        return (self.x, self.y)
+
     @property
     def scale_x(self):
         return self.x
