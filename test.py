@@ -8,21 +8,16 @@ ctx = pygamepro.GameContext.from_dim(pygamepro.Dimension(600, 800), styles = {
 
 n = 0
 
-@ctx.addEventListener("post-update", run_delay=pygamepro.ClockResizer(0.1, pygamepro.SECOND))
-def update():
-    ctx.updateStyles({
-        "background-color": (
-            random.randint(0, 255),
-            random.randint(0, 255),
-            random.randint(0, 255)
-        )
-    })
+test = ctx.create_rect(pygamepro.Dimension(10, 10), pygamepro.Dimension2d(0, 10, 0, 10))
 
-@ctx.addEventListener("post-update", run_delay=pygamepro.ClockResizer(1, pygamepro.SECOND))
-def update():
-    print("1 secon tick")
+@test.addEventListener("update")
+def onrender(self):
+    print("update")
+    self.rect.x += random.randint(-1, 1)
+    self.rect.y += random.randint(-1, 1)
 
-    
+
+print(test)
 
 ctx.start()
 
