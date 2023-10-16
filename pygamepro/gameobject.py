@@ -75,11 +75,12 @@ class GameBody(GameObject, pygame.sprite.Sprite):
         surf.blit(self.image, (int(round(self.display_pos.x, 0)), int(round(self.display_pos.y, 0))))
 
     def draw(self, context, surf):
+        self.callEventListeners("draw")
         if self.smoothblit:
             self.smooth_draw(context, surf)
-            return
-        self.display_pos.set(self.x, self.y)
-        surf.blit(self.image, (int(round(self.display_pos.x, 0)), int(round(self.display_pos.y, 0))))
+        else:
+            self.display_pos.set(self.x, self.y)
+            surf.blit(self.image, (int(round(self.display_pos.x, 0)), int(round(self.display_pos.y, 0))))
 
     def set_position(self, dim: Dimension):
         self.x = dim.x
@@ -98,3 +99,19 @@ class GameBody(GameObject, pygame.sprite.Sprite):
         #     size = size
 
         return GameBody(pos, pygame.Surface(siz), parent, *args, **kwargs)
+
+    @property
+    def topleft(self):
+        return self.rect.topleft
+
+    @property
+    def topright(self):
+        return self.rect.topright
+
+    @property
+    def bottomleft(self):
+        return self.rect.bottomleft
+
+    @property
+    def bottomright(self):
+        return self.rect.bottomright

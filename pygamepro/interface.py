@@ -29,7 +29,8 @@ class PygameProObject:
             "keyhold.framebind": set(),
             "keydown": set(),
             "keydown.framebind": set(),
-            "keyup": set()
+            "keyup": set(),
+            "draw": set()
         }
 
     def __repr__(self):

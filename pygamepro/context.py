@@ -5,6 +5,8 @@ import time
 from .dimensions import Dimension, Dimension2d
 from .interface import PygameProObject
 from .gameobject import GameObjectCreator
+from .debugger import Debugger
+from .physics import CollisionHandler
 
 class GameContext(PygameProObject, GameObjectCreator):
 
@@ -17,6 +19,9 @@ class GameContext(PygameProObject, GameObjectCreator):
         self.tickspeed = kwargs.get("tick", 128)
         self.terminate = False
         self.sprites = pygame.sprite.Group()
+        self.collision = CollisionHandler(self)
+
+        self.debugger = Debugger(self)
 
         self.smoothblit = kwargs.get("smoothdrawing", False)
 
@@ -75,6 +80,8 @@ class GameContext(PygameProObject, GameObjectCreator):
         for i in self.sprites:
             i.draw(self, self.main)
 
+        
+
         self.f[0] += 1
         self._fpt += 1
         pygame.display.update()
@@ -85,6 +92,9 @@ class GameContext(PygameProObject, GameObjectCreator):
 
     def _thread_self_tick(self):
         self.main = pygame.display.set_mode((self.size_x, self.size_y), vsync=1)
+
+        self.gametick = threading.Thread(target=self._thread_self_game_tick)
+        self.gametick.start()
 
         while True:
             self._thread_frame_update()
@@ -100,6 +110,7 @@ class GameContext(PygameProObject, GameObjectCreator):
             pressed = pygame.key.get_pressed()
             self.callEventListeners("keyhold", lambda i: pressed[i])
 
+            self.collision.test()
 
             self.f[1] += 1
             self.fpt = int(self._fpt)
@@ -112,7 +123,6 @@ class GameContext(PygameProObject, GameObjectCreator):
         self.tick = threading.Thread(target=self._thread_self_tick)
         self.tick.start()
 
-        self.gametick = threading.Thread(target=self._thread_self_game_tick)
-        self.gametick.start()
+        
 
         print("GameContext is running in thread " + str(self.tick))
