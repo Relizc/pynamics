@@ -7,6 +7,7 @@ from .interface import PygameProObject
 from .gameobject import GameObjectCreator
 from .debugger import Debugger
 from .physics import CollisionHandler
+from .logger import Logger
 
 class GameContext(PygameProObject, GameObjectCreator):
 
@@ -19,7 +20,8 @@ class GameContext(PygameProObject, GameObjectCreator):
         self.tickspeed = kwargs.get("tick", 128)
         self.terminate = False
         self.sprites = pygame.sprite.Group()
-        self.collision = CollisionHandler(self)
+        self.text = [] # For texts
+        #self.collision = CollisionHandler(self)
 
         self.debugger = Debugger(self)
 
@@ -34,6 +36,7 @@ class GameContext(PygameProObject, GameObjectCreator):
 
     def update(self):
         self.sprites.update()
+        
         
 
     def from_dim(scale: Dimension, *args, **kwargs):
@@ -80,7 +83,8 @@ class GameContext(PygameProObject, GameObjectCreator):
         for i in self.sprites:
             i.draw(self, self.main)
 
-        
+        for i in self.text:
+            i.update()
 
         self.f[0] += 1
         self._fpt += 1
@@ -110,8 +114,6 @@ class GameContext(PygameProObject, GameObjectCreator):
             pressed = pygame.key.get_pressed()
             self.callEventListeners("keyhold", lambda i: pressed[i])
 
-            self.collision.test()
-
             self.f[1] += 1
             self.fpt = int(self._fpt)
             self._fpt = 0
@@ -120,9 +122,14 @@ class GameContext(PygameProObject, GameObjectCreator):
             self.game_tick_clock.tick(self.tickspeed)
 
     def start(self):
-        self.tick = threading.Thread(target=self._thread_self_tick)
-        self.tick.start()
-
-        
-
-        print("GameContext is running in thread " + str(self.tick))
+        import platform
+        Logger.print("&bGameContext startup! System version: " + platform.release())
+        if platform.system() == "Windows":
+            self.tick = threading.Thread(target=self._thread_self_tick)
+            self.tick.start()
+            Logger.print("&bGameContext is running in thread " + str(self.tick))
+        else:
+            self._thread_self_tick()
+            Logger.print("&eGameContext is running on a system that does not support frame update threading. Thus, we will not open a thread for any display updates.")
+            Logger.print("&eSimilarily, any code executed below will be run after the game loop stops.")
+            Logger.print("&bGameContext is running in &dMAIN THREAD")

@@ -2,7 +2,8 @@ from .gameobject import GameObject
 from .context import GameContext
 from .dimensions import Dimension, Dimension2d, ClockResizer
 from .logger import Logger
-from .physics import MassBody
+from .physics import MassBody, CollisionBody
+from .text import Text
 
 # ClockResizer Units
 MILISECOND  = 0.001
@@ -28,3 +29,6 @@ ERROR       = 4
 DEBUG       = 5
 
 from pygame.constants import *
+
+import pygame
+pygame.init()

@@ -1,8 +1,8 @@
 import pygamepro
 import random
 
-FORCE = 2 # Change this to what force you want
-MASS = 10
+FORCE = 1 # Change this to what force you want
+MASS = 20
 
 pygamepro.Logger.print("&ePhysics Test 2")
 pygamepro.Logger.print("&bIn this demo, physics is enabled as usual, with another rigid object at the bottom of the screen")
@@ -11,11 +11,12 @@ pygamepro.Logger.print(f"&bPress &eArrow Keys &bto apply {FORCE}N of force to th
 pygamepro.Logger.print("&bPress &eR &bto reset the object to the center.")
 
 ctx = pygamepro.GameContext.from_dim(pygamepro.Dimension(500, 1000), styles = {
-    "background-color": "white"
-}, tick = 1, maxfps = 144)
+    "background-color": (0, 255, 255)
+}, tick = 128, maxfps = 500000)
 
 test = ctx.create_rect(pygamepro.Dimension(240, 0), pygamepro.Dimension2d(0, 10, 0, 10), smooth_blit=True)
 phy = pygamepro.MassBody(test, mass=MASS) # Adds mass to the object
+col = pygamepro.CollisionBody(phy)
 
 test2 = ctx.create_rect(pygamepro.Dimension(10, 480), pygamepro.Dimension2d(1, -20, 0, 10))
 pygamepro.MassBody(test2, mass=1, anchored=True)

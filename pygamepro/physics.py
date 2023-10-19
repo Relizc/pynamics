@@ -60,13 +60,11 @@ class CollisionHandler:
         # inbound_y = rect.topleft[1] < point[1] < rect.bottomright[1]
         # print(inbound_x, inbound_y)
 
-
 class MassBody(PygameProObject):
 
     def __init__(self, parent, **kwargs):
         self.parent = parent
         self.parent.massbody = self
-        self.parent.parent.collision.handle(self)
         self.mass = kwargs.get("mass", 1)
         self.gravity = kwargs.get("gravity", 10) / parent.parent.tickspeed
         self.velocity = Dimension(0, 0)
@@ -122,3 +120,16 @@ class MassBody(PygameProObject):
         self.netforce.add_dim(dim)
 
 
+
+class CollisionBody(PygameProObject):
+
+    def __init__(self, parent, *args, **kwargs):
+        self.parent = parent
+        self.elasticity = kwargs.get("elasticity", 0)
+
+        @self.parent.parent.addEventListener("update")
+        def u(mass):
+            print("test")
+
+    
+    

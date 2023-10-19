@@ -4,14 +4,13 @@ import threading
 
 class Debugger:
 
-    def _loop(self):
-        self.window = tk.Tk()
-        self.window.mainloop()
+    def _toggle(self):
+        pass
     
     def __init__(self, parent):
         self.parent = parent
         
-        # @self.parent.addEventListener("keydown", target=K_BACKQUOTE)
-        # def press(ctx):
-        #     self.x = threading.Thread(target = self._loop)
-        #     self.x.start()
+        @self.parent.addEventListener("keydown", target=K_BACKQUOTE)
+        def press(ctx):
+            self.x = threading.Thread(target = self._toggle)
+            self.x.start()

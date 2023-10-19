@@ -26,4 +26,4 @@ def hold(self):
 def hold(self):
     test.x += 1
 
-ctx.start()
+ctx.start_main()

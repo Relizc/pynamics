@@ -46,7 +46,7 @@ class GameBody(GameObject, pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.x = position[0]
         self.rect.y = position[1]
-
+        
         self.x = int(self.rect.x)
         self.y = int(self.rect.y)
 
@@ -57,9 +57,16 @@ class GameBody(GameObject, pygame.sprite.Sprite):
         self.display_pos = Dimension(position[0], position[1])
 
     def update(self):
+
+        if self.x < -2147483648 or self.x > 2147483647 or self.y < -2147483648 or self.x > 2147483648:
+            self.remove()
+            
+
         self.rect.x = self.x
         self.rect.y = self.y
         self.display_pos.set(self.rect.x, self.rect.y)
+        
+        
         self.callEventListeners("update")
 
     def smooth_draw(self, context, surf):

@@ -14,8 +14,8 @@ ctx = pygamepro.GameContext.from_dim(pygamepro.Dimension(500, 500), styles = {
     "background-color": "white"
 }, tick = 128, maxfps = 144)
 
-test = ctx.create_rect(pygamepro.Dimension(240, 0), pygamepro.Dimension2d(0, 10, 0, 10))
-phy = pygamepro.MassBody(test, mass=MASS) # Adds mass to the object
+test = ctx.create_rect(pygamepro.Dimension(240, 0), pygamepro.Dimension2d(0, 20, 0, 20))
+phy = pygamepro.MassBody(test, mass=MASS, gravity=0) # Adds mass to the object
 
 @ctx.addEventListener("keydown", target=pygamepro.K_r)
 def hold(self):
