@@ -15,6 +15,11 @@ class Runnable:
         else:
             self.tick += 1
 
+class RenderableObject:
+
+    def __init__(self, *args, **kwargs):
+        pass
+
 class PygameProObject:
 
     def __init__(self, *args, **kwargs):
@@ -32,6 +37,8 @@ class PygameProObject:
             "keyup": set(),
             "draw": set()
         }
+
+        self.enabled = True
 
     def __repr__(self):
         return f"<{self.__class__.__name__}>"
