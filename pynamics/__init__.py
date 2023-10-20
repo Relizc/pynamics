@@ -2,7 +2,8 @@ from .display import ProjectWindow, ViewPort
 from .gameobject import GameObject
 from .gamemanager import GameManager
 from .dimensions import Dimension, Dimension2d
-
+from .gamemanager import EventType
+from .gamemanager import Event
 
 # Aliases
 class Dim(Dimension): pass

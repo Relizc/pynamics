@@ -1,7 +1,10 @@
+import tkinter
+
 from .gameobject import *
 import threading
 from enum import Enum
 import time
+import keyboard
 
 
 class EventType(Enum):
@@ -14,13 +17,25 @@ class EventType(Enum):
     KEYDOWN_FRAMEBIND = 0x12
     KEYUP_FRAMEBIND = 0x13
     KEYHOLD_FRAMEBIND = 0x14
+    KEYPRESSED = 0x15
+    APRESSED = 0x16
 
 
 class Event:
-    def __init__(self, func, type: EventType = None, condition=None, ):
+    def __init__(self, func, typeC=None, condition=None, ):
         self.func = func
-        self.type = type
+        self.type = typeC
         self.condition = condition
+
+    def type_down(self) -> str:
+        theKey = self.type
+        if theKey == EventType.KEYPRESSED:
+            return keyboard.read_key()
+
+    def type_bool_down(self) -> bool:
+        theKey = self.type
+        if theKey == EventType.APRESSED:
+            return keyboard.is_pressed("a")
 
 
 class GameManager:
@@ -73,17 +88,17 @@ class GameManager:
                 if isinstance(i, Event):
                     if i.condition is not None and i.condition():
                         i.func()
-
+                    elif i.condition is None:
+                        if i.type_bool_down():
+                            i.func()
             time.sleep(self._epoch_tps)
 
     def frame(self):
         self.f += 1
-        print(f"This is frame {self.f}")
+        # print(f"This is frame {self.f}")
         self.window._tk.after(0, self.frame)
 
-    def kill(self):
-        self.updatethread.daemon = True
-        self.listenthread.daemon = True
+
 
     def set_ticks_per_update(self, tick: int):
         self.tpu = tick
@@ -109,6 +124,6 @@ class GameManager:
             return inner
         elif condition is None:
             def inner(func):
-                self.listeners.append(Event(func, type=eventtype))
+                self.listeners.append(Event(func, typeC=eventtype))
 
             return inner
