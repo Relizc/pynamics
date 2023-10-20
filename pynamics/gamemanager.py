@@ -73,6 +73,7 @@ class GameManager:
             if self.terminated: break
 
             self.ticks += 1
+            self.frame()
             if self.ticks % self.tpu == 0:
                 for i in self.updates:
                     i()
@@ -95,8 +96,9 @@ class GameManager:
 
     def frame(self):
         self.f += 1
-        # print(f"This is frame {self.f}")
-        self.window._tk.after(0, self.frame)
+        self.window.blit()
+
+
 
 
 

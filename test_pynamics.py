@@ -20,7 +20,10 @@ def condition():
 
 @ctx.add_tick_update
 def q():
-    pynamics.GameObject(ctx, random.randint(0, 100), random.randint(0, 100), 10, 10)
+    bob.position.x=random.randint(0,100)
+    bob.position.y=random.randint(0,100)
+    time.sleep(1)
+    # pynamics.GameObject(ctx, random.randint(0, 100), random.randint(0, 100), 10, 10)
 
 
 @ctx.add_event_listener(eventtype=pynamics.EventType.APRESSED)

@@ -31,6 +31,7 @@ class ProjectWindow(PyNamical):
         self.surface.delete("all")
         for i in self.parent.objects:
             if isinstance(i,GameObject):
+                print(i.position.x,i.position.y)
                 if i.content is not None:
                     self.surface.create_image(i.position.x,i.position.y,anchor=NW,image=i.content)
                 elif i.content is None:
