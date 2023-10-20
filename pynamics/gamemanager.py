@@ -42,7 +42,7 @@ class GameManager(PyNamical):
         self.tps = tps
         self._epoch_tps = 1 / self.tps
         self.listenthread = threading.Thread(target=self.listen)
-        self.framethread = threading.Thread(target=self.update_frame)
+        self.framethread = threading.Thread(target=self.frame)
         self.fps=60
         self.updatethread = threading.Thread(target=self.update)
         self.terminated = False
@@ -51,11 +51,15 @@ class GameManager(PyNamical):
         self.parent = None
         self.children = []
 
+        self.pressed = {}
+
     def _key(self, e):
         eventCode = int(e.type)
-        if eventCode == 2: #KeyPress
+        if eventCode == 2: # KeyPress
+            self.pressed[e.keysym] = True
             self.call_event_listeners(EventType.KEYDOWN, str(e.keysym))
-        elif eventCode == 3:
+        elif eventCode == 3: # KeyUp
+            self.pressed[e.keysym] = False
             self.call_event_listeners(EventType.KEYUP, str(e.keysym))
         pass
 
@@ -71,13 +75,18 @@ class GameManager(PyNamical):
         self.window._tk.bind("<KeyRelease>", self._key)
         self.window.start()
 
-    def update_frame(self):
-        self.frame()
+
     def update(self):
 
         while True:
 
             if self.terminated: break
+
+            self.call_event_listeners(EventType.TICK)
+
+            for i in self.pressed:
+                if self.pressed[i]:
+                    self.call_event_listeners(EventType.KEYHOLD, i)
 
             self.ticks += 1
 
@@ -102,6 +111,7 @@ class GameManager(PyNamical):
             time.sleep(self._epoch_tps)
 
     def frame(self):
+        self.call_event_listeners(EventType.FRAME)
         self.f += 1
         self.window.blit()
         self.window.surface.after(int(self._epoch_fps*1000),self.frame)

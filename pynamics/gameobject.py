@@ -18,6 +18,7 @@ class GameObject(PyNamical):
         self.parent.add_object(self)
 
 
+
     @property
     def topleft(self):
         return self.position
