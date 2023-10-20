@@ -24,6 +24,15 @@ def condition():
 @ctx.add_event_listener(eventtype=pynamics.EventType.APRESSED)
 def listen():
     bob.position.x-=1
+@ctx.add_event_listener(eventtype=pynamics.EventType.DPRESSED)
+def listen():
+    bob.position.x+=1
+@ctx.add_event_listener(eventtype=pynamics.EventType.SPRESSED)
+def listen():
+    bob.position.y+=1
+@ctx.add_event_listener(eventtype=pynamics.EventType.WPRESSED)
+def listen():
+    bob.position.y-=1
 
 
 print(ctx.children)

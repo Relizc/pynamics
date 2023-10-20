@@ -6,6 +6,7 @@ from enum import Enum
 import time
 import keyboard
 
+
 class EventType(Enum):
     FRAME = 0x00
     TICK = 0x01
@@ -18,6 +19,9 @@ class EventType(Enum):
     KEYHOLD_FRAMEBIND = 0x14
     KEYPRESSED = 0x15
     APRESSED = 0x16
+    DPRESSED = 0x17
+    SPRESSED = 0x18
+    WPRESSED = 0x19
 
 
 class Event:
@@ -35,6 +39,12 @@ class Event:
         theKey = self.type
         if theKey == EventType.APRESSED:
             return keyboard.is_pressed("a")
+        elif theKey == EventType.DPRESSED:
+            return keyboard.is_pressed("d")
+        elif theKey == EventType.WPRESSED:
+            return keyboard.is_pressed("w")
+        elif theKey == EventType.SPRESSED:
+            return keyboard.is_pressed("s")
 
 
 class GameManager:
@@ -52,11 +62,11 @@ class GameManager:
         self._epoch_tps = 1 / self.tps
         self.listenthread = threading.Thread(target=self.listen)
         self.framethread = threading.Thread(target=self.update_frame)
-        self.fps=60
+        self.fps = 60
         self.updatethread = threading.Thread(target=self.update)
         self.terminated = False
         self.f = 0
-        self._epoch_fps = 1/self.fps
+        self._epoch_fps = 1 / self.fps
         self.parent = None
         self.children = []
 
@@ -65,12 +75,12 @@ class GameManager:
         self.listenthread.start()
         self.framethread.start()
 
-
-
         self.window._tk.after(100, self.frame)
         self.window.start()
+
     def update_frame(self):
         self.frame()
+
     def update(self):
 
         while True:
@@ -102,10 +112,7 @@ class GameManager:
     def frame(self):
         self.f += 1
         self.window.blit()
-        self.window.surface.after(int(self._epoch_fps*1000),self.frame)
-
-
-
+        self.window.surface.after(int(self._epoch_fps * 1000), self.frame)
 
     def set_ticks_per_update(self, tick: int):
         self.tpu = tick
