@@ -37,3 +37,4 @@ class GameObject(PyNamical):
     @property
     def center(self):
         return self.position.add(self.size.x / 2, self.size.y / 2)
+
