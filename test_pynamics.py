@@ -18,17 +18,12 @@ def condition():
         return False
 
 
-@ctx.add_tick_update
-def q():
-    bob.position.x=random.randint(0,100)
-    bob.position.y=random.randint(0,100)
-    time.sleep(1)
-    # pynamics.GameObject(ctx, random.randint(0, 100), random.randint(0, 100), 10, 10)
+
 
 
 @ctx.add_event_listener(eventtype=pynamics.EventType.APRESSED)
 def listen():
-    print("i did stuff")
+    bob.position.x-=1
 
 
 print(ctx.children)

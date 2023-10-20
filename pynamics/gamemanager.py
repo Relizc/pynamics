@@ -52,6 +52,8 @@ class GameManager:
         self.tps = tps
         self._epoch_tps = 1 / self.tps
         self.listenthread = threading.Thread(target=self.listen)
+        self.framethread = threading.Thread(target=self.update_frame)
+
         self.updatethread = threading.Thread(target=self.update)
         self.terminated = False
         self.f = 0
@@ -62,10 +64,16 @@ class GameManager:
     def start(self):
         self.updatethread.start()
         self.listenthread.start()
+        self.framethread.start()
+
+
 
         self.window._tk.after(100, self.frame)
         self.window.start()
-
+    def update_frame(self):
+        while True:
+            self.frame()
+            time.sleep(self._epoch_tps)
     def update(self):
 
         while True:
@@ -73,7 +81,7 @@ class GameManager:
             if self.terminated: break
 
             self.ticks += 1
-            self.frame()
+
             if self.ticks % self.tpu == 0:
                 for i in self.updates:
                     i()
@@ -97,7 +105,6 @@ class GameManager:
     def frame(self):
         self.f += 1
         self.window.blit()
-
 
 
 
