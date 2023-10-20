@@ -38,7 +38,7 @@ class ProjectWindow(PyNamical):
                     self.surface.create_line(i.topleft.x,i.topleft.y,i.topright.x,i.topright.y)
                     self.surface.create_line(i.topleft.x,i.topleft.y,i.bottomleft.x,i.bottomleft.y)
                     self.surface.create_line(i.topright.x,i.topright.y,i.bottomright.x,i.bottomright.y)
-                    self.surface.create_line(i.bottomleft.x,i.bottomleft.y,i.bottomright.x,i.bottomright.y)
+                    self.surface.create_line(i.bottomleft.x,i.bottomleft.y,i.bottomright.x+1,i.bottomright.y)
 
 
     def _close_parent_close(self):

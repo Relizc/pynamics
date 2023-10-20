@@ -6,7 +6,6 @@ from enum import Enum
 import time
 import keyboard
 
-
 class EventType(Enum):
     FRAME = 0x00
     TICK = 0x01
@@ -71,9 +70,7 @@ class GameManager:
         self.window._tk.after(100, self.frame)
         self.window.start()
     def update_frame(self):
-        while True:
-            self.frame()
-            time.sleep(self._epoch_fps)
+        self.frame()
     def update(self):
 
         while True:
@@ -105,6 +102,7 @@ class GameManager:
     def frame(self):
         self.f += 1
         self.window.blit()
+        self.window.surface.after(int(self._epoch_fps*1000),self.frame)
 
 
 
