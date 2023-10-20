@@ -53,11 +53,11 @@ class GameManager:
         self._epoch_tps = 1 / self.tps
         self.listenthread = threading.Thread(target=self.listen)
         self.framethread = threading.Thread(target=self.update_frame)
-
+        self.fps=60
         self.updatethread = threading.Thread(target=self.update)
         self.terminated = False
         self.f = 0
-
+        self._epoch_fps = 1/self.fps
         self.parent = None
         self.children = []
 
@@ -73,7 +73,7 @@ class GameManager:
     def update_frame(self):
         while True:
             self.frame()
-            time.sleep(self._epoch_tps)
+            time.sleep(self._epoch_fps)
     def update(self):
 
         while True:
