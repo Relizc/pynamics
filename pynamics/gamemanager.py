@@ -1,23 +1,11 @@
 import tkinter
 
 from .gameobject import *
+from .interface import PyNamical
+from .events import EventType
+
 import threading
-from enum import Enum
 import time
-import keyboard
-
-class EventType(Enum):
-    FRAME = 0x00
-    TICK = 0x01
-    KEYDOWN = 0x02
-    KEYUP = 0x03
-    KEYHOLD = 0x04
-
-    KEYDOWN_FRAMEBIND = 0x12
-    KEYUP_FRAMEBIND = 0x13
-    KEYHOLD_FRAMEBIND = 0x14
-    KEYPRESSED = 0x15
-    APRESSED = 0x16
 
 
 class Event:
@@ -27,18 +15,21 @@ class Event:
         self.condition = condition
 
     def type_down(self) -> str:
-        theKey = self.type
-        if theKey == EventType.KEYPRESSED:
-            return keyboard.read_key()
+        # theType = self.type
+        # if theType == EventType.KEYPRESSED:
+        #     return keyboard.read_key()
+        pass
 
     def type_bool_down(self) -> bool:
-        theKey = self.type
-        if theKey == EventType.APRESSED:
-            return keyboard.is_pressed("a")
+        # theKey = self.type
+        # if theKey == EventType.APRESSED:
+        #     return keyboard.is_pressed("a")
+        pass
 
 
-class GameManager:
+class GameManager(PyNamical):
     def __init__(self, dimensions: Dimension, tps: int = 128):
+        super().__init__(None, no_parent=True)
         self.dimensions = dimensions
         self.width = dimensions.x
         self.length = dimensions.y
@@ -60,6 +51,14 @@ class GameManager:
         self.parent = None
         self.children = []
 
+    def _key(self, e):
+        eventCode = int(e.type)
+        if eventCode == 2: #KeyPress
+            self.call_event_listeners(EventType.KEYDOWN, str(e.keysym))
+        elif eventCode == 3:
+            self.call_event_listeners(EventType.KEYUP, str(e.keysym))
+        pass
+
     def start(self):
         self.updatethread.start()
         self.listenthread.start()
@@ -68,7 +67,10 @@ class GameManager:
 
 
         self.window._tk.after(100, self.frame)
+        self.window._tk.bind("<KeyPress>", self._key)
+        self.window._tk.bind("<KeyRelease>", self._key)
         self.window.start()
+
     def update_frame(self):
         self.frame()
     def update(self):
@@ -122,15 +124,3 @@ class GameManager:
 
         print(self.updates)
 
-    def add_event_listener(self, eventtype=None, condition=None):
-
-        if eventtype is None:
-            def inner(func):
-                self.listeners.append(Event(func, condition=condition))
-
-            return inner
-        elif condition is None:
-            def inner(func):
-                self.listeners.append(Event(func, typeC=eventtype))
-
-            return inner

@@ -1,6 +1,5 @@
 from .interface import PyNamical
 from .dimensions import Dimension
-from PIL import ImageTk,Image
 
 class GameObject(PyNamical):
     def __init__(self, parent: PyNamical, x: float, y: float, width: float, height: float, contents: str=None):
@@ -18,8 +17,6 @@ class GameObject(PyNamical):
 
         self.parent.add_object(self)
 
-        if self.content is not None:
-            self.content = ImageTk.PhotoImage(Image.open(contents))
 
     @property
     def topleft(self):

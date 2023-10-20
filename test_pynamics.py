@@ -18,12 +18,21 @@ def condition():
         return False
 
 
+@ctx.add_event_listener(event=pynamics.EventType.KEYDOWN, condition=pynamics.KeyEvaulator(pynamics.K_UP))
+def listen(self):
+    bob.position.y -= 10
 
+@ctx.add_event_listener(event=pynamics.EventType.KEYDOWN, condition=pynamics.KeyEvaulator(pynamics.K_DOWN))
+def listen(self):
+    bob.position.y += 10
 
+@ctx.add_event_listener(event=pynamics.EventType.KEYDOWN, condition=pynamics.KeyEvaulator(pynamics.K_LEFT))
+def listen(self):
+    bob.position.x -= 10
 
-@ctx.add_event_listener(eventtype=pynamics.EventType.APRESSED)
-def listen():
-    bob.position.x-=1
+@ctx.add_event_listener(event=pynamics.EventType.KEYDOWN, condition=pynamics.KeyEvaulator(pynamics.K_RIGHT))
+def listen(self):
+    bob.position.x += 10
 
 
 print(ctx.children)
