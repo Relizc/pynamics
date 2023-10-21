@@ -25,22 +25,23 @@ def condition():
 
 @ctx.add_event_listener(event=pynamics.EventType.KEYHOLD, condition=pynamics.KeyEvaulator(pynamics.K_UP))
 def listen(self):
-    bob.position.y -= 1
+    bob.add_force(pynamics.Vector2d(90,1))
+
 
 
 @ctx.add_event_listener(event=pynamics.EventType.KEYHOLD, condition=pynamics.KeyEvaulator(pynamics.K_DOWN))
 def listen(self):
-    bob.position.y += 1
+    bob.add_force(pynamics.Vector2d(270,1))
 
 
 @ctx.add_event_listener(event=pynamics.EventType.KEYHOLD, condition=pynamics.KeyEvaulator(pynamics.K_LEFT))
 def listen(self):
-    bob.position.x -= 1
+    bob.add_force(pynamics.Vector2d(180,1))
 
 
 @ctx.add_event_listener(event=pynamics.EventType.KEYHOLD, condition=pynamics.KeyEvaulator(pynamics.K_RIGHT))
 def listen(self):
-    bob.position.x += 1
+    bob.add_force(pynamics.Vector2d(0,1))
 
 
 

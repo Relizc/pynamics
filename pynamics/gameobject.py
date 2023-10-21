@@ -63,20 +63,18 @@ class PhysicsBody(GameObject):
         self.timeB = time.time()
         self.timeA = time.time()
 
-
-
-        applyingForce = Vector2d(270, self.gravity * self.mass)
+        applyingForce = Vector2d(90, self.gravity * self.mass)
 
         applied = applyingForce.add(self.fnet)
+
         self.fnet = applied
 
         # @self.parent.add_tick_update
         # def applyAirResistance():
-        #     airResistance = (1 / 2) * self.row * math.pow(self.v_inst.f, 2) * self.coeff
+        #     airResistance = (1 / 2) * self.row * (self.v_inst.f**2) * self.coeff
+        #     print("AIRO",airResistance)
+        #     r = (self.fnet.r + 180) % 360
         #
-        #     r = self.fnet.r + 180
-        #     if r >= 360:
-        #         r -= 360
         #
         #     airVector = Vector2d(r,airResistance)
         #
@@ -87,22 +85,23 @@ class PhysicsBody(GameObject):
             self.a.r = self.fnet.r
             self.a.f = self.fnet.f / self.mass
 
-
         @self.parent.add_tick_update
         def update_v():
-
-            self.v_inst = self.v_inst.add(Vector2d(self.a.r,self.a.f*self.parent._epoch_tps))
+            self.v_inst = self.v_inst.add(Vector2d(self.a.r, self.a.f * self.parent._epoch_tps))
             self.timeB = time.time()
 
         @self.parent.add_tick_update
         def update_v():
-            v = Vector2d(self.v_inst.r,self.v_inst.f)
+            v = Vector2d(self.v_inst.r, self.v_inst.f)
             v.f *= self.parent._epoch_tps
 
             x3, y3 = self.v_inst.cart()
-            print(self.v_inst.f)
+            print(x3,y3)
             self.position.x += x3
-            self.position.y += y3
+            self.position.y -= y3
+
+    def add_force(self, force):
+        self.fnet = self.fnet.add(force)
 
 
 class Vector2d():
@@ -135,6 +134,8 @@ class Vector2d():
 
         xf = x + x1
         yf = y + y1
+
+
 
         r = (xf ** 2 + yf ** 2) ** .5
         theta = math.degrees(math.atan2(yf, xf))

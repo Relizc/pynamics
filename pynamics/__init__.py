@@ -1,6 +1,6 @@
 from .display import ProjectWindow, ViewPort
 from .gameobject import GameObject
-from .gamemanager import GameManager,PhysicsBody
+from .gamemanager import GameManager,PhysicsBody,Vector2d
 from .dimensions import Dimension, Dimension2d
 from .events import EventHolder, EventType, KeyEvaulator
 
