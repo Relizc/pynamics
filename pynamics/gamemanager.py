@@ -109,6 +109,9 @@ class GameManager(PyNamical):
                             i.func()
             time.sleep(self._epoch_tps)
 
+    def test(self):
+        print(1)
+
     def frame(self):
         self.call_event_listeners(EventType.FRAME)
         self.f += 1
