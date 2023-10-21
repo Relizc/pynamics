@@ -2,7 +2,7 @@ import tkinter
 
 from .gameobject import *
 from .interface import PyNamical
-from .events import EventType
+from .events import EventType, Executable
 
 import threading
 import time
@@ -116,7 +116,8 @@ class GameManager(PyNamical):
         self.window.surface.after(int(self._epoch_fps*1000), self.frame)
 
 
-
+    def add_tick_update(self, function):
+        self.events[EventType.TICK].append(Executable(function, lambda i: True))
 
     def set_ticks_per_update(self, tick: int):
         self.tpu = tick

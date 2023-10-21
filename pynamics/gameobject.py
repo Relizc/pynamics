@@ -69,8 +69,6 @@ class PhysicsBody(GameObject):
         @self.parent.add_event_listener(event=EventType.TICK)
         def update_self(e):
 
-            print(self.fnet)
-
             self.acceleration.r = self.fnet.r
             self.acceleration.f = self.fnet.f / self.mass
 

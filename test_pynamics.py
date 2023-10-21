@@ -49,10 +49,8 @@ def listen(self):
     bob.clear()
 
 
-@ctx.add_event_listener(event=pynamics.EventType.TICK)
+@ctx.add_tick_update
 def tick(self):
-    #print(bob.fnet)
-    #print(bob.velocity)
     pass
 
 
