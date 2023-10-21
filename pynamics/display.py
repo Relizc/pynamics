@@ -17,7 +17,7 @@ class ViewPort(PyNamical):
 
 class ProjectWindow(PyNamical):
 
-    def __init__(self, parent: GameManager, size: Dimension = Dimension(2500, 2500)):
+    def __init__(self, parent: GameManager, size: Dimension = Dimension(500, 500)):
         super().__init__(parent)
         self.parent.window = self
 

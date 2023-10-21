@@ -2,6 +2,7 @@ import time
 
 from .interface import PyNamical
 from .dimensions import Dimension
+from .events import EventType
 import math
 import cmath
 
@@ -54,57 +55,49 @@ class PhysicsBody(GameObject):
         super().__init__(parent, x, y, width, height, contents, from_points)
 
         self.mass = mass
-        self.v_inst = Vector2d(0, 0)
-        self.a = Vector2d(0, 0)
+        self.velocity = Vector2d(0, 0)
+        self.acceleration = Vector2d(0, 0)
         self.coeff = 0.5
         self.row = row
         self.fnet = Vector2d(0, 0)
-        self.gravity = -9.8
-        self.timeB = time.time()
-        self.timeA = time.time()
+        self.gravity = -0.1
+        #self.timeB = time.time()
+       # self.timeA = time.time()
 
-        applyingForce = Vector2d(90, self.gravity * self.mass)
+        self.fnet = Vector2d(90, self.gravity * self.mass)
 
-        applied = applyingForce.add(self.fnet)
+        @self.parent.add_event_listener(event=EventType.TICK)
+        def update_self(e):
 
-        self.fnet = applied
+            print(self.fnet)
 
-        # @self.parent.add_tick_update
-        # def applyAirResistance():
-        #     airResistance = (1 / 2) * self.row * (self.v_inst.f**2) * self.coeff
-        #     print("AIRO",airResistance)
-        #     r = (self.fnet.r + 180) % 360
-        #
-        #
-        #     airVector = Vector2d(r,airResistance)
-        #
-        #     self.fnet = self.fnet.add(airVector)
+            self.acceleration.r = self.fnet.r
+            self.acceleration.f = self.fnet.f / self.mass
 
-        @self.parent.add_tick_update
-        def update_self():
-            self.a.r = self.fnet.r
-            self.a.f = self.fnet.f / self.mass
+            self.velocity = self.velocity.add(
+                Vector2d(self.acceleration.r, self.acceleration.f))
 
-        @self.parent.add_tick_update
-        def update_v():
-            self.v_inst = self.v_inst.add(Vector2d(self.a.r, self.a.f * self.parent._epoch_tps))
-            self.timeB = time.time()
-
-        @self.parent.add_tick_update
-        def update_v():
-            v = Vector2d(self.v_inst.r, self.v_inst.f)
+            v = Vector2d(self.velocity.r, self.velocity.f)
             v.f *= self.parent._epoch_tps
 
-            x3, y3 = self.v_inst.cart()
-            print(x3,y3)
+            x3, y3 = self.velocity.cart()
+            # print(x3,y3)
             self.position.x += x3
             self.position.y -= y3
+
+            self.fnet = Vector2d(90, self.gravity * self.mass)
+
 
     def add_force(self, force):
         self.fnet = self.fnet.add(force)
 
+    def clear(self):
+        self.fnet.clear()
+        self.velocity.clear()
+        self.acceleration.clear()
 
-class Vector2d():
+
+class Vector2d:
     def __init__(self, r, f):
         """
 
@@ -141,8 +134,15 @@ class Vector2d():
         theta = math.degrees(math.atan2(yf, xf))
         return Vector2d(theta, r)
 
+    def clear(self):
+        self.r = 0
+        self.f = 0
+
     def cart(self) -> tuple:
         x = self.f * math.cos(math.radians(self.r))
         y = self.f * math.sin(math.radians(self.r))
 
         return x, y
+
+    def __repr__(self):
+        return f"Vector2d(Rotation={self.r}, Value={self.f})"

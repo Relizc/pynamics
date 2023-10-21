@@ -34,6 +34,11 @@ class KeyEvaulator:
     def __call__(self, inp, *args, **kwargs):
         return inp == self.key
 
+class EventPriority:
+    HIGHEST = 0
+    LOWEST = 2147483647
+
+
 class EventHolder:
 
     def __init__(self):
@@ -44,10 +49,18 @@ class EventHolder:
             EventType.KEYUP: [],
         }
 
-    def add_event_listener(self, event: EventType = EventType.NONE, condition=lambda i: True, tick_delay=0):
+    def add_event_listener(self, event: EventType = EventType.NONE, priority: EventPriority=EventPriority.LOWEST, condition=lambda i: True, tick_delay=0):
+        """
+
+        :param event: `EventType` The event type of this event listener
+        :param priority: `EventPriority` Determines the order that the listener should run. If a listener has high priority, it will be run last, and vice versa.
+        :param condition: `Function` A lambda or a function that takes a specific input based on the EventType, and returns a boolean to tell whether the event should run or not.
+        :param tick_delay: `Integer` How many ticks it takes to execute this event.
+        :return:
+        """
 
         def inner(function):
-            self.events[event].append(Executable(function, condition))
+            self.events[event].insert(2147483647 - priority, Executable(function, condition))
 
         return inner
 

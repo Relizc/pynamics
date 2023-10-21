@@ -2,7 +2,7 @@ import pynamics
 import time
 import random
 
-ctx = pynamics.GameManager(pynamics.Dim(10000, 10000), tps=128)
+ctx = pynamics.GameManager(pynamics.Dim(100, 100), tps=128)
 window = pynamics.ProjectWindow(ctx)
 camera = pynamics.ViewPort(window)
 
@@ -43,11 +43,18 @@ def listen(self):
 def listen(self):
     bob.add_force(pynamics.Vector2d(0,1))
 
+@ctx.add_event_listener(event=pynamics.EventType.KEYDOWN, condition=pynamics.KeyEvaulator(pynamics.K_r))
+def listen(self):
+    bob.position.set(10, 10)
+    bob.clear()
 
 
+@ctx.add_event_listener(event=pynamics.EventType.TICK)
+def tick(self):
+    #print(bob.fnet)
+    #print(bob.velocity)
+    pass
 
-
-print(ctx.children)
 
 ctx.start()
 print("killed")

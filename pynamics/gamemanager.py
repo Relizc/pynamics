@@ -90,9 +90,8 @@ class GameManager(PyNamical):
 
             self.ticks += 1
 
-            if self.ticks % self.tpu == 0:
-                for i in self.updates:
-                    i()
+            for i in self.updates:
+                i()
 
             time.sleep(self._epoch_tps)
 
@@ -114,7 +113,7 @@ class GameManager(PyNamical):
         self.call_event_listeners(EventType.FRAME)
         self.f += 1
         self.window.blit()
-        self.window.surface.after(int(self._epoch_fps*1000),self.frame)
+        self.window.surface.after(int(self._epoch_fps*1000), self.frame)
 
 
 
@@ -127,10 +126,4 @@ class GameManager(PyNamical):
 
     def add_object(self, object: GameObject):
         self.objects.append(object)
-
-    def add_tick_update(self, function):
-
-        self.updates.append(function)
-
-        print(self.updates)
 
