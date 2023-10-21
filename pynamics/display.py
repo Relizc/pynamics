@@ -36,11 +36,7 @@ class ProjectWindow(PyNamical):
                 #print(i.position.x,i.position.y)
                 if i.content is not None:
                     self.surface.create_image(i.position.x, i.position.y, anchor=NW, image=i.content)
-                elif i.content is None and len(i.points) == 0:
-                    self.surface.create_line(i.topleft.x, i.topleft.y, i.topright.x, i.topright.y)
-                    self.surface.create_line(i.topleft.x, i.topleft.y, i.bottomleft.x, i.bottomleft.y)
-                    self.surface.create_line(i.topright.x, i.topright.y, i.bottomright.x, i.bottomright.y)
-                    self.surface.create_line(i.bottomleft.x, i.bottomleft.y, i.bottomright.x + 1, i.bottomright.y)
+
                 elif len(i.points) > 0:
                     for j in i.points:
                         pos1 = j[0]

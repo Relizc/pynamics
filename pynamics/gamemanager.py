@@ -122,6 +122,8 @@ class GameManager(PyNamical):
     def add_tick_update(self, function):
         self.events[EventType.TICK].append(Executable(function, lambda i: True))
 
+
+
     def set_ticks_per_update(self, tick: int):
         self.tpu = tick
 
