@@ -43,7 +43,7 @@ class GameManager(PyNamical):
         self._epoch_tps = 1 / self.tps
         self.listenthread = threading.Thread(target=self.listen)
         self.framethread = threading.Thread(target=self.frame)
-        self.fps=60
+        self.fps=144
         self.updatethread = threading.Thread(target=self.update)
         self.terminated = False
         self.f = 0
