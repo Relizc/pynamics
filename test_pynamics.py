@@ -14,6 +14,8 @@ bob = pynamics.PhysicsBody(ctx, 100, 100, 100, 100, 2,
                                         , ((50, 100), (0, 0))
                                         ))
 
+bob2 = pynamics.PhysicsBody(ctx, 100, 500, 100, 100, 5, use_mass=False)
+
 
 def condition():
     global thisTime
@@ -38,9 +40,9 @@ def listen(self):
     bob.apply_force(pynamics.Vector2d(180, 1),ctx._epoch_tps)
 
 
-@ctx.add_event_listener(event=pynamics.EventType.KEYHOLD, condition=pynamics.KeyEvaulator(pynamics.K_RIGHT))
+@ctx.add_event_listener(event=pynamics.EventType.KEYDOWN, condition=pynamics.KeyEvaulator(pynamics.K_RIGHT))
 def listen(self):
-    bob.apply_force(pynamics.Vector2d(0, 1),ctx._epoch_tps)
+    bob.apply_force(pynamics.Vector2d(0, 1),10)
 
 @ctx.add_event_listener(event=pynamics.EventType.KEYDOWN, condition=pynamics.KeyEvaulator(pynamics.K_r))
 def listen(self):
