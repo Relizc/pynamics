@@ -14,7 +14,6 @@ bob = pynamics.PhysicsBody(ctx, 100, 100, 100, 100,2,
                                         , ((50, 100), (0, 0))
                                         ))
 
-
 def condition():
     global thisTime
     if time.time() - thisTime >= 3:
