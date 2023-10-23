@@ -1,13 +1,18 @@
 from .styling import StyleLoader
+from .events import EventType, EventHolder
 
+class PyNamical(EventHolder):
 
-class PyNamical:
-
-    def __init__(self, parent):
+    def __init__(self, parent, no_parent=False):
+        super().__init__()
         self.style = StyleLoader()
         self.parent = parent
-        self.parent.children.append(self)
+
+        if not no_parent:
+            self.parent.children.append(self)
         self.children = []
+
+
 
     def delete(self):
         pass

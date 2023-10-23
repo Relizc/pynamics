@@ -1,30 +1,35 @@
+import tkinter
+
 from .gameobject import *
+from .interface import PyNamical
+from .events import EventType, Executable
+
 import threading
-from enum import Enum
 import time
 
 
-class EventType(Enum):
-    FRAME = 0x00
-    TICK = 0x01
-    KEYDOWN = 0x02
-    KEYUP = 0x03
-    KEYHOLD = 0x04
-
-    KEYDOWN_FRAMEBIND = 0x12
-    KEYUP_FRAMEBIND = 0x13
-    KEYHOLD_FRAMEBIND = 0x14
-
-
 class Event:
-    def __init__(self, func, type: EventType = None, condition=None, ):
+    def __init__(self, func, typeC=None, condition=None, ):
         self.func = func
-        self.type = type
+        self.type = typeC
         self.condition = condition
-        
 
-class GameManager:
-    def __init__(self, dimensions: Dimension, tps: int = 128, fps: int = 0):
+    def type_down(self) -> str:
+        # theType = self.type
+        # if theType == EventType.KEYPRESSED:
+        #     return keyboard.read_key()
+        pass
+
+    def type_bool_down(self) -> bool:
+        # theKey = self.type
+        # if theKey == EventType.APRESSED:
+        #     return keyboard.is_pressed("a")
+        pass
+
+
+class GameManager(PyNamical):
+    def __init__(self, dimensions: Dimension, tps: int = 128):
+        super().__init__(None, no_parent=True)
         self.dimensions = dimensions
         self.width = dimensions.x
         self.length = dimensions.y
@@ -35,40 +40,58 @@ class GameManager:
         self.ticks = 0
         self.tpl = 1
         self.tps = tps
-        self.fps = fps
-        if self.fps == 0:
-            self._fps = 0
-        else:
-            self._fps = 1 / self.fps
-        self._fps = int(round(self._fps * 1000, 0))
         self._epoch_tps = 1 / self.tps
         self.listenthread = threading.Thread(target=self.listen)
+        self.framethread = threading.Thread(target=self.frame)
+        self.fps=144
         self.updatethread = threading.Thread(target=self.update)
         self.terminated = False
         self.f = 0
-
-        self._dt = [0, 0]
-
+        self._epoch_fps = 1/self.fps
         self.parent = None
         self.children = []
+
+        self.pressed = {}
+
+    def _key(self, e):
+        eventCode = int(e.type)
+        if eventCode == 2: # KeyPress
+            self.pressed[e.keysym] = True
+            self.call_event_listeners(EventType.KEYDOWN, str(e.keysym))
+        elif eventCode == 3: # KeyUp
+            self.pressed[e.keysym] = False
+            self.call_event_listeners(EventType.KEYUP, str(e.keysym))
+        pass
 
     def start(self):
         self.updatethread.start()
         self.listenthread.start()
+        self.framethread.start()
+
+
 
         self.window._tk.after(100, self.frame)
+        self.window._tk.bind("<KeyPress>", self._key)
+        self.window._tk.bind("<KeyRelease>", self._key)
         self.window.start()
 
+
     def update(self):
- 
+
         while True:
 
             if self.terminated: break
 
+            self.call_event_listeners(EventType.TICK)
+
+            for i in self.pressed:
+                if self.pressed[i]:
+                    self.call_event_listeners(EventType.KEYHOLD, i)
+
             self.ticks += 1
-            if self.ticks % self.tpu == 0:
-                for i in self.updates:
-                    i()
+
+            for i in self.updates:
+                i()
 
             time.sleep(self._epoch_tps)
 
@@ -81,22 +104,25 @@ class GameManager:
                 if isinstance(i, Event):
                     if i.condition is not None and i.condition():
                         i.func()
-
+                    elif i.condition is None:
+                        if i.type_bool_down():
+                            i.func()
             time.sleep(self._epoch_tps)
 
+    def test(self):
+        print(1)
+
     def frame(self):
-
-        self._dt[1] = time.time() - self._dt[0]
-        self._dt[0] = time.time()
-        print(self._dt[1], self._fps)
-
+        self.call_event_listeners(EventType.FRAME)
         self.f += 1
-        print(f"This is frame {self.f}")
-        self.window._tk.after(self._fps, self.frame)
+        self.window.blit()
+        self.window.surface.after(int(self._epoch_fps*1000), self.frame)
 
-    def kill(self):
-        self.updatethread.daemon = True
-        self.listenthread.daemon = True
+
+    def add_tick_update(self, function):
+        self.events[EventType.TICK].append(Executable(function, lambda i: True))
+
+
 
     def set_ticks_per_update(self, tick: int):
         self.tpu = tick
@@ -107,19 +133,3 @@ class GameManager:
     def add_object(self, object: GameObject):
         self.objects.append(object)
 
-    def add_tick_update(self, function):
-
-        self.updates.append(function)
-
-    def add_event_listener(self, eventtype=None, condition=None):
-
-        if eventtype is None:
-            def inner(func):
-                self.listeners.append(Event(func, condition=condition))
-
-            return inner
-        elif condition is None:
-            def inner(func):
-                self.listeners.append(Event(func, type=eventtype))
-
-            return inner

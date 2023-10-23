@@ -1,7 +1,10 @@
 import tkinter as tk
-
+from .gamemanager import GameManager
 from .dimensions import Dimension, Dimension2d
 from .interface import PyNamical
+from .gameobject import GameObject
+from tkinter import NW
+
 
 class ViewPort(PyNamical):
 
@@ -12,10 +15,9 @@ class ViewPort(PyNamical):
         return dimension.add(self.position)
 
 
-
 class ProjectWindow(PyNamical):
 
-    def __init__(self, parent, size: Dimension = Dimension(500, 500)):
+    def __init__(self, parent: GameManager, size: Dimension = Dimension(2500, 1250)):
         super().__init__(parent)
         self.parent.window = self
 
@@ -27,6 +29,21 @@ class ProjectWindow(PyNamical):
         self.surface = tk.Canvas(self._tk, width=size.x, height=size.y, bg="white", highlightthickness=0)
         self.surface.pack()
 
+    def blit(self):
+        self.surface.delete("all")
+        for i in self.parent.objects:
+            if isinstance(i,GameObject):
+                #print(i.position.x,i.position.y)
+                if i.content is not None:
+                    self.surface.create_image(i.position.x, i.position.y, anchor=NW, image=i.content)
+
+                elif len(i.points) > 0:
+                    for j in i.points:
+                        pos1 = j[0]
+                        pos2 = j[1]
+                        self.surface.create_line(pos1[0] + i.position.x,pos1[1] + i.position.y,pos2[0] + i.position.x,pos2[1]+ i.position.y)
+
+
     def _close_parent_close(self):
         self.parent.terminated = True
         self._tk.destroy()
@@ -34,4 +51,3 @@ class ProjectWindow(PyNamical):
     def start(self):
         self._tk.protocol("WM_DELETE_WINDOW", self._close_parent_close)
         self._tk.mainloop()
-
