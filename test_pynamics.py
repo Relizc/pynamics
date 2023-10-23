@@ -2,7 +2,7 @@ import pynamics
 import time
 import random
 
-ctx = pynamics.GameManager(pynamics.Dim(1000, 1000), tps=128)
+ctx = pynamics.GameManager(pynamics.Dim(1000, 1000), tps=128, fps=1)
 window = pynamics.ProjectWindow(ctx)
 camera = pynamics.ViewPort(window)
 
