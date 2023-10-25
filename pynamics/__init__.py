@@ -3,6 +3,7 @@ from .gameobject import GameObject
 from .gamemanager import GameManager,PhysicsBody,Vector2d
 from .dimensions import Dimension, Dimension2d
 from .events import EventHolder, EventType, KeyEvaulator
+from .logger import Logger
 
 # Aliases
 class Dim(Dimension): pass
@@ -18,3 +19,10 @@ K_c = "c"
 K_d = "d"
 
 K_r = "r"
+
+K_backquote = 'quoteleft'
+
+VERSION = "1.0.0"
+
+Logger.print("&bInitialization completed.")
+Logger.print(f"&ePy&aNamics &bVersion {VERSION}")

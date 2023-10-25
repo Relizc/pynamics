@@ -46,6 +46,8 @@ class ProjectWindow(PyNamical):
 
     def _close_parent_close(self):
         self.parent.terminated = True
+        if self.parent.debug != None:
+            self.parent.debug.tk.destroy()
         self._tk.destroy()
 
     def start(self):

@@ -1,6 +1,8 @@
 from .styling import StyleLoader
 from .events import EventType, EventHolder
 
+
+
 class PyNamical(EventHolder):
 
     def __init__(self, parent, no_parent=False):

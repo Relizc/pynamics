@@ -14,7 +14,10 @@ bob = pynamics.PhysicsBody(ctx, 100, 100, 100, 100, 2,
                                         , ((50, 100), (0, 0))
                                         ))
 
-bob2 = pynamics.PhysicsBody(ctx, 100, 500, 100, 100, 5, use_mass=False)
+bob2 = pynamics.PhysicsBody(ctx, 100, 500, 100, 100, 5, use_mass=False,from_points=(
+    ((0,0),(10000,0)),
+    ((0,0),(0,10000)),
+))
 
 
 def condition():
