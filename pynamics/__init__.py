@@ -20,6 +20,8 @@ K_d = "d"
 
 K_r = "r"
 
+K_backquote = 'quoteleft'
+
 VERSION = "1.0.0"
 
 Logger.print("&bInitialization completed.")

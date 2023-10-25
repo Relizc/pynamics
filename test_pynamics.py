@@ -3,7 +3,7 @@ import time
 import random
 
 ctx = pynamics.GameManager(pynamics.Dim(10000, 10000), tps=128)
-window = pynamics.ProjectWindow(ctx)
+window = pynamics.ProjectWindow(ctx, size=pynamics.Dim(1000, 1000))
 camera = pynamics.ViewPort(window)
 
 bob1 = pynamics.GameObject(ctx, 10, 10, 10, 10)
@@ -22,29 +22,34 @@ def condition():
         return False
 
 
-@ctx.add_event_listener(event=pynamics.EventType.KEYHOLD, condition=pynamics.KeyEvaulator(pynamics.K_UP))
+@ctx.add_event_listener(event=pynamics.EventType.KEYDOWN, condition=pynamics.KeyEvaulator(pynamics.K_UP))
 def listen(self):
-    bob.apply_force(pynamics.Vector2d(90, 1),ctx._epoch_tps)
+    bob.apply_force(pynamics.Vector2d(90, 1), 0.1)
 
 
-@ctx.add_event_listener(event=pynamics.EventType.KEYHOLD, condition=pynamics.KeyEvaulator(pynamics.K_DOWN))
+@ctx.add_event_listener(event=pynamics.EventType.KEYDOWN, condition=pynamics.KeyEvaulator(pynamics.K_DOWN))
 def listen(self):
-    bob.apply_force(pynamics.Vector2d(270, 1),ctx._epoch_tps)
+    bob.apply_force(pynamics.Vector2d(270, 1), 0.1)
 
 
-@ctx.add_event_listener(event=pynamics.EventType.KEYHOLD, condition=pynamics.KeyEvaulator(pynamics.K_LEFT))
+@ctx.add_event_listener(event=pynamics.EventType.KEYDOWN, condition=pynamics.KeyEvaulator(pynamics.K_LEFT))
 def listen(self):
-    bob.apply_force(pynamics.Vector2d(180, 1),ctx._epoch_tps)
+    bob.apply_force(pynamics.Vector2d(180, 1), 0.1)
 
 
-@ctx.add_event_listener(event=pynamics.EventType.KEYHOLD, condition=pynamics.KeyEvaulator(pynamics.K_RIGHT))
+@ctx.add_event_listener(event=pynamics.EventType.KEYDOWN, condition=pynamics.KeyEvaulator(pynamics.K_RIGHT))
 def listen(self):
-    bob.apply_force(pynamics.Vector2d(0, 1),ctx._epoch_tps)
+    bob.apply_force(pynamics.Vector2d(0, 1), 0.1)
 
 @ctx.add_event_listener(event=pynamics.EventType.KEYDOWN, condition=pynamics.KeyEvaulator(pynamics.K_r))
 def listen(self):
     bob.position.set(10, 10)
     bob.clear()
+
+@ctx.add_event_listener(event=pynamics.EventType.TICK)
+def a(self):
+    #print(bob.velocity)
+    pass
 
 
 print(ctx.children)

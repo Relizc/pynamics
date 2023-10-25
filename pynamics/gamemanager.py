@@ -2,7 +2,9 @@ import tkinter
 
 from .gameobject import *
 from .interface import PyNamical
-from .events import EventType, Executable
+from .events import EventType, Executable, KeyEvaulator
+from .debugger import Debugger
+from .logger import Logger
 
 import threading
 import time
@@ -52,6 +54,16 @@ class GameManager(PyNamical):
         self.children = []
 
         self.pressed = {}
+
+        self.debug = None
+
+        @self.add_event_listener(event=EventType.KEYDOWN, condition=KeyEvaulator("quoteleft"))
+        def open_debugger(n):
+            if self.debug == None:
+                Logger.print("Debugger not found! Creating window instance", channel=5)
+                self.debug = Debugger()
+
+            self.debug.run()
 
     def _key(self, e):
         eventCode = int(e.type)

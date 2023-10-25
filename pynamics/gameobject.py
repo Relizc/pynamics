@@ -108,17 +108,19 @@ class PhysicsBody(GameObject):
         self.fnet = self.fnet.add(force)
 
     def apply_force(self, force, duration):
+
+
         def add_force():
+
             self.fnet = self.fnet.add(force)
+
             start_time = time.time()
             while True:
                 if time.time() - start_time >= duration:
                     break
                 time.sleep(self.parent._epoch_tps)
-            self.fnet = self.fnet.subtract(force)
 
-        thread_add_force = threading.Thread(target=add_force)
-        thread_add_force.start()
+        threading.Thread(target=add_force).start()
 
     def clear(self):
         self.fnet.clear()
@@ -131,7 +133,7 @@ class PhysicsBody(GameObject):
             if isinstance(i,PhysicsBody):
                 for j in i.points:
                     for k in self.points:
-
+                        pass
 
 
 class Vector2d():
@@ -192,6 +194,9 @@ class Vector2d():
         y = self.f * math.sin(math.radians(self.r))
 
         return x, y
+
+    def __repr__(self):
+        return f"Vector2d(Rotation={self.r}, Value={self.f})"
 
     def clear(self):
         self.r = 0
