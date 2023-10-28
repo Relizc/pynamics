@@ -1,4 +1,4 @@
-
+import threading
 import tkinter as tk
 from tkinter import ttk
 from .logger import Logger
@@ -38,9 +38,10 @@ class Debugger:
         self.events.pack(fill='both', expand=True)
         self.nb.add(self.events, text="Event Tracker")
 
+        self.query = tk.Entry(self.events)
+        self.query.grid(row=1, column = 0, sticky="ew")
+
         self.event = ttk.Treeview(self.events, columns=("epoch", "type", "source"), show='headings')
-
-
 
         self.event.column("epoch", anchor=tk.W, width=100)
         self.event.heading("epoch", text="Time", anchor=tk.W)
@@ -51,23 +52,87 @@ class Debugger:
         self.event.column("source", anchor=tk.W, width=200)
         self.event.heading("source", text="Called By", anchor=tk.W)
 
-        self.event.pack(fill="both", expand=True)
+        self.event.grid(row=2, column=0, sticky="ewns")
+
+        self.events.columnconfigure(0, weight=1)
+        self.events.rowconfigure(2, weight=1)
 
         self.event_iid = 0
         self.await_push = []
+
+
+
+
+
 
         ### Workspace ###
 
         self.exp = ttk.Frame(self.nb)
         self.exp.pack(fill='both', expand=True)
         self.nb.add(self.exp, text="Workspace")
+        self.q = {}
 
         self.explorer = ttk.Treeview(self.exp)
         self.explorer.heading("#0", text="Workspace")
 
-        self.explorer.insert('', tk.END, text="Object1", open=False)
+        self.explorer.insert('', tk.END, text="GameManager", open=False, iid=0)
+        self._workspace_iid = 0
+        self.q[self._workspace_iid] = self.parent
+        for i in self.parent.children:
+            self._workspace_dfs(i, 0)
 
-        self.explorer.grid(row=0, column=0)
+        self.explorer.grid(row=0, column=0, sticky="ns")
+
+        self.data_viewer = ttk.Frame(self.exp)
+        self.info = tk.Label(self.data_viewer, text="Select an item to view its properties")
+        self.info.pack(anchor="w")
+        self.data_viewer.grid(row=0, column=1, sticky="nesw")
+
+        self.explorer.bind('<ButtonRelease-1>', self._workspace_select)
+
+        self.exp.rowconfigure(0, weight=1)
+        self.exp.columnconfigure(0, weight=0)
+        self.exp.columnconfigure(1, weight=1)
+
+
+
+    def _workspace_select(self, e):
+        self.info.pack_forget()
+
+        stuff = self.q[int(self.explorer.focus())]
+
+        self.info = ttk.Treeview(self.data_viewer)
+        self.info.heading("#0", text=f"Browsing properties for element {stuff}")
+        self.info.grid(row=0, column=0, sticky="nesw")
+        self.data_viewer.rowconfigure(0, weight=1)
+        self.data_viewer.columnconfigure(0, weight=2)
+        self.data_viewer.columnconfigure(1, weight=1)
+
+
+
+        disp = ""
+        f = stuff.__dict__
+        for i in f:
+            cd = str(f[i])[:128]
+            disp += f"{i} = {cd}\n"
+        self.info.config(text=disp, anchor="w")
+
+
+    def _workspace_dfs(self, next, fr):
+
+        print(next, fr, self._workspace_iid)
+
+        self._workspace_iid += 1
+        c = int(self._workspace_iid)
+
+        self.explorer.insert('', tk.END, text=next.__class__.__name__, open=False, iid=self._workspace_iid)
+        self.q[self._workspace_iid] = next
+        self.explorer.move(self._workspace_iid, fr, 1)
+
+        for i in next.children:
+            self._workspace_dfs(i, c)
+
+
 
 
     def _call_callevent(self, event, obj, func):
@@ -100,13 +165,13 @@ class Debugger:
             self.event.insert(parent='',index='end',text='', values=i)
         self.event.yview_moveto(1)
         self.await_push = []
-        self.tk.after(100, self._tick_event_update)
+        self.tk.after(1, self._tick_event_update)
 
     def run(self):
         if not self.opened:
             self.tk.after(1000, self._tick_fps_op)
             self.tk.after(1000, self._tick_tps_op)
-            self.tk.after(100, self._tick_event_update)
+            self.tk.after(1, self._tick_event_update)
             self.tk.protocol("WM_DELETE_WINDOW", self.close)
             self.opened = True
 
