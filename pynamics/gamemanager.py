@@ -30,7 +30,7 @@ class Event:
 
 
 class GameManager(PyNamical):
-    def __init__(self, dimensions: Dimension, tps: int = 128):
+    def __init__(self, dimensions: Dimension, tps: int = 128, fps: int = 0):
         super().__init__(None, no_parent=True)
         self.dimensions = dimensions
         self.width = dimensions.x
@@ -45,11 +45,16 @@ class GameManager(PyNamical):
         self._epoch_tps = 1 / self.tps
         self.listenthread = threading.Thread(target=self.listen)
         self.framethread = threading.Thread(target=self.frame)
-        self.fps=144
+        if fps == 0:
+            self.fps = 0
+            self._epoch_fps = 0.001
+        else:
+            self.fps = fps
+            self._epoch_fps = 1 / self.fps
         self.updatethread = threading.Thread(target=self.update)
         self.terminated = False
         self.f = 0
-        self._epoch_fps = 1/self.fps
+        self.t = 0
         self.parent = None
         self.children = []
 
@@ -61,7 +66,7 @@ class GameManager(PyNamical):
         def open_debugger(n):
             if self.debug == None:
                 Logger.print("Debugger not found! Creating window instance", channel=5)
-                self.debug = Debugger()
+                self.debug = Debugger(self)
 
             self.debug.run()
 
@@ -101,6 +106,7 @@ class GameManager(PyNamical):
                     self.call_event_listeners(EventType.KEYHOLD, i)
 
             self.ticks += 1
+            self.t += 1
 
             for i in self.updates:
                 i()
