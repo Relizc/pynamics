@@ -1,6 +1,14 @@
 
+import enum
 
-class EventType:
+def commit(e, s, a):
+    None
+DebugAttacher = commit
+def change_debug_attacher(func):
+    global DebugAttacher
+    DebugAttacher = func
+
+class EventType(enum.Enum):
 
     NONE = 0x00
 
@@ -9,7 +17,7 @@ class EventType:
     KEYUP = 0x03
 
     FRAME = 0x00
-    TICK = 0x01
+    TICK = 0x10
 
     KEYDOWN_FRAMEBIND = 0x12
     KEYUP_FRAMEBIND = 0x13
@@ -47,6 +55,7 @@ class EventHolder:
             EventType.KEYDOWN: [],
             EventType.KEYHOLD: [],
             EventType.KEYUP: [],
+            EventType.TICK: []
         }
 
     def add_event_listener(self, event: EventType = EventType.NONE, priority: EventPriority=EventPriority.LOWEST, condition=lambda i: True, tick_delay=0):
@@ -73,4 +82,5 @@ class EventHolder:
         """
         for func in self.events[event]:
             if func.condition(condition):
+                DebugAttacher(event, self, func)
                 func(self)

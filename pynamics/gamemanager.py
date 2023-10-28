@@ -2,7 +2,7 @@ import tkinter
 
 from .gameobject import *
 from .interface import PyNamical
-from .events import EventType, Executable, KeyEvaulator
+from .events import EventType, Executable, KeyEvaulator, change_debug_attacher
 from .debugger import Debugger
 from .logger import Logger
 
@@ -67,6 +67,9 @@ class GameManager(PyNamical):
             if self.debug == None:
                 Logger.print("Debugger not found! Creating window instance", channel=5)
                 self.debug = Debugger(self)
+
+                change_debug_attacher(self.debug._call_callevent)
+                
 
             self.debug.run()
 
