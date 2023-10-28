@@ -180,8 +180,6 @@ class Debugger:
     def _workspace_property_change(self, e):
         stuff = self.m[int(self.info.focus())]
 
-        print(stuff)
-
         if not isinstance(stuff, (int, float, str)):
             tkmsg.showinfo(f"Unable to edit property", f"The debugger cannot edit the property because the type {stuff.__class__.__name__} is not supported.")
             return
@@ -219,8 +217,6 @@ class Debugger:
 
 
     def _workspace_dfs(self, next, fr):
-
-        print(next, fr, self._workspace_iid)
 
         self._workspace_iid += 1
         c = int(self._workspace_iid)
