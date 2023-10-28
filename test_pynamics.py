@@ -2,7 +2,7 @@ import pynamics
 import time
 import random
 
-ctx = pynamics.GameManager(pynamics.Dim(10000, 10000), tps=128)
+ctx = pynamics.GameManager(pynamics.Dim(10000, 10000), tps=1, fps=0)
 window = pynamics.ProjectWindow(ctx)
 camera = pynamics.ViewPort(window)
 
@@ -30,22 +30,26 @@ def condition():
 
 @ctx.add_event_listener(event=pynamics.EventType.KEYHOLD, condition=pynamics.KeyEvaulator(pynamics.K_UP))
 def listen(self):
-    bob.apply_force(pynamics.Vector2d(90, 1),ctx._epoch_tps)
+    #bob.apply_force(pynamics.Vector2d(90, 1),ctx._epoch_tps)
+    bob.add_force(pynamics.Vector2d(90, 1))
 
 
 @ctx.add_event_listener(event=pynamics.EventType.KEYHOLD, condition=pynamics.KeyEvaulator(pynamics.K_DOWN))
 def listen(self):
-    bob.apply_force(pynamics.Vector2d(270, 1),ctx._epoch_tps)
+    #bob.apply_force(pynamics.Vector2d(270, 1),ctx._epoch_tps)
+    bob.add_force(pynamics.Vector2d(270, 1))
 
 
 @ctx.add_event_listener(event=pynamics.EventType.KEYHOLD, condition=pynamics.KeyEvaulator(pynamics.K_LEFT))
 def listen(self):
-    bob.apply_force(pynamics.Vector2d(180, 1),ctx._epoch_tps)
+    #bob.apply_force(pynamics.Vector2d(180, 1),ctx._epoch_tps)
+    bob.add_force(pynamics.Vector2d(180, 1))
 
 
-@ctx.add_event_listener(event=pynamics.EventType.KEYDOWN, condition=pynamics.KeyEvaulator(pynamics.K_RIGHT))
+@ctx.add_event_listener(event=pynamics.EventType.KEYHOLD, condition=pynamics.KeyEvaulator(pynamics.K_RIGHT))
 def listen(self):
-    bob.apply_force(pynamics.Vector2d(0, 1),10)
+    #bob.apply_force(pynamics.Vector2d(0, 1),10)
+    bob.add_force(pynamics.Vector2d(0, 1))
 
 @ctx.add_event_listener(event=pynamics.EventType.KEYDOWN, condition=pynamics.KeyEvaulator(pynamics.K_r))
 def listen(self):
