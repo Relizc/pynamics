@@ -1,17 +1,64 @@
 import threading
 import tkinter as tk
 from tkinter import ttk
+import tkinter.messagebox as tkmsg
 from .logger import Logger
 from .events import EventType
 import datetime
 import inspect
 
+class DebugPropertyEditor:
+
+    SUPPORTED_TYPES = {
+        "int": int,
+        "str": str,
+        "float": float
+    }
+
+    def change(self):
+        try:
+            value = self.SUPPORTED_TYPES[self.ok.get()](self.e.get())
+        except:
+            tkmsg.showerror("Unsupported Value", f"Your value is not supported for the variable type {self.ok.get()}")
+
+        self.property = value
+        print(self.property)
+
+    def __init__(self, parent, property):
+        self.parent = parent
+        self.tk = tk.Toplevel()
+        self.tk.title(f"Property Editor of {property.__class__.__name__}")
+        self.tk.geometry("300x200")
+        self.property = property
+
+        self.tk.columnconfigure(0, weight=1)
+
+        tk.Label(self.tk, text=f"Changing property of", pady=0).grid(row=0)
+        tk.Label(self.tk, text=f"<{property.__class__.__name__}> {property}", pady=0).grid(row=1)
+
+        self.ok = tk.StringVar(value=property.__class__.__name__)
+        gg = []
+        for i in self.SUPPORTED_TYPES:
+            gg.append(i)
+        self.option = tk.OptionMenu(self.tk, self.ok, *gg)
+        self.option.grid(row=2)
+
+        self.e = tk.StringVar(value=str(property))
+
+        self.entry = tk.Entry(self.tk, textvariable=self.e)
+        self.entry.grid(row=3)
+
+        self.sure = tk.Button(self.tk, text="Change Property", command=self.change)
+        self.sure.grid(row=5, columnspan=2)
+
+
 
 
 class Debugger:
 
-    def __init__(self, parent):
-        self.tk = tk.Tk()
+    def __init__(self, parent, enable_event_listener: bool=False, allow_edits: bool=False):
+        self.event_update = enable_event_listener
+        self.tk = tk.Toplevel()
         self.opened = False
         self.display = True
         self.parent = parent
@@ -20,6 +67,7 @@ class Debugger:
 
         self.nb = ttk.Notebook(self.tk)
         self.nb.pack(fill='both', expand=True)
+        self.editor = None
 
         ### General ###
 
@@ -38,27 +86,32 @@ class Debugger:
         self.events.pack(fill='both', expand=True)
         self.nb.add(self.events, text="Event Tracker")
 
-        self.query = tk.Entry(self.events)
-        self.query.grid(row=1, column = 0, sticky="ew")
+        if self.event_update:
 
-        self.event = ttk.Treeview(self.events, columns=("epoch", "type", "source"), show='headings')
 
-        self.event.column("epoch", anchor=tk.W, width=100)
-        self.event.heading("epoch", text="Time", anchor=tk.W)
+            self.query = tk.Entry(self.events)
+            self.query.grid(row=1, column=0, sticky="ew")
 
-        self.event.column("type", anchor=tk.W, width=100)
-        self.event.heading("type", text="Event Type", anchor=tk.W)
+            self.event = ttk.Treeview(self.events, columns=("epoch", "type", "source"), show='headings')
 
-        self.event.column("source", anchor=tk.W, width=200)
-        self.event.heading("source", text="Called By", anchor=tk.W)
+            self.event.column("epoch", anchor=tk.W, width=100)
+            self.event.heading("epoch", text="Time", anchor=tk.W)
 
-        self.event.grid(row=2, column=0, sticky="ewns")
+            self.event.column("type", anchor=tk.W, width=100)
+            self.event.heading("type", text="Event Type", anchor=tk.W)
 
-        self.events.columnconfigure(0, weight=1)
-        self.events.rowconfigure(2, weight=1)
+            self.event.column("source", anchor=tk.W, width=200)
+            self.event.heading("source", text="Called By", anchor=tk.W)
 
-        self.event_iid = 0
-        self.await_push = []
+            self.event.grid(row=2, column=0, sticky="ewns")
+
+            self.events.columnconfigure(0, weight=1)
+            self.events.rowconfigure(2, weight=1)
+
+            self.event_iid = 0
+            self.await_push = []
+        else:
+            tk.Label(self.events, text="Event Tracker is currently disabled due to resource optimization.\nYou can enable Event Tracker by creating a pynamics.debug.Debugger class with enable_event_listener = True.").pack()
 
 
 
@@ -94,7 +147,46 @@ class Debugger:
         self.exp.columnconfigure(0, weight=0)
         self.exp.columnconfigure(1, weight=1)
 
+    def _workspace_property_dfs(self, start, fr):
+        #print(start)
 
+        if not isinstance(start, (dict, list)):
+            return
+
+        ind = 0
+
+        for i in start:
+            self._ws_prop_iid += 1
+            if isinstance(start, list):
+                bb = f"ListIndex({ind})<{i.__class__.__name__}> = {i}"
+                item = i
+                ind += 1
+            elif isinstance(start, dict):
+                if isinstance(start[i], list):
+                    bb = f"{i}<{start[i].__class__.__name__}> = [Iterable List({len(start[i])})]"
+                elif isinstance(start[i], dict):
+                    bb = f"{i}<{start[i].__class__.__name__}> = [Iterable Dict({len(start[i])})]"
+                else:
+                    bb = f"{i}<{start[i].__class__.__name__}> = {start[i]}"
+                item = start[i]
+            self.m[self._ws_prop_iid] = item
+
+            # if isinstance(item, (dict, list)):
+            #     bb = "..."
+            self.info.insert('', tk.END, text=bb, open=False, iid=self._ws_prop_iid)
+            self.info.move(self._ws_prop_iid, fr, 2147483647)
+            self._workspace_property_dfs(item, self._ws_prop_iid)
+
+    def _workspace_property_change(self, e):
+        stuff = self.m[int(self.info.focus())]
+
+        print(stuff)
+
+        if not isinstance(stuff, (int, float, str)):
+            tkmsg.showinfo(f"Unable to edit property", f"The debugger cannot edit the property because the type {stuff.__class__.__name__} is not supported.")
+            return
+
+        self.editor = DebugPropertyEditor(self, stuff)
 
     def _workspace_select(self, e):
         self.info.pack_forget()
@@ -102,20 +194,28 @@ class Debugger:
         stuff = self.q[int(self.explorer.focus())]
 
         self.info = ttk.Treeview(self.data_viewer)
-        self.info.heading("#0", text=f"Browsing properties for element {stuff}")
+        self.info.heading("#0", text=f"Browsing properties for element {stuff.__class__.__name__}")
         self.info.grid(row=0, column=0, sticky="nesw")
+        self.info.bind('<Double-1>', self._workspace_property_change)
         self.data_viewer.rowconfigure(0, weight=1)
-        self.data_viewer.columnconfigure(0, weight=2)
-        self.data_viewer.columnconfigure(1, weight=1)
+        self.data_viewer.columnconfigure(0, weight=1)
 
+        self._ws_prop_iid = 0
 
+        self.m = {}
 
-        disp = ""
-        f = stuff.__dict__
-        for i in f:
-            cd = str(f[i])[:128]
-            disp += f"{i} = {cd}\n"
-        self.info.config(text=disp, anchor="w")
+        for i in stuff.__dict__:
+            thing = stuff.__dict__[i]
+            if isinstance(thing, list):
+                bb = f"[Iterable List({len(thing)})]"
+            elif isinstance(thing, dict):
+                bb = f"[Iterable Dict({len(thing)})]"
+            else:
+                bb = str(thing)
+            self.info.insert('', tk.END, text=f"{i}<{thing.__class__.__name__}> = {bb}", open=False, iid=self._ws_prop_iid)
+            self.m[self._ws_prop_iid] = thing
+            self._workspace_property_dfs(thing, self._ws_prop_iid)
+            self._ws_prop_iid += 1
 
 
     def _workspace_dfs(self, next, fr):
@@ -127,7 +227,7 @@ class Debugger:
 
         self.explorer.insert('', tk.END, text=next.__class__.__name__, open=False, iid=self._workspace_iid)
         self.q[self._workspace_iid] = next
-        self.explorer.move(self._workspace_iid, fr, 1)
+        self.explorer.move(self._workspace_iid, fr, 2147483647)
 
         for i in next.children:
             self._workspace_dfs(i, c)
@@ -136,17 +236,20 @@ class Debugger:
 
 
     def _call_callevent(self, event, obj, func):
-        self.await_push.append([
-            datetime.datetime.now().strftime("%H:%m:%S.%f"),
-            EventType(event).name,
-            f"{func.function.__module__}:{inspect.findsource(func.function)[1]}"
-        ])
-        self.event_iid += 1
+        if self.event_update:
+            self.await_push.append([
+                datetime.datetime.now().strftime("%H:%m:%S.%f"),
+                EventType(event).name,
+                f"{func.function.__module__}:{inspect.findsource(func.function)[1]}"
+            ])
+            self.event_iid += 1
 
 
     def close(self):
         self.tk.withdraw()
         self.display = False
+        if self.editor != None:
+            self.editor.tk.destroy()
 
     def _tick_fps_op(self):
         self._fps.config(text=f"FPS: {self.parent.f} (Set: {self.parent.fps})")
@@ -161,6 +264,7 @@ class Debugger:
         self.tk.after(1000, self._tick_tps_op)
 
     def _tick_event_update(self):
+        if not self.event_update: return
         for i in self.await_push:
             self.event.insert(parent='',index='end',text='', values=i)
         self.event.yview_moveto(1)
