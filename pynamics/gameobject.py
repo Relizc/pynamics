@@ -114,6 +114,9 @@ class GameObject(PyNamical):
 
         self.parent.add_object(self)
 
+    def __repr__(self):
+        return f"GameObject()"
+
     @property
     def topleft(self):
         return self.position
@@ -434,3 +437,6 @@ class Vector2d():
     def clear(self):
         self.r = 0
         self.f = 0
+
+    def __repr__(self):
+        return f"Vector2d(Angle: {self.r}, Value: {self.f})"
