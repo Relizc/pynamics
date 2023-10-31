@@ -17,6 +17,7 @@ class Debugger:
         self.parent = parent
 
         self.tk.geometry("800x500")
+        self.tk.title("Debug Tools")
 
         self.nb = ttk.Notebook(self.tk)
         self.nb.pack(fill='both', expand=True)
@@ -100,13 +101,13 @@ class Debugger:
             self.event.insert(parent='',index='end',text='', values=i)
         self.event.yview_moveto(1)
         self.await_push = []
-        self.tk.after(100, self._tick_event_update)
+        self.tk.after(1, self._tick_event_update)
 
     def run(self):
         if not self.opened:
             self.tk.after(1000, self._tick_fps_op)
             self.tk.after(1000, self._tick_tps_op)
-            self.tk.after(100, self._tick_event_update)
+            self.tk.after(1, self._tick_event_update)
             self.tk.protocol("WM_DELETE_WINDOW", self.close)
             self.opened = True
 
