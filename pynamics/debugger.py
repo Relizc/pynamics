@@ -62,7 +62,11 @@ class Debugger:
         self.display = True
         self.parent = parent
 
+        self._eps = 0
+        self.eps = 0
+
         self.tk.geometry("800x500")
+        self.tk.title("Debug Tools")
 
         self.nb = ttk.Notebook(self.tk)
         self.nb.pack(fill='both', expand=True)
@@ -88,8 +92,8 @@ class Debugger:
         if self.event_update:
 
 
-            self.query = tk.Entry(self.events)
-            self.query.grid(row=1, column=0, sticky="ew")
+            self.l = tk.Label(self.events, text="4700 Events Called. EPS: 370")
+            self.l.grid(row=1, column=0, sticky="ew")
 
             self.event = ttk.Treeview(self.events, columns=("epoch", "type", "source"), show='headings')
 
@@ -109,6 +113,8 @@ class Debugger:
 
             self.event_iid = 0
             self.await_push = []
+
+            self.log = 0
         else:
             tk.Label(self.events, text="Event Tracker is currently disabled due to resource optimization.\nYou can enable Event Tracker by creating a pynamics.debug.Debugger class with enable_event_listener = True.").pack()
 
@@ -145,6 +151,8 @@ class Debugger:
         self.exp.rowconfigure(0, weight=1)
         self.exp.columnconfigure(0, weight=0)
         self.exp.columnconfigure(1, weight=1)
+
+        
 
     def _workspace_property_dfs(self, start, fr):
         #print(start)
@@ -260,11 +268,24 @@ class Debugger:
 
     def _tick_event_update(self):
         if not self.event_update: return
+
         for i in self.await_push:
             self.event.insert(parent='',index='end',text='', values=i)
+        self.log += len(self.await_push)
+        self._eps += len(self.await_push)
         self.event.yview_moveto(1)
         self.await_push = []
+
+        self.l.config(text=f"{self.log} events called. EPS: {self.eps}")
+
         self.tk.after(1, self._tick_event_update)
+
+    def _tick_event_update_sec(self):
+        self.eps = self._eps
+        self._eps = 0
+        self.l.config(text=f"{self.log} events called. EPS: {self.eps}")
+
+        self.tk.after(1000, self._tick_event_update_sec)
 
     def run(self):
         self.tk.focus_force()
@@ -273,6 +294,7 @@ class Debugger:
             self.tk.after(1000, self._tick_fps_op)
             self.tk.after(1000, self._tick_tps_op)
             self.tk.after(1, self._tick_event_update)
+            self.tk.after(1000, self._tick_event_update_sec)
             self.tk.protocol("WM_DELETE_WINDOW", self.close)
             self.opened = True
 
