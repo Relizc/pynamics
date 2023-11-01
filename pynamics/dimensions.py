@@ -1,3 +1,5 @@
+
+
 class ClockResizer:
 
     def __init__(self, value, timescale):
@@ -52,6 +54,15 @@ class Dimension2d:
     def __init__(self, scale_x, offset_x, scale_y, offset_y):
         self.x = Dimension(scale_x, offset_x)
         self.y = Dimension(scale_y, offset_y)
+
+    def add_vector(self, vector):
+        v = Vector2d(vector.r, vector.f)
+        v.f *= self.parent._epoch_tps
+
+        x3, y3 = self.velocity.cart()
+        # print(x3,y3)
+        self.position.x += x3
+        self.position.y -= y3
 
     @property
     def scale_x(self):
