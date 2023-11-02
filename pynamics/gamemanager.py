@@ -92,7 +92,6 @@ class GameManager(PyNamical):
     def start(self):
         self.updatethread.start()
         self.listenthread.start()
-        self.framethread.start()
 
         try:
             self.window

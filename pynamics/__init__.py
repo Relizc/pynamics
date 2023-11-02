@@ -1,5 +1,5 @@
 from .display import ProjectWindow, ViewPort
-from .gameobject import GameObject, TopViewPhysicsBody
+from .gameobject import GameObject, TopViewPhysicsBody, Image
 from .gamemanager import GameManager,PhysicsBody,Vector2d
 from .dimensions import Dimension, Dimension2d
 from .events import EventHolder, EventType, KeyEvaulator
