@@ -2,9 +2,12 @@ import threading
 import time
 from .events import EventPriority, EventType, KeyEvaulator
 from .interface import PyNamical
-from .dimensions import Dimension
+from .dimensions import Dimension, Vector2d
 import math
 import cmath
+import tkinter as tk
+from PIL import Image as ImageUtils
+from PIL import ImageTk
 
 
 class Point:
@@ -94,10 +97,13 @@ class GameObject(PyNamical):
         :param height: The height of the GameObject
         """
         super().__init__(parent)
+        
         self.position = Dimension(x, y)
+        self.last_position = None
         self.size = Dimension(width, height)
         self.content = contents
         self.absolute = Dimension(x, y)
+        self.blit_id = None
         self.points = [
             ((self.position.x, self.position.y), (self.position.x - self.size.x, self.position.y)),
             ((self.position.x - self.size.x, self.position.y),
@@ -145,6 +151,29 @@ class GameObject(PyNamical):
     def y(self):
         return self.position.y
     
+
+class Image(GameObject):
+
+    def __init__(self, parent: GameObject, x: float, y: float, width: float = -1, height: float = -1,
+                 image_path: str = None,
+                 resize_keep_ratio: bool = False):
+        super().__init__(parent, x, y, width, height)
+        self.image_path = image_path
+        self.image = ImageUtils.open(image_path)
+        if width != -1 or height != -1:
+            if resize_keep_ratio:
+                self.image.thumbnail((width, height), ImageUtils.ANTIALIAS)
+            else:
+                self.image = self.image.resize((width, height))
+
+        self.content = ImageTk.PhotoImage(self.image)
+
+    def __repr__(self):
+        return f"Image(file={self.image_path})"
+    
+
+
+    
 class TopViewPhysicsBody(GameObject):
 
     def __init__(self, parent: GameObject, x: float, y: float, width: float, height: float, mass: int,
@@ -153,28 +182,35 @@ class TopViewPhysicsBody(GameObject):
         super().__init__(parent, x, y, width, height, contents, from_points)
 
         self.mass = mass
+        self.force = Vector2d(0, 0)
         self.velocity = Vector2d(0, 0)
         self.acceleration = Vector2d(0, 0)
         self.coefficient = floor_friction
 
-    def init_movement(self):
+    def init_movement(self, force: int = 1):
         @self.parent.add_event_listener(event=EventType.KEYHOLD, condition=KeyEvaulator("Up"))
         def m(ctx):
-            self.acceleration.add_self(Vector2d(90, 1))
+            self.force.add_self(Vector2d(90, force))
         @self.parent.add_event_listener(event=EventType.KEYHOLD, condition=KeyEvaulator("Down"))
         def m(ctx):
-            self.acceleration.add_self(Vector2d(270, 1))
+            self.force.add_self(Vector2d(270, force))
         @self.parent.add_event_listener(event=EventType.KEYHOLD, condition=KeyEvaulator("Left"))
         def m(ctx):
-            self.acceleration.add_self(Vector2d(180, 1))
+            self.force.add_self(Vector2d(180, force))
         @self.parent.add_event_listener(event=EventType.KEYHOLD, condition=KeyEvaulator("Right"))
         def m(ctx):
-            self.acceleration.add_self(Vector2d(0, 1))
+            self.force.add_self(Vector2d(0, force))
         @self.parent.add_event_listener(event=EventType.TICK)
         def shift(ctx):
+            self.acceleration = Vector2d(self.force.r, self.force.f / self.mass)
+            self.force.clear()
             self.velocity.add_self(self.acceleration)
             self.acceleration.clear()
-            print(self.velocity)
+            self.position.add_vector(self.velocity)
+            
+            v = Vector2d(self.velocity.r + 180, self.velocity.f * self.coefficient)
+
+            self.velocity.add_self(v)
 
         
 
@@ -288,84 +324,4 @@ class PhysicsBody(GameObject):
             time.sleep(self.parent._epoch_tps)
 
 
-class Vector2d():
-    def __init__(self, r, f):
-        """
 
-        :param r: the rotation of the object from the origin.
-            |
-            O
-        ----|----           =90 degrees
-            |
-            |
-            |
-            |
-        --O-|----           =180 degrees
-            |
-            |
-            etc.
-        :param f: the value of the vector
-        """
-        self.r = r
-        self.f = f
-
-    def add_self(self, vector):
-        q = self.add(vector)
-        self.r = q.r
-        self.f = q.f
-
-    def add(self, b):
-        x = self.f * math.cos(math.radians(self.r))
-        y = self.f * math.sin(math.radians(self.r))
-
-        x1 = b.f * math.cos(math.radians(b.r))
-        y1 = b.f * math.sin(math.radians(b.r))
-
-        xf = x + x1
-        yf = y + y1
-
-        r = (xf ** 2 + yf ** 2) ** .5
-        theta = math.degrees(math.atan2(yf, xf))
-        return Vector2d(theta, r)
-
-    def subtract(self, b1):
-        rb = (b1.r + 180) % 360
-        fb = b1.f
-        b = Vector2d(rb, fb)
-
-        x = self.f * math.cos(math.radians(self.r))
-        y = self.f * math.sin(math.radians(self.r))
-
-        x1 = b.f * math.cos(math.radians(b.r))
-        y1 = b.f * math.sin(math.radians(b.r))
-
-        xf = x + x1
-        yf = y + y1
-
-        r = (xf ** 2 + yf ** 2) ** .5
-        theta = math.degrees(math.atan2(yf, xf))
-        return Vector2d(theta, r)
-
-    def cart(self) -> tuple:
-        x = self.f * math.cos(math.radians(self.r))
-        y = self.f * math.sin(math.radians(self.r))
-
-        return x, y
-
-    def equation(self) -> tuple:
-        x, y = self.cart()
-        x1, y1 = Vector2d(self.r, self.f / 2).cart()
-        if x1 - x == 0:
-            return "X", x, 0
-        m = (y1 - y) / (x1 - x)
-        if m == 0:
-            return "Y", y, 0
-        b = y - (m * x)
-        return "Y", m, b
-
-    def clear(self):
-        self.r = 0
-        self.f = 0
-
-    def __repr__(self):
-        return f"Vector2d(Angle: {self.r}, Value: {self.f})"
