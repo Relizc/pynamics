@@ -7,6 +7,12 @@ from .events import EventType
 import datetime
 import inspect
 
+def change(a, b):
+    print(id(a.property), id(a.parent.parent.tps))
+    a.property = b
+    a.parent.parent.tps = b
+    print(id(a.property), id(a.parent.parent.tps))
+
 class DebugPropertyEditor:
 
     SUPPORTED_TYPES = {
@@ -14,15 +20,6 @@ class DebugPropertyEditor:
         "str": str,
         "float": float
     }
-
-    def change(self):
-        try:
-            value = self.SUPPORTED_TYPES[self.ok.get()](self.e.get())
-        except:
-            tkmsg.showerror("Unsupported Value", f"Your value is not supported for the variable type {self.ok.get()}")
-
-        self.property = value
-        print(self.property)
 
     def __init__(self, parent, property):
         self.parent = parent
@@ -48,7 +45,9 @@ class DebugPropertyEditor:
         self.entry = tk.Entry(self.tk, textvariable=self.e)
         self.entry.grid(row=3)
 
-        self.sure = tk.Button(self.tk, text="Change Property", command=self.change)
+        print(id(self.property), id(self.parent.parent.tps))
+
+        self.sure = tk.Button(self.tk, text="Change Property", command=lambda: change(self, self.SUPPORTED_TYPES[self.ok.get()](self.e.get())))
         self.sure.grid(row=5, columnspan=2)
 
 
@@ -199,10 +198,10 @@ class Debugger:
 
         stuff = self.q[int(self.explorer.focus())]
 
+
         self.info = ttk.Treeview(self.data_viewer)
         self.info.heading("#0", text=f"Browsing properties for element {stuff.__class__.__name__}")
         self.info.grid(row=0, column=0, sticky="nesw")
-        self.info.bind('<Double-1>', self._workspace_property_change)
         self.data_viewer.rowconfigure(0, weight=1)
         self.data_viewer.columnconfigure(0, weight=1)
 
@@ -289,6 +288,8 @@ class Debugger:
         self.tk.after(1000, self._tick_event_update_sec)
 
     def run(self):
+        self.tk.focus_force()
+
         if not self.opened:
             self.tk.after(1000, self._tick_fps_op)
             self.tk.after(1000, self._tick_tps_op)
