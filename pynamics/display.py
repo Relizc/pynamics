@@ -60,7 +60,6 @@ class ProjectWindow(PyNamical):
                     
                     i.last_position = Dimension(i.position.x, i.position.y)
                     i.blit_id = g
-                    print(i.blit_id)
 
     def _close_parent_close(self):
         self.parent.terminated = True
