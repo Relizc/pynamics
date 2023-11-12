@@ -7,6 +7,12 @@ from .events import EventType
 import datetime
 import inspect
 
+def change(a, b):
+    print(id(a.property), id(a.parent.parent.tps))
+    a.property = b
+    a.parent.parent.tps = b
+    print(id(a.property), id(a.parent.parent.tps))
+
 class DebugPropertyEditor:
 
     SUPPORTED_TYPES = {
@@ -14,17 +20,6 @@ class DebugPropertyEditor:
         "str": str,
         "float": float
     }
-
-    def change(self):
-        try:
-            value = self.SUPPORTED_TYPES[self.ok.get()](self.e.get())
-        except:
-            tkmsg.showerror("Unsupported Value", f"Your value is not supported for the variable type {self.ok.get()}")
-
-        self.property = value
-
-
-        print(self.property)
 
     def __init__(self, parent, property):
         self.parent = parent
@@ -50,7 +45,9 @@ class DebugPropertyEditor:
         self.entry = tk.Entry(self.tk, textvariable=self.e)
         self.entry.grid(row=3)
 
-        self.sure = tk.Button(self.tk, text="Change Property", command=self.change)
+        print(id(self.property), id(self.parent.parent.tps))
+
+        self.sure = tk.Button(self.tk, text="Change Property", command=lambda: change(self, self.SUPPORTED_TYPES[self.ok.get()](self.e.get())))
         self.sure.grid(row=5, columnspan=2)
 
 
@@ -65,7 +62,11 @@ class Debugger:
         self.display = True
         self.parent = parent
 
+        self._eps = 0
+        self.eps = 0
+
         self.tk.geometry("800x500")
+        self.tk.title("Debug Tools")
 
         self.nb = ttk.Notebook(self.tk)
         self.nb.pack(fill='both', expand=True)
@@ -91,8 +92,8 @@ class Debugger:
         if self.event_update:
 
 
-            self.query = tk.Entry(self.events)
-            self.query.grid(row=1, column=0, sticky="ew")
+            self.l = tk.Label(self.events, text="4700 Events Called. EPS: 370")
+            self.l.grid(row=1, column=0, sticky="ew")
 
             self.event = ttk.Treeview(self.events, columns=("epoch", "type", "source"), show='headings')
 
@@ -112,6 +113,8 @@ class Debugger:
 
             self.event_iid = 0
             self.await_push = []
+
+            self.log = 0
         else:
             tk.Label(self.events, text="Event Tracker is currently disabled due to resource optimization.\nYou can enable Event Tracker by creating a pynamics.debug.Debugger class with enable_event_listener = True.").pack()
 
@@ -149,6 +152,8 @@ class Debugger:
         self.exp.columnconfigure(0, weight=0)
         self.exp.columnconfigure(1, weight=1)
 
+        
+
     def _workspace_property_dfs(self, start, fr):
         #print(start)
 
@@ -182,8 +187,6 @@ class Debugger:
     def _workspace_property_change(self, e):
         stuff = self.m[int(self.info.focus())]
 
-        print(stuff)
-
         if not isinstance(stuff, (int, float, str)):
             tkmsg.showinfo(f"Unable to edit property", f"The debugger cannot edit the property because the type {stuff.__class__.__name__} is not supported.")
             return
@@ -195,10 +198,10 @@ class Debugger:
 
         stuff = self.q[int(self.explorer.focus())]
 
+
         self.info = ttk.Treeview(self.data_viewer)
         self.info.heading("#0", text=f"Browsing properties for element {stuff.__class__.__name__}")
         self.info.grid(row=0, column=0, sticky="nesw")
-        self.info.bind('<Double-1>', self._workspace_property_change)
         self.data_viewer.rowconfigure(0, weight=1)
         self.data_viewer.columnconfigure(0, weight=1)
 
@@ -221,8 +224,6 @@ class Debugger:
 
 
     def _workspace_dfs(self, next, fr):
-
-        print(next, fr, self._workspace_iid)
 
         self._workspace_iid += 1
         c = int(self._workspace_iid)
@@ -267,17 +268,33 @@ class Debugger:
 
     def _tick_event_update(self):
         if not self.event_update: return
+
         for i in self.await_push:
             self.event.insert(parent='',index='end',text='', values=i)
+        self.log += len(self.await_push)
+        self._eps += len(self.await_push)
         self.event.yview_moveto(1)
         self.await_push = []
+
+        self.l.config(text=f"{self.log} events called. EPS: {self.eps}")
+
         self.tk.after(1, self._tick_event_update)
 
+    def _tick_event_update_sec(self):
+        self.eps = self._eps
+        self._eps = 0
+        self.l.config(text=f"{self.log} events called. EPS: {self.eps}")
+
+        self.tk.after(1000, self._tick_event_update_sec)
+
     def run(self):
+        self.tk.focus_force()
+
         if not self.opened:
             self.tk.after(1000, self._tick_fps_op)
             self.tk.after(1000, self._tick_tps_op)
             self.tk.after(1, self._tick_event_update)
+            self.tk.after(1000, self._tick_event_update_sec)
             self.tk.protocol("WM_DELETE_WINDOW", self.close)
             self.opened = True
 

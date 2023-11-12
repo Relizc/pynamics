@@ -30,7 +30,12 @@ class Event:
 
 
 class GameManager(PyNamical):
-    def __init__(self, dimensions: Dimension, tps: int = 128, fps: int = 0):
+    def __init__(self, 
+                 dimensions: Dimension, 
+                 tps: int = 128, 
+                 fps: int = 0,
+                 event_tracker: bool = False):
+        
         super().__init__(None, no_parent=True)
         self.dimensions = dimensions
         self.width = dimensions.x
@@ -45,6 +50,7 @@ class GameManager(PyNamical):
         self._epoch_tps = 1 / self.tps
         self.listenthread = threading.Thread(target=self.listen)
         self.framethread = threading.Thread(target=self.frame)
+        self.event_track = event_tracker
         if fps == 0:
             self.fps = 0
             self._epoch_fps = 0.001
@@ -67,7 +73,7 @@ class GameManager(PyNamical):
 
             if self.debug == None:
                 Logger.print("Debugger not found! Creating window instance", channel=5)
-                self.debug = Debugger(self)
+                self.debug = Debugger(self, enable_event_listener=self.event_track)
 
                 change_debug_attacher(self.debug._call_callevent)
                 
@@ -87,9 +93,12 @@ class GameManager(PyNamical):
     def start(self):
         self.updatethread.start()
         self.listenthread.start()
-        self.framethread.start()
 
-
+        try:
+            self.window
+        except AttributeError:
+            err = RuntimeError("No ViewPort Object found for this specific GameManager instance. Create a viewport by using pynamics.ProjectWindow.")
+            raise err
 
         self.window._tk.after(100, self.frame)
         self.window._tk.bind("<KeyPress>", self._key)
