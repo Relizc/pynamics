@@ -62,8 +62,9 @@ class GameManager(PyNamical):
 
         self.debug = None
 
-        @self.add_event_listener(event=EventType.KEYDOWN, condition=KeyEvaulator("quoteleft"))
+        @self.add_event_listener(event=EventType.KEYDOWN, condition=KeyEvaulator("e"))
         def open_debugger(n):
+
             if self.debug == None:
                 Logger.print("Debugger not found! Creating window instance", channel=5)
                 self.debug = Debugger(self)

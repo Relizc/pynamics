@@ -1,6 +1,6 @@
 import threading
 import time
-from .events import EventType
+from .events import EventType, EventPriority
 from .interface import PyNamical
 from .dimensions import Dimension
 import math
@@ -158,39 +158,182 @@ class PhysicsBody(GameObject):
         self.velocity = Vector2d(0, 0)
         self.acceleration = Vector2d(0, 0)
         self.coeff = 0.5
-        self.rectitude = 0
+        self.rectitude = 0.6
         self.row = row
         self.use_mass = use_mass
         self.use_collide = use_collide
         self.fnet = Vector2d(0, 0)
         self.gravity = -0.1
+        self.zeroed = False
         # self.timeB = time.time()
         # self.timeA = time.time()
-
+        self.fa = False
         self.fnet = Vector2d(90, self.gravity * self.mass)
         if self.use_mass:
-            @self.parent.add_event_listener(event=EventType.TICK)
+            @self.parent.add_event_listener(event=EventType.TICK,priority=EventPriority.LOWEST)
             def update_self(e):
-                self.acceleration.r = self.fnet.r
-                self.acceleration.f = self.fnet.f / self.mass
+                    if not self.zeroed:
+                        self.acceleration.r = self.fnet.r
+                        self.acceleration.f = self.fnet.f / self.mass
 
-                self.velocity = self.velocity.add(
-                    Vector2d(self.acceleration.r, self.acceleration.f))
+                        self.velocity = self.velocity.add(
+                            Vector2d(self.acceleration.r, self.acceleration.f))
 
-                v = Vector2d(self.velocity.r, self.velocity.f)
-                v.f *= self.parent._epoch_tps
+                        v = Vector2d(self.velocity.r, self.velocity.f)
+                        v.f *= self.parent._epoch_tps
 
-                x3, y3 = self.velocity.cart()
-                # print(x3,y3)
-                self.position.x += x3
-                self.position.y -= y3
+                        x3, y3 = self.velocity.cart()
+                        # print(x3,y3)
+                        self.position.x += x3
+                        self.position.y -= y3
 
-                self.fnet = Vector2d(90, self.gravity * self.mass)
+                        self.fnet = Vector2d(90, self.gravity * self.mass)
         if self.use_collide:
-            threading.Thread(target=self.handle_collisions).start()
+            @self.parent.add_event_listener(event=EventType.TICK,priority=EventPriority.LOWEST)
+
+            def handle_collisions(e):
+                objects = self.parent.objects
+
+
+                collision = False
+                coeff = 0
+                for i in objects:
+                    if isinstance(i, PhysicsBody) and i != self:
+                        for j in i.points:
+                            for k in self.points:
+                                p1 = (j[0][0] + i.position.x, (j[0][1] + i.position.y) * -1)
+                                p2 = (j[1][0] + i.position.x, (j[1][1] + i.position.y) * -1)
+                                q1 = (k[0][0] + self.position.x, (k[0][1] + self.position.y) * -1)
+                                q2 = (k[1][0] + self.position.x, (k[1][1] + self.position.y) * -1)
+                                p1 = Point(p1[0], p1[1])
+                                p2 = Point(p2[0], p2[1])
+                                q1 = Point(q1[0], q1[1])
+                                q2 = Point(q2[0], q2[1])
+                                if doIntersect(p1, p2, q1, q2):
+                                    collision = True
+                                    coeff = i.rectitude
+                                    break
+
+                                # if (p1[0] - p2[0]) == 0:
+                                #     if (q1[0] - q2[0]) == 0:
+                                #         print("this is true")
+                                #         collision = True
+                                #         coeff = i.rectitude
+                                #         break
+                                #     else:
+                                #
+                                #         m2 = (q1[1] - q2[1]) / (q1[0] - q2[0])
+                                #         if m2 == 0:
+                                #             b2 = q1[1]
+                                #         elif q1[0] == 0:
+                                #             b2 = q1[1]
+                                #         else:
+                                #             b2 = q1[1] / (m2 * q1[0])
+                                #         x = p1[0]
+                                #         y = m2 * x + b2
+                                #         intersect = False
+                                #         pointMore = (x, y)
+                                #         if min(p1[0], p2[0]) <= pointMore[0] <= max(p1[0], p2[0]):
+                                #             if min(q1[0], q2[0]) <= pointMore[0] <= max(q1[0], q2[0]):
+                                #                 if min(p1[1], p2[1]) <= pointMore[1] <= max(p1[1], p2[1]):
+                                #                     if min(q1[1], q2[1]) <= pointMore[1] <= max(q1[1], q2[1]):
+                                #                         intersect = True
+                                #         if intersect:
+                                #             collision = True
+                                #             coeff = i.rectitude
+                                #             break
+                                # elif (q1[0] - q2[0]) == 0:
+                                #
+                                #     m = (p1[1] - p2[1]) / (p1[0] - p2[0])
+                                #     if m == 0:
+                                #         b = p1[1]
+                                #     elif p1[0] == 0:
+                                #         b = p1[1]
+                                #     else:
+                                #         b = p1[1] / (m * p1[0])
+                                #     x = q1[0]
+                                #     y = m * x + b
+                                #
+                                #     intersect = False
+                                #     pointMore = (x, y)
+                                #     if min(p1[0], p2[0]) <= pointMore[0] <= max(p1[0], p2[0]):
+                                #         if min(q1[0], q2[0]) <= pointMore[0] <= max(q1[0], q2[0]):
+                                #             if min(p1[1], p2[1]) <= pointMore[1] <= max(p1[1], p2[1]):
+                                #                 if min(q1[1], q2[1]) <= pointMore[1] <= max(q1[1], q2[1]):
+                                #                     intersect = True
+                                #
+                                #     if intersect:
+                                #         collision = True
+                                #         coeff = i.rectitude
+                                #         break
+                                # else:
+                                #
+                                #     m = (p1[1] - p2[1]) / (p1[0] - p2[0])
+                                #
+                                #     m2 = (q1[1] - q2[1]) / (q1[0] - q2[0])
+                                #
+                                #     if m == 0:
+                                #         b = p1[1]
+                                #     elif p1[0] == 0:
+                                #         b = p1[1]
+                                #     else:
+                                #         b = p1[1] / (m * p1[0])
+                                #     if m2 == 0:
+                                #         b2 = q1[1]
+                                #     elif q1[0] == 0:
+                                #         b2 = q1[1]
+                                #     else:
+                                #         b2 = q1[1] / (m2 * q1[0])
+                                #     if (m2 - m) == 0:
+                                #         if b == b2:
+                                #             intersect = True
+                                #     else:
+                                #         x = (b - b2) / (m2 - m)
+                                #         y = m * x + b
+                                #         intersect = False
+                                #         pointMore = (x, y)
+                                #         if min(p1[0], p2[0]) <= pointMore[0] <= max(p1[0], p2[0]):
+                                #             if min(q1[0], q2[0]) <= pointMore[0] <= max(q1[0], q2[0]):
+                                #                 if min(p1[1], p2[1]) <= pointMore[1] <= max(p1[1], p2[1]):
+                                #                     if min(q1[1], q2[1]) <= pointMore[1] <= max(q1[1], q2[1]):
+                                #                         intersect = True
+                                #
+                                #     if intersect:
+                                #         collision = True
+                                #         coeff = i.rectitude
+                                #         break
+                            if collision:
+                                break
+                    if collision:
+                        # if not self.fa: self.zeroed = True
+                        # selfMomentum = Vector2d(self.velocity.r, self.velocity.f * self.mass)
+                        # otherMomentum = Vector2d(i.velocity.r, i.velocity.f * i.mass)
+                        finalVelocity = ((self.velocity.f * (self.mass - i.mass) + 2 * (i.mass * i.velocity.f)) / (
+                                self.mass + i.mass)) * self.rectitude
+                        finalVelocity2 = ((i.velocity.f * (i.mass - self.mass) + 2 * (
+                                    self.mass * self.velocity.f)) / (
+                                                 i.mass + self.mass)) * self.rectitude
+
+                        self.velocity.f = finalVelocity
+                        i.velocity.f = finalVelocity2
+                        break
+                    else:
+                        pass
+                        # self.zeroed = False
+
 
     def add_force(self, force):
         self.fnet = self.fnet.add(force)
+        def d():
+            da = time.time()
+            while time.time() - da <= self.parent._epoch_tps:
+
+                self.fa = True
+                time.sleep(self.parent._epoch_tps*0.8)
+            self.fa = False
+        threading.Thread(target=d).start()
+
+        self.zeroed = False
 
     def apply_force(self, force, duration):
         def add_force():
@@ -210,132 +353,9 @@ class PhysicsBody(GameObject):
         self.velocity.clear()
         self.acceleration.clear()
 
-    def handle_collisions(self):
-        objects = self.parent.objects
-        while True:
-            collision = False
-            coeff = 0
-            for i in objects:
-                if isinstance(i, PhysicsBody) and i != self:
-                    for j in i.points:
-                        for k in self.points:
-                            p1 = (j[0][0] + i.position.x, (j[0][1] + i.position.y) * -1)
-                            p2 = (j[1][0] + i.position.x, (j[1][1] + i.position.y) * -1)
-                            q1 = (k[0][0] + self.position.x, (k[0][1] + self.position.y) * -1)
-                            q2 = (k[1][0] + self.position.x, (k[1][1] + self.position.y) * -1)
-                            p1 = Point(p1[0], p1[1])
-                            p2 = Point(p2[0], p2[1])
-                            q1 = Point(q1[0], q1[1])
-                            q2 = Point(q2[0], q2[1])
-                            if doIntersect(p1, p2, q1, q2):
-                                collision = True
-                                coeff = i.rectitude
-                                break
 
-                            # if (p1[0] - p2[0]) == 0:
-                            #     if (q1[0] - q2[0]) == 0:
-                            #         print("this is true")
-                            #         collision = True
-                            #         coeff = i.rectitude
-                            #         break
-                            #     else:
-                            #
-                            #         m2 = (q1[1] - q2[1]) / (q1[0] - q2[0])
-                            #         if m2 == 0:
-                            #             b2 = q1[1]
-                            #         elif q1[0] == 0:
-                            #             b2 = q1[1]
-                            #         else:
-                            #             b2 = q1[1] / (m2 * q1[0])
-                            #         x = p1[0]
-                            #         y = m2 * x + b2
-                            #         intersect = False
-                            #         pointMore = (x, y)
-                            #         if min(p1[0], p2[0]) <= pointMore[0] <= max(p1[0], p2[0]):
-                            #             if min(q1[0], q2[0]) <= pointMore[0] <= max(q1[0], q2[0]):
-                            #                 if min(p1[1], p2[1]) <= pointMore[1] <= max(p1[1], p2[1]):
-                            #                     if min(q1[1], q2[1]) <= pointMore[1] <= max(q1[1], q2[1]):
-                            #                         intersect = True
-                            #         if intersect:
-                            #             collision = True
-                            #             coeff = i.rectitude
-                            #             break
-                            # elif (q1[0] - q2[0]) == 0:
-                            #
-                            #     m = (p1[1] - p2[1]) / (p1[0] - p2[0])
-                            #     if m == 0:
-                            #         b = p1[1]
-                            #     elif p1[0] == 0:
-                            #         b = p1[1]
-                            #     else:
-                            #         b = p1[1] / (m * p1[0])
-                            #     x = q1[0]
-                            #     y = m * x + b
-                            #
-                            #     intersect = False
-                            #     pointMore = (x, y)
-                            #     if min(p1[0], p2[0]) <= pointMore[0] <= max(p1[0], p2[0]):
-                            #         if min(q1[0], q2[0]) <= pointMore[0] <= max(q1[0], q2[0]):
-                            #             if min(p1[1], p2[1]) <= pointMore[1] <= max(p1[1], p2[1]):
-                            #                 if min(q1[1], q2[1]) <= pointMore[1] <= max(q1[1], q2[1]):
-                            #                     intersect = True
-                            #
-                            #     if intersect:
-                            #         collision = True
-                            #         coeff = i.rectitude
-                            #         break
-                            # else:
-                            #
-                            #     m = (p1[1] - p2[1]) / (p1[0] - p2[0])
-                            #
-                            #     m2 = (q1[1] - q2[1]) / (q1[0] - q2[0])
-                            #
-                            #     if m == 0:
-                            #         b = p1[1]
-                            #     elif p1[0] == 0:
-                            #         b = p1[1]
-                            #     else:
-                            #         b = p1[1] / (m * p1[0])
-                            #     if m2 == 0:
-                            #         b2 = q1[1]
-                            #     elif q1[0] == 0:
-                            #         b2 = q1[1]
-                            #     else:
-                            #         b2 = q1[1] / (m2 * q1[0])
-                            #     if (m2 - m) == 0:
-                            #         if b == b2:
-                            #             intersect = True
-                            #     else:
-                            #         x = (b - b2) / (m2 - m)
-                            #         y = m * x + b
-                            #         intersect = False
-                            #         pointMore = (x, y)
-                            #         if min(p1[0], p2[0]) <= pointMore[0] <= max(p1[0], p2[0]):
-                            #             if min(q1[0], q2[0]) <= pointMore[0] <= max(q1[0], q2[0]):
-                            #                 if min(p1[1], p2[1]) <= pointMore[1] <= max(p1[1], p2[1]):
-                            #                     if min(q1[1], q2[1]) <= pointMore[1] <= max(q1[1], q2[1]):
-                            #                         intersect = True
-                            #
-                            #     if intersect:
-                            #         collision = True
-                            #         coeff = i.rectitude
-                            #         break
-                        if collision:
-                            break
-                if collision:
-                    # selfMomentum = Vector2d(self.velocity.r, self.velocity.f * self.mass)
-                    # otherMomentum = Vector2d(i.velocity.r, i.velocity.f * i.mass)
-                    finalVelocity = (self.velocity.f * (self.mass - i.mass) + 2 * (i.mass * i.velocity.f)) / (
-                                self.mass + i.mass) * i.rectitude
-                    finalVelocity2 = (i.velocity.f * (i.mass - self.mass) + 2 * (self.mass * self.velocity.f)) / (
-                                i.mass + self.mass) * self.rectitude
 
-                    self.velocity.f = finalVelocity
-                    i.velocity.f = finalVelocity2
-                    break
-            time.sleep(self.parent._epoch_tps)
-
-    # def use_advanced_collision(self):
+    # def use_advanced_collision(self):`r
     #     rotation = self.acceleration.r
     #     xoffset = self.position.x
     #     yoffset = -self.position.y

@@ -22,6 +22,8 @@ class DebugPropertyEditor:
             tkmsg.showerror("Unsupported Value", f"Your value is not supported for the variable type {self.ok.get()}")
 
         self.property = value
+
+
         print(self.property)
 
     def __init__(self, parent, property):
