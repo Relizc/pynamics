@@ -7,6 +7,7 @@ from .debugger import Debugger
 from .logger import Logger
 
 import threading
+import random
 import time
 
 
@@ -61,14 +62,23 @@ class GameManager(PyNamical):
         self.terminated = False
         self.f = 0
         self.t = 0
+        self.uptick = 0
         self.parent = None
         self.children = []
+        self.starttime = 0
 
         self.pressed = {}
 
         self.debug = None
 
+<<<<<<< HEAD
+        self._timedifferencetick = time.time()
+        self.deltatime = 0
+
+        @self.add_event_listener(event=EventType.KEYDOWN, condition=KeyEvaulator("quoteleft"))
+=======
         @self.add_event_listener(event=EventType.KEYDOWN, condition=KeyEvaulator("e"))
+>>>>>>> b80fb59d0003a76c4d288266c6dca2ff3b97875d
         def open_debugger(n):
 
             if self.debug == None:
@@ -85,7 +95,7 @@ class GameManager(PyNamical):
         if eventCode == 2: # KeyPress
             self.pressed[e.keysym] = True
             self.call_event_listeners(EventType.KEYDOWN, str(e.keysym))
-        elif eventCode == 3: # KeyUp
+        elif eventCode == 3: # KeyUpa
             self.pressed[e.keysym] = False
             self.call_event_listeners(EventType.KEYUP, str(e.keysym))
         pass
@@ -99,11 +109,15 @@ class GameManager(PyNamical):
         except AttributeError:
             err = RuntimeError("No ViewPort Object found for this specific GameManager instance. Create a viewport by using pynamics.ProjectWindow.")
             raise err
+        
+        self.starttime = time.time()
 
         self.window._tk.after(100, self.frame)
         self.window._tk.bind("<KeyPress>", self._key)
         self.window._tk.bind("<KeyRelease>", self._key)
         self.window.start()
+
+        
 
 
     def update(self):
@@ -111,6 +125,9 @@ class GameManager(PyNamical):
         while True:
 
             if self.terminated: break
+
+            self.deltatime = time.time() - self._timedifferencetick
+            self._timedifferencetick = time.time()
 
             self.call_event_listeners(EventType.TICK)
 
@@ -125,6 +142,8 @@ class GameManager(PyNamical):
                 i()
 
             time.sleep(self._epoch_tps)
+            #time.sleep(0.0001)
+            #time.sleep(random.randint(0, 100) / 1000)
 
     def listen(self):
         while True:
