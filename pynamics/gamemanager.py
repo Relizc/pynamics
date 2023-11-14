@@ -71,14 +71,10 @@ class GameManager(PyNamical):
 
         self.debug = None
 
-<<<<<<< HEAD
         self._timedifferencetick = time.time()
         self.deltatime = 0
 
         @self.add_event_listener(event=EventType.KEYDOWN, condition=KeyEvaulator("quoteleft"))
-=======
-        @self.add_event_listener(event=EventType.KEYDOWN, condition=KeyEvaulator("e"))
->>>>>>> b80fb59d0003a76c4d288266c6dca2ff3b97875d
         def open_debugger(n):
 
             if self.debug == None:
