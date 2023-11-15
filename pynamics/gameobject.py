@@ -220,7 +220,7 @@ class TopViewPhysicsBody(GameObject):
 
 class PhysicsBody(GameObject):
     def __init__(self, parent: PyNamical, x: float, y: float, width: float, height: float, mass: int,
-                 contents: str = None, from_points: tuple = None, row=1.225, use_mass=True, use_collide=True):
+                 contents: str = None, from_points: tuple = None, row=1.225, use_mass=True, use_collide=True, collision_type=1):
         super().__init__(parent, x, y, width, height, contents, from_points)
 
         # @self.parent.add_tick_update
@@ -241,6 +241,7 @@ class PhysicsBody(GameObject):
         self.rectitude = 0
         self.row = row
         self.use_mass = use_mass
+        self.collision_type = int(collision_type)
         self.use_collide = use_collide
         self.fnet = Vector2d(0, 0)
         self.gravity = -0.1
@@ -260,8 +261,10 @@ class PhysicsBody(GameObject):
 
                 v = Vector2d(self.velocity.r, self.velocity.f)
                 v.f *= self.parent._epoch_tps
-                if self.use_collide and self.use_mass:
+                if self.use_collide and self.use_mass and self.collision_type == 1:
                     self.handle_collisions()
+                elif self.use_collide and self.use_mass and self.collision_type == 2:
+                    pass
                 x3, y3 = self.velocity.cart()
 
                 self.position.x += x3
@@ -323,34 +326,36 @@ class PhysicsBody(GameObject):
             if collision:
                 # selfMomentum = Vector2d(self.velocity.r, self.velocity.f * self.mass)
                 # otherMomentum = Vector2d(i.velocity.r, i.velocity.f * i.mass)
+                # while True:
+                #     if self.parent.terminated: break
+                #     collision1 = False
+                #     for j in i.points:
+                #         for k in self.points:
+                #             p11 = (j[0][0] + i.position.x, (j[0][1] + i.position.y) * -1)
+                #             p22 = (j[1][0] + i.position.x, (j[1][1] + i.position.y) * -1)
+                #             q11 = (k[0][0] + self.position.x, (k[0][1] + self.position.y) * -1)
+                #             q22 = (k[1][0] + self.position.x, (k[1][1] + self.position.y) * -1)
+                #             p11 = Point(p11[0], p11[1])
+                #             p22 = Point(p22[0], p22[1])
+                #             q11 = Point(q11[0], q11[1])
+                #             q22 = Point(q22[0], q22[1])
+                #             if doIntersect(p11, p22, q11, q22):
+                #                 collision1 = True
+                #                 break
+                #         if collision1:
+                #             break
+                #
+                #     if collision1:
+                #         vel = Vector2d((self.velocity.r + 180) % 360, 1)
+                #         x1,y1 = vel.cart()
+                #         self.position.x += x1
+                #         self.position.y -= y1
+                #     else:
+                #         break
+                #     time.sleep(self.parent._epoch_tps)
+                #
+                # break
 
-                while True:
-                    if self.parent.terminated: break
-                    collision1 = False
-                    for j in i.points:
-                        for k in self.points:
-                            p11 = (j[0][0] + i.position.x, (j[0][1] + i.position.y) * -1)
-                            p22 = (j[1][0] + i.position.x, (j[1][1] + i.position.y) * -1)
-                            q11 = (k[0][0] + self.position.x, (k[0][1] + self.position.y) * -1)
-                            q22 = (k[1][0] + self.position.x, (k[1][1] + self.position.y) * -1)
-                            p11 = Point(p11[0], p11[1])
-                            p22 = Point(p22[0], p22[1])
-                            q11 = Point(q11[0], q11[1])
-                            q22 = Point(q22[0], q22[1])
-                            if doIntersect(p11, p22, q11, q22):
-                                collision1 = True
-                                break
-                        if collision1:
-                            break
-
-                    if collision1:
-                        vel = Vector2d((self.velocity.r + 180) % 360, 1)
-                        x1,y1 = vel.cart()
-                        self.position.x += x1
-                        self.position.y -= y1
-                    else:
-                        break
-                    time.sleep(self.parent._epoch_tps)
                 vixself = self.velocity.cart()[0]
                 viyself = self.velocity.cart()[1]
 
@@ -364,8 +369,6 @@ class PhysicsBody(GameObject):
 
                 rho = np.sqrt(vfxself ** 2 + vfyself ** 2)
                 phi = np.arctan2(vfyself, vfxself)
-
                 self.velocity = Vector2d(phi, rho)
 
-                break
             # time.sleep(self.parent._epoch_tps)
