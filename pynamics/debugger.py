@@ -5,6 +5,7 @@ import tkinter.messagebox as tkmsg
 from .logger import Logger
 from .events import EventType
 import datetime
+import time
 import inspect
 
 def change(a, b):
@@ -74,7 +75,7 @@ class Debugger:
 
         ### General ###
 
-        self.general = ttk.Frame(self.nb)
+        self.general = tk.Frame(self.nb)
         self.general.pack(fill='both', expand=True)
         self.nb.add(self.general, text="General Information")
 
@@ -125,7 +126,7 @@ class Debugger:
 
         ### Workspace ###
 
-        self.exp = ttk.Frame(self.nb)
+        self.exp = tk.Frame(self.nb)
         self.exp.pack(fill='both', expand=True)
         self.nb.add(self.exp, text="Workspace")
         self.q = {}
@@ -151,6 +152,56 @@ class Debugger:
         self.exp.rowconfigure(0, weight=1)
         self.exp.columnconfigure(0, weight=0)
         self.exp.columnconfigure(1, weight=1)
+
+        # Tick Manager
+
+        self.tickman = tk.Frame(self.nb)
+        self.tickman.pack(fill="both", expand=True)
+        self.nb.add(self.tickman, text="Tick Manager")
+
+        self.tickinfo = tk.Label(self.tickman, text=f"Tick Epoch: {self.parent.ticks}\nUptime: {self.parent.starttime}", font=("Courier", 14))
+        self.tickinfo.pack()
+
+        self.insttps = tk.Label(self.tickman, text=f"Instantaneous TPS: ?", font=("Courier", 14))
+        self.insttps.pack()
+
+        self.statusgraph = tk.Canvas(self.tickman, width=700,height=100,bg="green")
+        self.statusgraph.pack()
+
+        self.points = [0]
+        self.graph_x = 0
+        self.graph_x_factor = 1
+        self.last = 0
+        self.graph_measure = 0
+
+    def _tickman_update(self):
+        t = max(time.time() - self.parent.starttime, 1)
+        c = "%.2f" % (self.parent.ticks / t)
+        self.tickinfo.config(text=f"""Tick Epoch: {self.parent.ticks}
+Uptime: {int(t * 1000)}ms since startup
+Avg TPS: {c} (Target: {self.parent.tps})
+Tick DeltaTime: {self.parent.deltatime}""", font=("Courier", 14))
+        self.tk.after(1, self._tickman_update)
+
+    def _tickman_graph_update(self):
+        self.graph_x += self.graph_x_factor
+        #self.statusgraph.create_line(self.graph_x, 10, self.graph_x + 1, 10, fill="red")
+
+        asdf = round(((1 / self.parent.deltatime) / (self.parent.tps + int(self.parent.tps * 0.5))) * 100)
+        self.points.append(asdf)
+
+        if self.graph_x > 700: self.points.pop(0)
+
+        self.statusgraph.delete("all")
+
+        for x in range(1, len(self.points)):
+            point_a = 100 - self.points[x - 1]
+            point_b = 100 - self.points[x]
+
+            self.statusgraph.create_line((x - 1) * self.graph_x_factor, point_a, x * self.graph_x_factor, point_b, fill="red")
+
+        self.last = asdf
+        self.tk.after(10, self._tickman_graph_update)
 
         
 
@@ -262,6 +313,7 @@ class Debugger:
 
     def _tick_tps_op(self):
         self._tps.config(text=f"TPS: {self.parent.t} (Set: {self.parent.tps})")
+        self.insttps.config(text=f"Instantaneous TPS: {self.parent.t}")
         self.parent.t = 0
 
         self.tk.after(1000, self._tick_tps_op)
@@ -287,7 +339,7 @@ class Debugger:
 
         self.tk.after(1000, self._tick_event_update_sec)
 
-    def run(self):
+    def _run(self):
         self.tk.focus_force()
 
         if not self.opened:
@@ -295,11 +347,19 @@ class Debugger:
             self.tk.after(1000, self._tick_tps_op)
             self.tk.after(1, self._tick_event_update)
             self.tk.after(1000, self._tick_event_update_sec)
+            self.tk.after(1, self._tickman_update)
+            self.tk.after(100, self._tickman_graph_update)
+                
+
             self.tk.protocol("WM_DELETE_WINDOW", self.close)
             self.opened = True
 
         if not self.display:
             self.display = True
             self.tk.deiconify()
+
+    def run(self):
+        self.run_thread = threading.Thread(target=self._run)
+        self.run_thread.start()
 
             

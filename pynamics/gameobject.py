@@ -1,5 +1,8 @@
 import threading
 import time
+
+import numpy as np
+
 from .events import EventPriority, EventType, KeyEvaulator
 from .interface import PyNamical
 from .dimensions import Dimension, Vector2d
@@ -97,7 +100,7 @@ class GameObject(PyNamical):
         :param height: The height of the GameObject
         """
         super().__init__(parent)
-        
+
         self.position = Dimension(x, y)
         self.last_position = None
         self.size = Dimension(width, height)
@@ -142,15 +145,15 @@ class GameObject(PyNamical):
     @property
     def center(self):
         return self.position.add(self.size.x / 2, self.size.y / 2)
-    
+
     @property
     def x(self):
         return self.position.x
-    
+
     @property
     def y(self):
         return self.position.y
-    
+
 
 class Image(GameObject):
 
@@ -170,10 +173,8 @@ class Image(GameObject):
 
     def __repr__(self):
         return f"Image(file={self.image_path})"
-    
 
 
-    
 class TopViewPhysicsBody(GameObject):
 
     def __init__(self, parent: GameObject, x: float, y: float, width: float, height: float, mass: int,
@@ -191,15 +192,19 @@ class TopViewPhysicsBody(GameObject):
         @self.parent.add_event_listener(event=EventType.KEYHOLD, condition=KeyEvaulator("Up"))
         def m(ctx):
             self.force.add_self(Vector2d(90, force))
+
         @self.parent.add_event_listener(event=EventType.KEYHOLD, condition=KeyEvaulator("Down"))
         def m(ctx):
             self.force.add_self(Vector2d(270, force))
+
         @self.parent.add_event_listener(event=EventType.KEYHOLD, condition=KeyEvaulator("Left"))
         def m(ctx):
             self.force.add_self(Vector2d(180, force))
+
         @self.parent.add_event_listener(event=EventType.KEYHOLD, condition=KeyEvaulator("Right"))
         def m(ctx):
             self.force.add_self(Vector2d(0, force))
+
         @self.parent.add_event_listener(event=EventType.TICK)
         def shift(ctx):
             self.acceleration = Vector2d(self.force.r, self.force.f / self.mass)
@@ -207,12 +212,10 @@ class TopViewPhysicsBody(GameObject):
             self.velocity.add_self(self.acceleration)
             self.acceleration.clear()
             self.position.add_vector(self.velocity)
-            
+
             v = Vector2d(self.velocity.r + 180, self.velocity.f * self.coefficient)
 
             self.velocity.add_self(v)
-
-        
 
 
 class PhysicsBody(GameObject):
@@ -248,6 +251,7 @@ class PhysicsBody(GameObject):
         if self.use_mass:
             @self.parent.add_event_listener(event=EventType.TICK)
             def update_self(e):
+
                 self.acceleration.r = self.fnet.r
                 self.acceleration.f = self.fnet.f / self.mass
 
@@ -256,15 +260,20 @@ class PhysicsBody(GameObject):
 
                 v = Vector2d(self.velocity.r, self.velocity.f)
                 v.f *= self.parent._epoch_tps
-
+                if self.use_collide and self.use_mass:
+                    self.handle_collisions()
                 x3, y3 = self.velocity.cart()
-                # print(x3,y3)
+
                 self.position.x += x3
                 self.position.y -= y3
 
                 self.fnet = Vector2d(90, self.gravity * self.mass)
-        if self.use_collide:
-            threading.Thread(target=self.handle_collisions).start()
+
+        # if self.use_collide and self.use_mass:
+        #     # threading.Thread(target=self.handle_collisions).start()
+        #     @self.parent.add_event_listener(event=EventType.TICK , priority = EventPriority.HIGHEST)
+        #     def apply_collisions(e):
+        #         self.handle_collisions()
 
     def add_force(self, force):
         self.fnet = self.fnet.add(force)
@@ -289,39 +298,74 @@ class PhysicsBody(GameObject):
 
     def handle_collisions(self):
         objects = self.parent.objects
-        while True:
-            collision = False
-            coeff = 0
-            for i in objects:
-                if isinstance(i, PhysicsBody) and i != self:
+        # while True:
+        collision = False
+        # if self.parent.terminated: break
+        coeff = 0
+        for i in objects:
+            if isinstance(i, PhysicsBody) and i != self:
+                for j in i.points:
+                    for k in self.points:
+                        p1 = (j[0][0] + i.position.x, (j[0][1] + i.position.y) * -1)
+                        p2 = (j[1][0] + i.position.x, (j[1][1] + i.position.y) * -1)
+                        q1 = (k[0][0] + self.position.x, (k[0][1] + self.position.y) * -1)
+                        q2 = (k[1][0] + self.position.x, (k[1][1] + self.position.y) * -1)
+                        p1 = Point(p1[0], p1[1])
+                        p2 = Point(p2[0], p2[1])
+                        q1 = Point(q1[0], q1[1])
+                        q2 = Point(q2[0], q2[1])
+                        if doIntersect(p1, p2, q1, q2):
+                            collision = True
+                            coeff = i.rectitude
+                            break
+                    if collision:
+                        break
+            if collision:
+                # selfMomentum = Vector2d(self.velocity.r, self.velocity.f * self.mass)
+                # otherMomentum = Vector2d(i.velocity.r, i.velocity.f * i.mass)
+
+                while True:
+                    if self.parent.terminated: break
+                    collision1 = False
                     for j in i.points:
                         for k in self.points:
-                            p1 = (j[0][0] + i.position.x, (j[0][1] + i.position.y) * -1)
-                            p2 = (j[1][0] + i.position.x, (j[1][1] + i.position.y) * -1)
-                            q1 = (k[0][0] + self.position.x, (k[0][1] + self.position.y) * -1)
-                            q2 = (k[1][0] + self.position.x, (k[1][1] + self.position.y) * -1)
-                            p1 = Point(p1[0], p1[1])
-                            p2 = Point(p2[0], p2[1])
-                            q1 = Point(q1[0], q1[1])
-                            q2 = Point(q2[0], q2[1])
-                            if doIntersect(p1, p2, q1, q2):
-                                collision = True
-                                coeff = i.rectitude
+                            p11 = (j[0][0] + i.position.x, (j[0][1] + i.position.y) * -1)
+                            p22 = (j[1][0] + i.position.x, (j[1][1] + i.position.y) * -1)
+                            q11 = (k[0][0] + self.position.x, (k[0][1] + self.position.y) * -1)
+                            q22 = (k[1][0] + self.position.x, (k[1][1] + self.position.y) * -1)
+                            p11 = Point(p11[0], p11[1])
+                            p22 = Point(p22[0], p22[1])
+                            q11 = Point(q11[0], q11[1])
+                            q22 = Point(q22[0], q22[1])
+                            if doIntersect(p11, p22, q11, q22):
+                                collision1 = True
                                 break
-                        if collision:
+                        if collision1:
                             break
-                if collision:
-                    # selfMomentum = Vector2d(self.velocity.r, self.velocity.f * self.mass)
-                    # otherMomentum = Vector2d(i.velocity.r, i.velocity.f * i.mass)
-                    finalVelocity = (self.velocity.f * (self.mass - i.mass) + 2 * (i.mass * i.velocity.f)) / (
-                                self.mass + i.mass) * i.rectitude
-                    finalVelocity2 = (i.velocity.f * (i.mass - self.mass) + 2 * (self.mass * self.velocity.f)) / (
-                                i.mass + self.mass) * self.rectitude
 
-                    self.velocity.f = finalVelocity
-                    i.velocity.f = finalVelocity2
-                    break
-            time.sleep(self.parent._epoch_tps)
+                    if collision1:
+                        vel = Vector2d((self.velocity.r + 180) % 360, 1)
+                        x1,y1 = vel.cart()
+                        self.position.x += x1
+                        self.position.y -= y1
+                    else:
+                        break
+                    time.sleep(self.parent._epoch_tps)
+                vixself = self.velocity.cart()[0]
+                viyself = self.velocity.cart()[1]
 
+                vixi = i.velocity.cart()[0]
+                viyi = i.velocity.cart()[1]
 
+                vfxself = ((self.mass - i.mass) / (self.mass + i.mass)) * vixself + (
+                        (2 * i.mass) / (self.mass + i.mass)) * vixi
+                vfyself = ((self.mass - i.mass) / (self.mass + i.mass)) * viyself + (
+                        (2 * i.mass) / (self.mass + i.mass)) * viyi
 
+                rho = np.sqrt(vfxself ** 2 + vfyself ** 2)
+                phi = np.arctan2(vfyself, vfxself)
+
+                self.velocity = Vector2d(phi, rho)
+
+                break
+            # time.sleep(self.parent._epoch_tps)
