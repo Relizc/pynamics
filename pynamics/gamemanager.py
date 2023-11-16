@@ -158,11 +158,19 @@ class GameManager(PyNamical):
     def test(self):
         print(1)
 
+    def _frame(self):
+        while True:
+            print("frame")
+            self.call_event_listeners(EventType.FRAME)
+            self.f += 1
+            self.window.blit()
+            time.sleep(self._epoch_fps)        
+
     def frame(self):
-        self.call_event_listeners(EventType.FRAME)
-        self.f += 1
-        self.window.blit()
-        self.window.surface.after(int(self._epoch_fps*1000), self.frame)
+        x = threading.Thread(target=self._frame)
+        x.start()
+        
+        #self.window.surface.after(int(self._epoch_fps*1000), self.frame)
 
 
     def add_tick_update(self, function):
