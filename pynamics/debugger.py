@@ -7,6 +7,7 @@ from .events import EventType
 import datetime
 import time
 import inspect
+import random
 
 def change(a, b):
     print(id(a.property), id(a.parent.parent.tps))
@@ -170,11 +171,12 @@ class Debugger:
 
         self.points = [0]
         self.graph_x = 0
-        self.graph_x_factor = 1
+        self.graph_x_factor = 5
         self.last = 0
         self.graph_measure = 0
 
     def _tickman_update(self):
+        print(f"update {random.randint(1, 1000)}")
         t = max(time.time() - self.parent.starttime, 1)
         c = "%.2f" % (self.parent.ticks / t)
         self.tickinfo.config(text=f"""Tick Epoch: {self.parent.ticks}
