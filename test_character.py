@@ -9,12 +9,6 @@ back1 = pn.Image(game, 0, 0, 1000, 700, "world.jpeg")
 
 bob1 = pn.TopViewPhysicsBody(game, 10, 10, 10, 10, 60)
 bob1.init_movement(30)
-#bob1.establish_movement()]]]]]]]]]]]
-
-# @game.add_event_listener(event=pn.EventType.KEYHOLD, condition=pn.KeyEvaulator(pn.K_UP))
-# def move_up(ctx):
-#     bob1.position.y -= 1
-
 @game.add_event_listener(event=pn.EventType.KEYDOWN, condition=pn.KeyEvaulator(pn.K_LEFT))
 def c(ctx):
     pn.TopViewPhysicsBody(game, random.randint(1, 100), random.randint(1, 100), 10, 10, 60).init_movement(10)

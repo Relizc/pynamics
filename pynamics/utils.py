@@ -15,4 +15,21 @@ def establish_basic_movement(manager: GameManager, parent: GameObject):
     @manager.add_event_listener(event=EventType.KEYHOLD, condition=KeyEvaulator("Right"))
     def m(ctx):
         parent.position.x += 1
-    
+
+
+def establish_basic_movement_wasd(manager: GameManager, parent: GameObject):
+    @manager.add_event_listener(event=EventType.KEYHOLD, condition=KeyEvaulator("w"))
+    def m(ctx):
+        parent.position.y -= 1
+
+    @manager.add_event_listener(event=EventType.KEYHOLD, condition=KeyEvaulator("s"))
+    def m(ctx):
+        parent.position.y += 1
+
+    @manager.add_event_listener(event=EventType.KEYHOLD, condition=KeyEvaulator("a"))
+    def m(ctx):
+        parent.position.x -= 1
+
+    @manager.add_event_listener(event=EventType.KEYHOLD, condition=KeyEvaulator("d"))
+    def m(ctx):
+        parent.position.x += 1

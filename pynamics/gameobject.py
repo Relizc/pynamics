@@ -220,7 +220,8 @@ class TopViewPhysicsBody(GameObject):
 
 class PhysicsBody(GameObject):
     def __init__(self, parent: PyNamical, x: float, y: float, width: float, height: float, mass: int,
-                 contents: str = None, from_points: tuple = None, row=1.225, use_mass=True, use_collide=True, collision_type=1, use_gravity = True):
+                 contents: str = None, from_points: tuple = None, row=1.225, use_mass=True, use_collide=True,
+                 collision_type=1, use_gravity=True):
         super().__init__(parent, x, y, width, height, contents, from_points)
 
         # @self.parent.add_tick_update
@@ -239,7 +240,7 @@ class PhysicsBody(GameObject):
         self.use_gravity = use_gravity
         self.acceleration = Vector2d(0, 0)
         self.coeff = 0.5
-        self.rectitude = 0
+        self.rectitude = 1
         self.row = row
         self.use_mass = use_mass
         self.collision_type = int(collision_type)
@@ -252,27 +253,31 @@ class PhysicsBody(GameObject):
 
         if self.use_gravity: self.fnet = Vector2d(90, self.gravity * self.mass)
         if self.use_mass:
-            @self.parent.add_event_listener(event=EventType.TICK)
-            def update_self(e):
 
-                self.acceleration.r = self.fnet.r
-                self.acceleration.f = self.fnet.f / self.mass
+            def update_self():
+                while self.parent.terminated == False:
+                    self.acceleration.r = self.fnet.r
+                    self.acceleration.f = self.fnet.f / self.mass
 
-                self.velocity = self.velocity.add(
-                    Vector2d(self.acceleration.r, self.acceleration.f))
+                    self.velocity = self.velocity.add(
+                        Vector2d(self.acceleration.r, self.acceleration.f))
 
-                v = Vector2d(self.velocity.r, self.velocity.f)
-                v.f *= self.parent._epoch_tps
-                if self.use_collide and self.use_mass and self.collision_type == 1:
-                    self.handle_collisions()
-                elif self.use_collide and self.use_mass and self.collision_type == 2:
-                    pass
-                x3, y3 = self.velocity.cart()
+                    v = Vector2d(self.velocity.r, self.velocity.f)
+                    v.f *= self.parent._epoch_tps
+                    if self.use_collide and self.use_mass and self.collision_type == 1:
 
-                self.position.x += x3
-                self.position.y -= y3
+                        self.handle_collisions()
+                    elif self.use_collide and self.use_mass and self.collision_type == 2:
+                        pass
+                    x3, y3 = self.velocity.cart()
 
-                if self.use_gravity: self.fnet = Vector2d(90, self.gravity * self.mass)
+                    self.position.x += x3
+                    self.position.y -= y3
+
+                    if self.use_gravity: self.fnet = Vector2d(90, self.gravity * self.mass)
+                    time.sleep(self.parent._epoch_tps)
+
+            threading.Thread(target=update_self).start()
 
         # if self.use_collide and self.use_mass:
         #     # threading.Thread(target=self.handle_collisions).start()
@@ -326,8 +331,8 @@ class PhysicsBody(GameObject):
                     if collision:
                         break
             if collision:
-                selfMomentum = Vector2d(self.velocity.r, self.velocity.f * self.mass)
-                otherMomentum = Vector2d(i.velocity.r, i.velocity.f * i.mass)
+
+
                 while True:
                     if self.parent.terminated: break
                     collision1 = False
@@ -349,13 +354,11 @@ class PhysicsBody(GameObject):
 
                     if collision1:
                         vel = Vector2d((self.velocity.r + 180) % 360, 1)
-                        x1,y1 = vel.cart()
+                        x1, y1 = vel.cart()
                         self.position.x += x1
                         self.position.y -= y1
                     else:
                         break
-                    time.sleep(self.parent._epoch_tps)
-
 
 
                 vixself = self.velocity.cart()[0]
@@ -364,13 +367,14 @@ class PhysicsBody(GameObject):
                 vixi = i.velocity.cart()[0]
                 viyi = i.velocity.cart()[1]
 
-                vfxself = ((self.mass - i.mass) / (self.mass + i.mass)) * vixself + (
-                        (2 * i.mass) / (self.mass + i.mass)) * vixi
-                vfyself = ((self.mass - i.mass) / (self.mass + i.mass)) * viyself + (
-                        (2 * i.mass) / (self.mass + i.mass)) * viyi
+                vfxself = (((self.mass - i.mass) / (self.mass + i.mass)) * vixself + (
+                        (2 * i.mass) / (self.mass + i.mass)) * vixi) * min(self.rectitude, i.rectitude)
+                vfyself = (((self.mass - i.mass) / (self.mass + i.mass)) * viyself + (
+                        (2 * i.mass) / (self.mass + i.mass)) * viyi) * min(self.rectitude, i.rectitude)
 
                 rho = np.sqrt(vfxself ** 2 + vfyself ** 2)
-                phi = np.arctan2(vfyself, vfxself)
+                phi = np.arctan2(vfyself, vfxself)* 180 / np.pi
+
                 self.velocity = Vector2d(phi, rho)
 
-            # time.sleep(self.parent._epoch_tps)
+                # time.sleep(self.parent._epoch_tps)
