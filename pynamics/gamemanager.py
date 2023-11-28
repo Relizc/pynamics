@@ -138,6 +138,12 @@ class GameManager(PyNamical):
                 i()
 
             time.sleep(self._epoch_tps)
+
+            while (self.debug != None and self.debug.tickchanger_paused) and (self.debug.tickchanger_paused and not self.debug.tickchanger_stepping):
+                self.debug.await_tickchanger_continue()
+            if self.debug != None:
+                self.debug.tickchanger_stepping = False
+
             #time.sleep(0.0001)
             #time.sleep(random.randint(0, 100) / 1000)
 
@@ -160,7 +166,7 @@ class GameManager(PyNamical):
 
     def _frame(self):
         while True:
-            print("frame")
+            #print("frame")
             self.call_event_listeners(EventType.FRAME)
             self.f += 1
             self.window.blit()

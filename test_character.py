@@ -3,7 +3,7 @@ import random
 
 game = pn.GameManager(dimensions=pn.Dimension(100, 100), fps=300, event_tracker=True)
 window = pn.ProjectWindow(game, size=pn.Dimension(1000, 700))
-cam = pn.ViewPort(window)
+cam = pn.ViewPort(window, position=pn.Dimension(100, 100))
 
 back1 = pn.Image(game, 0, 0, 1000, 700, "world.jpeg")
 

@@ -169,14 +169,60 @@ class Debugger:
         self.statusgraph = tk.Canvas(self.tickman, width=700,height=100,bg="green")
         self.statusgraph.pack()
 
+        self.pp = tk.Button(self.tickman, text="Pause Tick", command=self._tickman_pause)
+        self.pp.pack()
+
+        self.ticknext = tk.Button(self.tickman, text="Tick Step", command=self._tickman_stepnext)
+        self.ticknext.pack()
+
+        tk.Label(self.tickman, text="Change game tick:")
+
+        self._tickinput = tk.IntVar()
+        self._tickinput.set(self.parent.tps)
+
+        self.tickinput = tk.Entry(self.tickman, textvariable=self._tickinput)
+        self.tickinput.pack()
+
+        self.submittickinput = tk.Button(self.tickman, command=self._tickman_change_tps, text="Change TPS")
+        self.submittickinput.pack()
+
+        self.tickchanger_paused = False
+        self.tickchanger_stepping = 0
+
         self.points = [0]
         self.graph_x = 0
         self.graph_x_factor = 5
         self.last = 0
         self.graph_measure = 0
 
+    def _tickman_change_tps(self):
+        f = self._tickinput.get()
+        print(f)
+        self.parent.tps = f
+        self.parent._epoch_tps = 1 / self.parent.tps
+        Logger.print(f"Changed TPS to {f} (DeltaTime:{self.parent._epoch_tps})", channel=5)
+
+    def await_tickchanger_continue(self):
+        if self.tickchanger_stepping:
+            self.tickchanger_paused = False
+        time.sleep(0.01)
+        pass
+
+    def _tickman_stepnext(self):
+        self.tickchanger_stepping = 1
+
+    def _tickman_unpause(self):
+        self.pp.config(text="Pause Tick", command=self._tickman_pause)
+        self.tickchanger_paused = False
+
+    def _tickman_pause(self):
+        self.pp.config(text="Resume Tick", command=self._tickman_unpause)
+        self.tickchanger_paused = True
+
+
+
     def _tickman_update(self):
-        print(f"update {random.randint(1, 1000)}")
+        #print(f"update {random.randint(1, 1000)}")
         t = max(time.time() - self.parent.starttime, 1)
         c = "%.2f" % (self.parent.ticks / t)
         self.tickinfo.config(text=f"""Tick Epoch: {self.parent.ticks}
