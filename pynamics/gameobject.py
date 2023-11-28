@@ -234,8 +234,10 @@ class PhysicsBody(GameObject):
         #     airVector = Vector2d(r,airResistance)
         #
         #     self.fnet = self.fnet.add(airVector)
-
-        self.mass = mass
+        if use_mass == False:
+            self.mass = 10e18
+        else:
+            self.mass = mass
         self.velocity = Vector2d(0, 0)
         self.use_gravity = use_gravity
         self.acceleration = Vector2d(0, 0)
@@ -332,7 +334,6 @@ class PhysicsBody(GameObject):
                         break
             if collision:
 
-
                 while True:
                     if self.parent.terminated: break
                     collision1 = False
@@ -360,20 +361,21 @@ class PhysicsBody(GameObject):
                     else:
                         break
 
-
                 vixself = self.velocity.cart()[0]
                 viyself = self.velocity.cart()[1]
 
                 vixi = i.velocity.cart()[0]
                 viyi = i.velocity.cart()[1]
+                print(vixself, viyself, vixi, viyi, i.mass, self.mass)
+
 
                 vfxself = (((self.mass - i.mass) / (self.mass + i.mass)) * vixself + (
-                        (2 * i.mass) / (self.mass + i.mass)) * vixi) * min(self.rectitude, i.rectitude)
+                        (2 * i.mass) / (self.mass + i.mass)) * vixi)   * min(self.rectitude, i.rectitude)
                 vfyself = (((self.mass - i.mass) / (self.mass + i.mass)) * viyself + (
-                        (2 * i.mass) / (self.mass + i.mass)) * viyi) * min(self.rectitude, i.rectitude)
+                        (2 * i.mass) / (self.mass + i.mass)) * viyi)   * min(self.rectitude, i.rectitude)
 
                 rho = np.sqrt(vfxself ** 2 + vfyself ** 2)
-                phi = np.arctan2(vfyself, vfxself)* 180 / np.pi
+                phi = np.arctan2(vfyself, vfxself) * 180 / np.pi
 
                 self.velocity = Vector2d(phi, rho)
 
