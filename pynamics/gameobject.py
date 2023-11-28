@@ -102,6 +102,7 @@ class GameObject(PyNamical):
         super().__init__(parent)
 
         self.position = Dimension(x, y)
+        self.this_position = Dimension(x, y)
         self.last_position = None
         self.size = Dimension(width, height)
         self.content = contents
