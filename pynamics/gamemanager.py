@@ -31,12 +31,12 @@ class Event:
 
 
 class GameManager(PyNamical):
-    def __init__(self, 
-                 dimensions: Dimension, 
-                 tps: int = 128, 
+    def __init__(self,
+                 dimensions: Dimension,
+                 tps: int = 128,
                  fps: int = 0,
                  event_tracker: bool = False):
-        
+
         super().__init__(None, no_parent=True)
         self.dimensions = dimensions
         self.width = dimensions.x
@@ -82,16 +82,16 @@ class GameManager(PyNamical):
                 self.debug = Debugger(self, enable_event_listener=self.event_track)
 
                 change_debug_attacher(self.debug._call_callevent)
-                
 
             self.debug.run()
 
     def _key(self, e):
         eventCode = int(e.type)
-        if eventCode == 2: # KeyPress
+        if eventCode == 2:
+            # KeyPress
             self.pressed[e.keysym] = True
             self.call_event_listeners(EventType.KEYDOWN, str(e.keysym))
-        elif eventCode == 3: # KeyUpa
+        elif eventCode == 3:  # KeyUp
             self.pressed[e.keysym] = False
             self.call_event_listeners(EventType.KEYUP, str(e.keysym))
         pass
@@ -103,18 +103,16 @@ class GameManager(PyNamical):
         try:
             self.window
         except AttributeError:
-            err = RuntimeError("No ViewPort Object found for this specific GameManager instance. Create a viewport by using pynamics.ProjectWindow.")
+            err = RuntimeError(
+                "No ViewPort Object found for this specific GameManager instance. Create a viewport by using pynamics.ProjectWindow.")
             raise err
-        
+
         self.starttime = time.time()
 
         self.window._tk.after(100, self.frame)
         self.window._tk.bind("<KeyPress>", self._key)
         self.window._tk.bind("<KeyRelease>", self._key)
         self.window.start()
-
-        
-
 
     def update(self):
 
@@ -138,14 +136,8 @@ class GameManager(PyNamical):
                 i()
 
             time.sleep(self._epoch_tps)
-
-            while (self.debug != None and self.debug.tickchanger_paused) and (self.debug.tickchanger_paused and not self.debug.tickchanger_stepping):
-                self.debug.await_tickchanger_continue()
-            if self.debug != None:
-                self.debug.tickchanger_stepping = False
-
-            #time.sleep(0.0001)
-            #time.sleep(random.randint(0, 100) / 1000)
+            # time.sleep(0.0001)
+            # time.sleep(random.randint(0, 100) / 1000)
 
     def listen(self):
         while True:
@@ -164,25 +156,14 @@ class GameManager(PyNamical):
     def test(self):
         print(1)
 
-    def _frame(self):
-        while True:
-            #print("frame")
-            self.call_event_listeners(EventType.FRAME)
-            self.f += 1
-            self.window.blit()
-            time.sleep(self._epoch_fps)        
-
     def frame(self):
-        x = threading.Thread(target=self._frame)
-        x.start()
-        
-        #self.window.surface.after(int(self._epoch_fps*1000), self.frame)
-
+        self.call_event_listeners(EventType.FRAME)
+        self.f += 1
+        self.window.blit()
+        self.window.surface.after(int(self._epoch_fps * 1000), self.frame)
 
     def add_tick_update(self, function):
         self.events[EventType.TICK].append(Executable(function, lambda i: True))
-
-
 
     def set_ticks_per_update(self, tick: int):
         self.tpu = tick
@@ -192,4 +173,3 @@ class GameManager(PyNamical):
 
     def add_object(self, object: GameObject):
         self.objects.append(object)
-

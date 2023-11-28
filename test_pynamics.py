@@ -14,11 +14,9 @@ bob = pynamics.PhysicsBody(ctx, 100, 100, 100, 100, 2,
                                         , ((50, 100), (0, 0))
                                         ))
 
-bob2 = pynamics.PhysicsBody(ctx, 100, 500, 100, 100, 5, use_mass=False,from_points=(
-    ((0,0),(10000,0)),
-    ((0,0),(0,10000)),
-))
-
+bob2 = pynamics.PhysicsBody(ctx, 500, 750, 1000, 1000, 2, use_gravity=False,use_mass=False
+                           )
+bob.rectitude = 0.5
 
 def condition():
     global thisTime
@@ -30,26 +28,27 @@ def condition():
 
 @ctx.add_event_listener(event=pynamics.EventType.KEYHOLD, condition=pynamics.KeyEvaulator(pynamics.K_UP))
 def listen(self):
-    #bob.apply_force(pynamics.Vector2d(90, 1),ctx._epoch_tps)
+    # bob.apply_force(pynamics.Vector2d(90, 1),ctx._epoch_tps)
     bob.add_force(pynamics.Vector2d(90, 1))
 
 
 @ctx.add_event_listener(event=pynamics.EventType.KEYHOLD, condition=pynamics.KeyEvaulator(pynamics.K_DOWN))
 def listen(self):
-    #bob.apply_force(pynamics.Vector2d(270, 1),ctx._epoch_tps)
+    # bob.apply_force(pynamics.Vector2d(270, 1),ctx._epoch_tps)
     bob.add_force(pynamics.Vector2d(270, 1))
 
 
 @ctx.add_event_listener(event=pynamics.EventType.KEYHOLD, condition=pynamics.KeyEvaulator(pynamics.K_LEFT))
 def listen(self):
-    #bob.apply_force(pynamics.Vector2d(180, 1),ctx._epoch_tps)
+    # bob.apply_force(pynamics.Vector2d(180, 1),ctx._epoch_tps)
     bob.add_force(pynamics.Vector2d(180, 1))
 
 
 @ctx.add_event_listener(event=pynamics.EventType.KEYHOLD, condition=pynamics.KeyEvaulator(pynamics.K_RIGHT))
 def listen(self):
-    #bob.apply_force(pynamics.Vector2d(0, 1),10)
+    # bob.apply_force(pynamics.Vector2d(0, 1),10)
     bob.add_force(pynamics.Vector2d(0, 1))
+
 
 @ctx.add_event_listener(event=pynamics.EventType.KEYDOWN, condition=pynamics.KeyEvaulator(pynamics.K_r))
 def listen(self):
@@ -57,7 +56,7 @@ def listen(self):
     bob.clear()
 
 
-print(ctx.children)
 
+print(ctx.children)
 ctx.start()
 print("killed")
