@@ -14,9 +14,9 @@ bob = pynamics.PhysicsBody(ctx, 100, 100, 100, 100, 2,
                                         , ((50, 100), (0, 0))
                                         ))
 
-bob2 = pynamics.PhysicsBody(ctx, 500, 100, 100, 100, 2,
+bob2 = pynamics.PhysicsBody(ctx, 500, 750, 1000, 1000, 2, use_gravity=False,use_mass=False
                            )
-
+bob.rectitude = 0.5
 
 def condition():
     global thisTime
@@ -55,11 +55,8 @@ def listen(self):
     bob.position.set(10, 10)
     bob.clear()
 
-    bob2.position.set(200, 10)
-    bob2.clear()
 
 
 print(ctx.children)
-pynamics.utils.establish_basic_movement_wasd(ctx,bob2)
 ctx.start()
 print("killed")
