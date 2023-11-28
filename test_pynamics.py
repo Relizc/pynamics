@@ -16,7 +16,7 @@ bob = pynamics.PhysicsBody(ctx, 100, 100, 100, 100, 2,
 
 bob2 = pynamics.PhysicsBody(ctx, 500, 750, 1000, 1000, 2, use_gravity=False,use_mass=False
                            )
-bob.rectitude = 0.5
+bob.rectitude = 5
 
 def condition():
     global thisTime

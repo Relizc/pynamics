@@ -374,6 +374,8 @@ class PhysicsBody(GameObject):
                 vfyself = (((self.mass - i.mass) / (self.mass + i.mass)) * viyself + (
                         (2 * i.mass) / (self.mass + i.mass)) * viyi)   * min(self.rectitude, i.rectitude)
 
+                vfxself = -vfxself
+
                 rho = np.sqrt(vfxself ** 2 + vfyself ** 2)
                 phi = np.arctan2(vfyself, vfxself) * 180 / np.pi
 
