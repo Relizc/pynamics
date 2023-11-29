@@ -14,6 +14,12 @@ bob = pynamics.PhysicsBody(ctx, 100, 100, 100, 100, 2,
                                         , ((50, 100), (0, 0))
                                         ))
 
+bob3 = pynamics.PhysicsBody(ctx, 100, 100, 100, 100, 2,
+                           from_points=(((0, 0), (100, 100))
+                                        , ((100, 100), (50, 100))
+                                        , ((50, 100), (0, 0))
+                                        ))
+
 bob2 = pynamics.PhysicsBody(ctx, 500, 750, 1000, 1000, 2, use_gravity=False,use_mass=False
                            )
 bob.rectitude = 5

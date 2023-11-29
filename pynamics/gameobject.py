@@ -124,6 +124,19 @@ class GameObject(PyNamical):
 
         self.parent.add_object(self)
 
+    def attach_movement_thread(self):
+        def update_self():
+            while self.parent.terminated == False:
+
+                while self.parent.debug != None and self.parent.debug.tickchanger_paused:
+                    time.sleep(0.01)
+                    continue
+
+                self.update()
+                time.sleep(self.parent._epoch_tps)
+
+        threading.Thread(target=update_self).start()
+
     def __repr__(self):
         return f"GameObject()"
 
@@ -189,6 +202,8 @@ class TopViewPhysicsBody(GameObject):
         self.acceleration = Vector2d(0, 0)
         self.coefficient = floor_friction
 
+        self.attach_movement_thread()
+
     def init_movement(self, force: int = 1):
         @self.parent.add_event_listener(event=EventType.KEYHOLD, condition=KeyEvaulator("Up"))
         def m(ctx):
@@ -206,17 +221,16 @@ class TopViewPhysicsBody(GameObject):
         def m(ctx):
             self.force.add_self(Vector2d(0, force))
 
-        @self.parent.add_event_listener(event=EventType.TICK)
-        def shift(ctx):
-            self.acceleration = Vector2d(self.force.r, self.force.f / self.mass)
-            self.force.clear()
-            self.velocity.add_self(self.acceleration)
-            self.acceleration.clear()
-            self.position.add_vector(self.velocity)
+    def update(self):
+        self.acceleration = Vector2d(self.force.r, self.force.f / self.mass)
+        self.force.clear()
+        self.velocity.add_self(self.acceleration)
+        self.acceleration.clear()
+        self.position.add_vector(self.velocity)
 
-            v = Vector2d(self.velocity.r + 180, self.velocity.f * self.coefficient)
+        v = Vector2d(self.velocity.r + 180, self.velocity.f * self.coefficient)
 
-            self.velocity.add_self(v)
+        self.velocity.add_self(v)
 
 
 class PhysicsBody(GameObject):
@@ -256,37 +270,36 @@ class PhysicsBody(GameObject):
 
         if self.use_gravity: self.fnet = Vector2d(90, self.gravity * self.mass)
         if self.use_mass:
+            self.attach_movement_thread()
 
-            def update_self():
-                while self.parent.terminated == False:
-                    self.acceleration.r = self.fnet.r
-                    self.acceleration.f = self.fnet.f / self.mass
-
-                    self.velocity = self.velocity.add(
-                        Vector2d(self.acceleration.r, self.acceleration.f))
-
-                    v = Vector2d(self.velocity.r, self.velocity.f)
-                    v.f *= self.parent._epoch_tps
-                    if self.use_collide and self.use_mass and self.collision_type == 1:
-
-                        self.handle_collisions()
-                    elif self.use_collide and self.use_mass and self.collision_type == 2:
-                        pass
-                    x3, y3 = self.velocity.cart()
-
-                    self.position.x += x3
-                    self.position.y -= y3
-
-                    if self.use_gravity: self.fnet = Vector2d(90, self.gravity * self.mass)
-                    time.sleep(self.parent._epoch_tps)
-
-            threading.Thread(target=update_self).start()
 
         # if self.use_collide and self.use_mass:
         #     # threading.Thread(target=self.handle_collisions).start()
         #     @self.parent.add_event_listener(event=EventType.TICK , priority = EventPriority.HIGHEST)
         #     def apply_collisions(e):
         #         self.handle_collisions()
+
+    def update(self):
+        self.acceleration.r = self.fnet.r
+        self.acceleration.f = self.fnet.f / self.mass
+
+        self.velocity = self.velocity.add(
+            Vector2d(self.acceleration.r, self.acceleration.f))
+
+        v = Vector2d(self.velocity.r, self.velocity.f)
+        v.f *= self.parent._epoch_tps
+        if self.use_collide and self.use_mass and self.collision_type == 1:
+
+            self.handle_collisions()
+        elif self.use_collide and self.use_mass and self.collision_type == 2:
+            pass
+        x3, y3 = self.velocity.cart()
+
+        self.position.x += x3
+        self.position.y -= y3
+
+        if self.use_gravity: self.fnet = Vector2d(90, self.gravity * self.mass)
+
 
     def add_force(self, force):
         self.fnet = self.fnet.add(force)

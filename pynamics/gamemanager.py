@@ -120,6 +120,12 @@ class GameManager(PyNamical):
 
             if self.terminated: break
 
+            while self.debug != None and self.debug.tickchanger_paused:
+                time.sleep(0.01)
+                continue
+
+
+
             self.deltatime = time.time() - self._timedifferencetick
             self._timedifferencetick = time.time()
 
