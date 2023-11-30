@@ -65,7 +65,7 @@ class ProjectWindow(PyNamical):
                     #print(i, i.position, i.last_position)
                     
                     self.surface.delete(f"ID{i.blit_id}")
-                    print(f"delete: {(time.time() - a) * 1000}")
+                    #print(f"delete: {(time.time() - a) * 1000}")
                     a = time.time()
 
                     g = random.randint(-2**64, 2**64)
@@ -74,7 +74,7 @@ class ProjectWindow(PyNamical):
 
                     if i.content is not None:
                         self.surface.create_image(cam.x, cam.y, anchor=NW, image=i.content, tags=f"ID{g}")
-                        print(f"point creation: {(time.time() - a) * 1000}")
+                        #print(f"point creation: {(time.time() - a) * 1000}")
                         a = time.time()
 
                     elif len(i.points) > 0:
@@ -83,12 +83,13 @@ class ProjectWindow(PyNamical):
                             pos2 = j[1]
                             self.surface.create_line(pos1[0] + cam.x,pos1[1] + cam.y,pos2[0] + cam.x,pos2[1]+ cam.y, tags=f"ID{g}")
 
-                        print(f"multipoint creation: {(time.time() - a) * 1000}")
+                        #print(f"multipoint creation: {(time.time() - a) * 1000}")
                         a = time.time()
                     
                     i.last_position = Dimension(i.position.x, i.position.y)
                     i.blit_id = g
-                    print(f"update: {(time.time() - a) * 1000}")
+
+                    #print(f"update: {(time.time() - a) * 1000}")
                     a = time.time()
 
     def _close_parent_close(self):
