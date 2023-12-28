@@ -9,11 +9,12 @@ import time
 import inspect
 import random
 
-def change(a, b):
-    print(id(a.property), id(a.parent.parent.tps))
-    a.property = b
-    a.parent.parent.tps = b
-    print(id(a.property), id(a.parent.parent.tps))
+def change(s, a, b, c):
+    print(c)
+    a.__dict__[b[0]] = c
+    s.parent._workspace_select(None)
+    s.tk.destroy()
+
 
 class DebugPropertyEditor:
 
@@ -23,11 +24,16 @@ class DebugPropertyEditor:
         "float": float
     }
 
-    def __init__(self, parent, property):
+    def __init__(self, parent, fro, path):
+        property = fro.__dict__[path[0]]
+
         self.parent = parent
         self.tk = tk.Toplevel()
         self.tk.title(f"Property Editor of {property.__class__.__name__}")
         self.tk.geometry("300x200")
+
+
+
         self.property = property
 
         self.tk.columnconfigure(0, weight=1)
@@ -47,9 +53,7 @@ class DebugPropertyEditor:
         self.entry = tk.Entry(self.tk, textvariable=self.e)
         self.entry.grid(row=3)
 
-        print(id(self.property), id(self.parent.parent.tps))
-
-        self.sure = tk.Button(self.tk, text="Change Property", command=lambda: change(self, self.SUPPORTED_TYPES[self.ok.get()](self.e.get())))
+        self.sure = tk.Button(self.tk, text="Change Property", command=lambda: change(self, fro, path, self.SUPPORTED_TYPES[self.ok.get()](self.e.get())))
         self.sure.grid(row=5, columnspan=2)
 
 
@@ -106,7 +110,7 @@ class Debugger:
             self.event.heading("type", text="Event Type", anchor=tk.W)
 
             self.event.column("source", anchor=tk.W, width=200)
-            self.event.heading("source", text="Called By", anchor=tk.W)
+            self.event.heading("source", text="Function Source", anchor=tk.W)
 
             self.event.grid(row=2, column=0, sticky="ewns")
 
@@ -126,6 +130,9 @@ class Debugger:
 
 
         ### Workspace ###
+
+        self.lastLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL = None
+        self.wspath = {}
 
         self.exp = tk.Frame(self.nb)
         self.exp.pack(fill='both', expand=True)
@@ -197,7 +204,7 @@ class Debugger:
 
     def _tickman_change_tps(self):
         f = self._tickinput.get()
-        print(f)
+        #print(f)
         self.parent.tps = f
         self.parent._epoch_tps = 1 / self.parent.tps
         Logger.print(f"Changed TPS to {f} (DeltaTime:{self.parent._epoch_tps})", channel=5)
@@ -253,13 +260,14 @@ Tick DeltaTime: {self.parent.deltatime}""", font=("Courier", 14))
 
         
 
-    def _workspace_property_dfs(self, start, fr):
+    def _workspace_property_dfs(self, start, fr, path):
         #print(start)
 
         if not isinstance(start, (dict, list)):
             return
 
         ind = 0
+        r = list(path)
 
         for i in start:
             self._ws_prop_iid += 1
@@ -267,6 +275,8 @@ Tick DeltaTime: {self.parent.deltatime}""", font=("Courier", 14))
                 bb = f"ListIndex({ind})<{i.__class__.__name__}> = {i}"
                 item = i
                 ind += 1
+                r.append(ind)
+
             elif isinstance(start, dict):
                 if isinstance(start[i], list):
                     bb = f"{i}<{start[i].__class__.__name__}> = [Iterable List({len(start[i])})]"
@@ -275,13 +285,17 @@ Tick DeltaTime: {self.parent.deltatime}""", font=("Courier", 14))
                 else:
                     bb = f"{i}<{start[i].__class__.__name__}> = {start[i]}"
                 item = start[i]
+                nam = start[i].__class__.__name__
+                r.append(i)
+
             self.m[self._ws_prop_iid] = item
+            self.wspath[self._ws_prop_iid] = r
 
             # if isinstance(item, (dict, list)):
             #     bb = "..."
             self.info.insert('', tk.END, text=bb, open=False, iid=self._ws_prop_iid)
             self.info.move(self._ws_prop_iid, fr, 2147483647)
-            self._workspace_property_dfs(item, self._ws_prop_iid)
+            self._workspace_property_dfs(item, self._ws_prop_iid, r)
 
     def _workspace_property_change(self, e):
         stuff = self.m[int(self.info.focus())]
@@ -290,12 +304,16 @@ Tick DeltaTime: {self.parent.deltatime}""", font=("Courier", 14))
             tkmsg.showinfo(f"Unable to edit property", f"The debugger cannot edit the property because the type {stuff.__class__.__name__} is not supported.")
             return
 
-        self.editor = DebugPropertyEditor(self, stuff)
+        self.editor = DebugPropertyEditor(self, self.q[int(self.explorer.focus())], self.wspath[int(self.info.focus())])
 
     def _workspace_select(self, e):
         self.info.pack_forget()
 
         stuff = self.q[int(self.explorer.focus())]
+        if self.lastLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL != None:
+            self.lastLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL.debug_unhighlight()
+        stuff.debug_unhighlight()
+        self.lastLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL = stuff
 
 
         self.info = ttk.Treeview(self.data_viewer)
@@ -303,6 +321,8 @@ Tick DeltaTime: {self.parent.deltatime}""", font=("Courier", 14))
         self.info.grid(row=0, column=0, sticky="nesw")
         self.data_viewer.rowconfigure(0, weight=1)
         self.data_viewer.columnconfigure(0, weight=1)
+
+        self.info.bind("<Double-1>", self._workspace_property_change)
 
         self._ws_prop_iid = 0
 
@@ -318,7 +338,8 @@ Tick DeltaTime: {self.parent.deltatime}""", font=("Courier", 14))
                 bb = str(thing)
             self.info.insert('', tk.END, text=f"{i}<{thing.__class__.__name__}> = {bb}", open=False, iid=self._ws_prop_iid)
             self.m[self._ws_prop_iid] = thing
-            self._workspace_property_dfs(thing, self._ws_prop_iid)
+            self.wspath[self._ws_prop_iid] = [i]
+            self._workspace_property_dfs(thing, self._ws_prop_iid, [i])
             self._ws_prop_iid += 1
 
 

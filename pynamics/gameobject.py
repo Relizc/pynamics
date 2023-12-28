@@ -211,6 +211,12 @@ class GameObject(PyNamical):
         self.parent.frame()
         self.forcedisplay = False
 
+    def debug_highlight(self):
+        pass
+
+    def debug_unhighlight(self):
+        pass
+
 
 class Image(GameObject):
 
@@ -459,7 +465,7 @@ class PhysicsBody(GameObject):
 
                 vixi = i.velocity.cart()[0]
                 viyi = i.velocity.cart()[1]
-                print(vixself, viyself, vixi, viyi, i.mass, self.mass)
+                #print(vixself, viyself, vixi, viyi, i.mass, self.mass)
 
                 vfxself = (((self.mass - i.mass) / (self.mass + i.mass)) * vixself + (
                         (2 * i.mass) / (self.mass + i.mass)) * vixi) * min(self.rectitude, i.rectitude)
