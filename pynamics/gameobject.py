@@ -148,6 +148,26 @@ class GameObject(PyNamical):
                     break
         return collision
 
+    def collide_side(self, other):
+        collision = False
+        if isinstance(other, GameObject):
+            for j in other.points:
+                for k in self.points:
+                    p1 = (j[0][0] + other.position.x, (j[0][1] + other.position.y) * -1)
+                    p2 = (j[1][0] + other.position.x, (j[1][1] + other.position.y) * -1)
+                    q1 = (k[0][0] + self.position.x, (k[0][1] + self.position.y) * -1)
+                    q2 = (k[1][0] + self.position.x, (k[1][1] + self.position.y) * -1)
+                    p1 = Point(p1[0], p1[1])
+                    p2 = Point(p2[0], p2[1])
+                    q1 = Point(q1[0], q1[1])
+                    q2 = Point(q2[0], q2[1])
+                    if doIntersect(p1, p2, q1, q2):
+                        collision = True
+                        break
+                if collision:
+                    break
+        return collision
+
     def attach_movement_thread(self):
         def update_self():
             while self.parent.terminated == False:
@@ -170,7 +190,6 @@ class GameObject(PyNamical):
             self.parent.frame()
             self.parent.ghosts.remove(self)
             del self
-
 
     def __repr__(self):
         return f"GameObject()"
@@ -202,9 +221,11 @@ class GameObject(PyNamical):
     @property
     def y(self):
         return self.position.y
+
     def hide(self):
         self.hidden = True
         self.parent.frame()
+
     def unhide(self):
         self.hidden = False
         self.forcedisplay = True
@@ -465,7 +486,7 @@ class PhysicsBody(GameObject):
 
                 vixi = i.velocity.cart()[0]
                 viyi = i.velocity.cart()[1]
-                #print(vixself, viyself, vixi, viyi, i.mass, self.mass)
+                # print(vixself, viyself, vixi, viyi, i.mass, self.mass)
 
                 vfxself = (((self.mass - i.mass) / (self.mass + i.mass)) * vixself + (
                         (2 * i.mass) / (self.mass + i.mass)) * vixi) * min(self.rectitude, i.rectitude)
