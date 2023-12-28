@@ -9,6 +9,7 @@ from .dimensions import Dimension, Vector2d
 import math
 import cmath
 import tkinter as tk
+import ctypes
 from PIL import Image as ImageUtils
 from PIL import ImageTk
 
@@ -106,8 +107,10 @@ class GameObject(PyNamical):
         self.last_position = None
         self.size = Dimension(width, height)
         self.content = contents
+        self.hidden = False
         self.absolute = Dimension(x, y)
         self.blit_id = None
+        self.forcedisplay = False
         self.points = [
             ((self.position.x, self.position.y), (self.position.x - self.size.x, self.position.y)),
             ((self.position.x - self.size.x, self.position.y),
@@ -121,8 +124,29 @@ class GameObject(PyNamical):
             self.points = []
             for i in from_points:
                 self.points.append(i)
+        self.id = id(self)
 
         self.parent.add_object(self)
+
+    def collide(self, other):
+        collision = False
+        if isinstance(other, GameObject):
+            for j in other.points:
+                for k in self.points:
+                    p1 = (j[0][0] + other.position.x, (j[0][1] + other.position.y) * -1)
+                    p2 = (j[1][0] + other.position.x, (j[1][1] + other.position.y) * -1)
+                    q1 = (k[0][0] + self.position.x, (k[0][1] + self.position.y) * -1)
+                    q2 = (k[1][0] + self.position.x, (k[1][1] + self.position.y) * -1)
+                    p1 = Point(p1[0], p1[1])
+                    p2 = Point(p2[0], p2[1])
+                    q1 = Point(q1[0], q1[1])
+                    q2 = Point(q2[0], q2[1])
+                    if doIntersect(p1, p2, q1, q2):
+                        collision = True
+                        break
+                if collision:
+                    break
+        return collision
 
     def attach_movement_thread(self):
         def update_self():
@@ -136,6 +160,17 @@ class GameObject(PyNamical):
                 time.sleep(self.parent._epoch_tps)
 
         threading.Thread(target=update_self).start()
+
+    def delete(self):
+        if isinstance(self.parent.objects, list):
+            aid = self.parent.objectpointers[self.id]
+            val = ctypes.cast(aid, ctypes.py_object).value
+            self.parent.objects.remove(val)
+            self.parent.ghosts.append(self)
+            self.parent.frame()
+            self.parent.ghosts.remove(self)
+            del self
+
 
     def __repr__(self):
         return f"GameObject()"
@@ -167,6 +202,14 @@ class GameObject(PyNamical):
     @property
     def y(self):
         return self.position.y
+    def hide(self):
+        self.hidden = True
+        self.parent.frame()
+    def unhide(self):
+        self.hidden = False
+        self.forcedisplay = True
+        self.parent.frame()
+        self.forcedisplay = False
 
 
 class Image(GameObject):
@@ -201,8 +244,6 @@ class TopViewPhysicsBody(GameObject):
         self.velocity = Vector2d(0, 0)
         self.acceleration = Vector2d(0, 0)
         self.coefficient = floor_friction
-
-        self.attach_movement_thread()
 
     def init_movement(self, force: int = 1):
         @self.parent.add_event_listener(event=EventType.KEYHOLD, condition=KeyEvaulator("Up"))
@@ -272,7 +313,10 @@ class PhysicsBody(GameObject):
         if self.use_mass:
             self.attach_movement_thread()
 
-
+            def update_self():
+                while not self.parent.terminated:
+                    self.acceleration.r = self.fnet.r
+                    self.acceleration.f = self.fnet.f / self.mass
         # if self.use_collide and self.use_mass:
         #     # threading.Thread(target=self.handle_collisions).start()
         #     @self.parent.add_event_listener(event=EventType.TICK , priority = EventPriority.HIGHEST)
@@ -300,6 +344,11 @@ class PhysicsBody(GameObject):
 
         if self.use_gravity: self.fnet = Vector2d(90, self.gravity * self.mass)
 
+        # if self.use_collide and self.use_mass:
+        #     # threading.Thread(target=self.handle_collisions).start()
+        #     @self.parent.add_event_listener(event=EventType.TICK , priority = EventPriority.HIGHEST)
+        #     def apply_collisions(e):
+        #         self.handle_collisions()
 
     def add_force(self, force):
         self.fnet = self.fnet.add(force)
@@ -347,33 +396,63 @@ class PhysicsBody(GameObject):
                     if collision:
                         break
             if collision:
+                # while True:
+                #     if self.parent.terminated: break
+                #     collision1 = False
+                #     for j in i.points:
+                #         for k in self.points:
+                #             p11 = (j[0][0] + i.position.x, (j[0][1] + i.position.y) * -1)
+                #             p22 = (j[1][0] + i.position.x, (j[1][1] + i.position.y) * -1)
+                #             q11 = (k[0][0] + self.position.x, (k[0][1] + self.position.y) * -1)
+                #             q22 = (k[1][0] + self.position.x, (k[1][1] + self.position.y) * -1)
+                #             p11 = Point(p11[0], p11[1])
+                #             p22 = Point(p22[0], p22[1])
+                #             q11 = Point(q11[0], q11[1])
+                #             q22 = Point(q22[0], q22[1])
+                #             if doIntersect(p11, p22, q11, q22):
+                #                 collision1 = True
+                #                 break
+                #         if collision1:
+                #             break
+                #
+                #     if collision1:
+                #         vel = Vector2d((self.velocity.r + 180) % 360, 1)
+                #         x1, y1 = vel.cart()
+                #         self.position.x += x1
+                #         self.position.y -= y1
+                #     else:
+                #         break
+                x, y = self.velocity.cart()
+                x += self.position.x
+                y -= self.position.y
+                pointx, pointy = self.position.x, self.position.y
+                if pointx - x == 0:
+                    num = pointx
+                    collisions = []
+                    collDist = 0
 
-                while True:
-                    if self.parent.terminated: break
-                    collision1 = False
-                    for j in i.points:
-                        for k in self.points:
-                            p11 = (j[0][0] + i.position.x, (j[0][1] + i.position.y) * -1)
-                            p22 = (j[1][0] + i.position.x, (j[1][1] + i.position.y) * -1)
-                            q11 = (k[0][0] + self.position.x, (k[0][1] + self.position.y) * -1)
-                            q22 = (k[1][0] + self.position.x, (k[1][1] + self.position.y) * -1)
-                            p11 = Point(p11[0], p11[1])
-                            p22 = Point(p22[0], p22[1])
-                            q11 = Point(q11[0], q11[1])
-                            q22 = Point(q22[0], q22[1])
-                            if doIntersect(p11, p22, q11, q22):
-                                collision1 = True
-                                break
-                        if collision1:
-                            break
+                    for k in self.points:
+                        q11 = (k[0][0] + self.position.x, (k[0][1] + self.position.y) * -1)
+                        q22 = (k[1][0] + self.position.x, (k[1][1] + self.position.y) * -1)
+                        if min(q11[0], q22[0]) <= num <= max(q11[0], q22[0]):
+                            if q11[0] == q22[0]:
 
-                    if collision1:
-                        vel = Vector2d((self.velocity.r + 180) % 360, 1)
-                        x1, y1 = vel.cart()
-                        self.position.x += x1
-                        self.position.y -= y1
-                    else:
-                        break
+                                collDist = max(abs(-self.position.y - min(q11[1], q22[1])), collDist)
+
+
+                            else:
+                                q1x, q1y = (q11[0], q11[1])
+                                q2x, q2y = (q22[0], q22[1])
+                                m = (q1y - q2y) / (q1x - q2x)
+                                b = q2y - m * q2x
+
+                                # intersection
+                                yd = m * num + b
+                                intersection = (num, yd)
+                                if min(q11[0], q22[0]) <= intersection[0] <= max(q11[0], q22[0]) and min(q11[1],
+                                                                                                         q22[1]) <= \
+                                        intersection[1] <= max(q11[1], q22[1]):
+                                    collDist = max(collDist, abs(-self.position.y - intersection[1]))
 
                 vixself = self.velocity.cart()[0]
                 viyself = self.velocity.cart()[1]
@@ -382,13 +461,10 @@ class PhysicsBody(GameObject):
                 viyi = i.velocity.cart()[1]
                 print(vixself, viyself, vixi, viyi, i.mass, self.mass)
 
-
                 vfxself = (((self.mass - i.mass) / (self.mass + i.mass)) * vixself + (
-                        (2 * i.mass) / (self.mass + i.mass)) * vixi)   * min(self.rectitude, i.rectitude)
+                        (2 * i.mass) / (self.mass + i.mass)) * vixi) * min(self.rectitude, i.rectitude)
                 vfyself = (((self.mass - i.mass) / (self.mass + i.mass)) * viyself + (
-                        (2 * i.mass) / (self.mass + i.mass)) * viyi)   * min(self.rectitude, i.rectitude)
-
-                vfxself = -vfxself
+                        (2 * i.mass) / (self.mass + i.mass)) * viyi) * min(self.rectitude, i.rectitude)
 
                 rho = np.sqrt(vfxself ** 2 + vfyself ** 2)
                 phi = np.arctan2(vfyself, vfxself) * 180 / np.pi
