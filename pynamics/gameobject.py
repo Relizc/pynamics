@@ -108,6 +108,7 @@ class GameObject(PyNamical):
         self.content = contents
         self.absolute = Dimension(x, y)
         self.blit_id = None
+        self.clear_blit = True
         self.points = [
             ((self.position.x, self.position.y), (self.position.x - self.size.x, self.position.y)),
             ((self.position.x - self.size.x, self.position.y),
@@ -128,12 +129,18 @@ class GameObject(PyNamical):
         def update_self():
             while self.parent.terminated == False:
 
-                while self.parent.debug != None and self.parent.debug.tickchanger_paused:
-                    time.sleep(0.01)
-                    continue
+                try:
+                    while self.parent.debug != None and self.parent.debug.tickchanger_paused:
+                        time.sleep(0.01)
+                        continue
 
-                self.update()
-                time.sleep(self.parent._epoch_tps)
+                    self.update()
+                    time.sleep(self.parent._epoch_tps)
+                except Exception as e:
+                    import traceback
+                    q = traceback.format_exc()
+                    self.parent.call_error(self, e, q)
+                    break
 
         threading.Thread(target=update_self).start()
 

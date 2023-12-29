@@ -179,3 +179,7 @@ class GameManager(PyNamical):
 
     def add_object(self, object: GameObject):
         self.objects.append(object)
+
+    def call_error(self, source, exception, trace):
+        import tkinter.messagebox as tkmsg
+        tkmsg.showerror("Oops!", f"The following {exception.__class__.__name__} occurred at {source}:\nid={hex(id(source))}\n\n{trace}")
