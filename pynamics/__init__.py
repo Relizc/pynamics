@@ -5,7 +5,7 @@ from .dimensions import Dimension, Dimension2d
 from .events import EventHolder, EventType, KeyEvaulator
 from .logger import Logger
 from . import utils
-
+import pickle
 # Aliases
 class Dim(Dimension): pass
 class Dim2d(Dimension2d): pass
@@ -27,3 +27,8 @@ VERSION = "1.0.0"
 
 Logger.print("&bInitialization completed.")
 Logger.print(f"&ePy&aNamics &bVersion {VERSION}")
+def load_object_from_binary(path:str):
+    f = open(path,"rb")
+
+    obj = pickle.load(f)
+    return obj

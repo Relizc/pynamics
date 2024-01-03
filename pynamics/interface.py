@@ -14,7 +14,11 @@ class PyNamical(EventHolder):
             self.parent.children.append(self)
         self.children = []
 
+    def debug_unhighlight(self):
+        pass
 
+    def debug_highlight(self):
+        pass
 
     def delete(self):
         pass

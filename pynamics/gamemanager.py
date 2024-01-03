@@ -5,7 +5,7 @@ from .interface import PyNamical
 from .events import EventType, Executable, KeyEvaulator, change_debug_attacher
 from .debugger import Debugger
 from .logger import Logger
-
+import ctypes
 import threading
 import random
 import time
@@ -41,7 +41,9 @@ class GameManager(PyNamical):
         self.dimensions = dimensions
         self.width = dimensions.x
         self.length = dimensions.y
+        self.object_count = 0
         self.objects = []
+        self.objectpointers = {}
         self.updates = []
         self.listeners = []
         self.tpu = 1
@@ -66,7 +68,7 @@ class GameManager(PyNamical):
         self.parent = None
         self.children = []
         self.starttime = 0
-
+        self.ghosts = []
         self.pressed = {}
 
         self.debug = None
@@ -186,3 +188,5 @@ class GameManager(PyNamical):
 
     def add_object(self, object: GameObject):
         self.objects.append(object)
+        a = self.objects[-1]
+        self.objectpointers[object.id] = id(a)

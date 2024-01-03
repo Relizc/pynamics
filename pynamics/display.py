@@ -48,6 +48,8 @@ class ProjectWindow(PyNamical):
 
     def blit(self):
         #self.surface.delete("all")
+        for i in self.parent.ghosts:
+            self.surface.delete(f"ID{i.blit_id}")
         for i in self.parent.objects:
             if isinstance(i, GameObject):
 
@@ -60,11 +62,45 @@ class ProjectWindow(PyNamical):
                 a = time.time()
 
                 moved = i.position != i.last_position
-                if moved:
+                if i.hidden:
+                    self.surface.delete("all")
+                    for j in self.parent.objects:
+                        if isinstance(j,GameObject):
+                            if not j.hidden:
+
+                                a = time.time()
+
+                                g = random.randint(-2 ** 64, 2 ** 64)
+
+                                cam = self.viewport.shift(j.position)
+
+                                if j.content is not None:
+                                    self.surface.create_image(cam.x, cam.y, anchor=NW, image=j.content, tags=f"ID{g}")
+                                    # print(f"point creation: {(time.time() - a) * 1000}")
+                                    a = time.time()
+
+                                elif len(j.points) > 0:
+                                    for j in j.points:
+                                        pos1 = j[0]
+                                        pos2 = j[1]
+                                        self.surface.create_line(pos1[0] + cam.x, pos1[1] + cam.y, pos2[0] + cam.x,
+                                                                 pos2[1] + cam.y, tags=f"ID{g}")
+
+                                    # print(f"multipoint creation: {(time.time() - a) * 1000}")
+                                    a = time.time()
+
+                                i.last_position = Dimension(i.position.x, i.position.y)
+                                i.blit_id = g
+
+                                # print(f"update: {(time.time() - a) * 1000}")
+                                a = time.time()
+                    break
+                if (moved and not i.hidden) or i.forcedisplay:
                     
                     #print(i, i.position, i.last_position)
-                    
-                    self.surface.delete(f"ID{i.blit_id}")
+
+                    if i.clear_blit:
+                        self.surface.delete(f"ID{i.blit_id}")
                     #print(f"delete: {(time.time() - a) * 1000}")
                     a = time.time()
 
@@ -91,6 +127,7 @@ class ProjectWindow(PyNamical):
 
                     #print(f"update: {(time.time() - a) * 1000}")
                     a = time.time()
+
 
     def _close_parent_close(self):
         self.parent.terminated = True
