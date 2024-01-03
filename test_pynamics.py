@@ -6,7 +6,7 @@ ctx = pynamics.GameManager(pynamics.Dim(10000, 10000), tps=128, fps=0, event_tra
 window = pynamics.ProjectWindow(ctx)
 camera = pynamics.ViewPort(window)
 
-bob1 = pynamics.GameObject(ctx, 10, 10, 10, 10)
+#bob1 = pynamics.GameObject(ctx, 10, 10, 10, 10)
 thisTime = time.time()
 bob = pynamics.PhysicsBody(ctx, 100, 100, 100, 100, 2,
                            from_points=(((0, 0), (100, 100))
@@ -14,15 +14,15 @@ bob = pynamics.PhysicsBody(ctx, 100, 100, 100, 100, 2,
                                         , ((50, 100), (0, 0))
                                         ))
 
-bob3 = pynamics.PhysicsBody(ctx, 100, 100, 100, 100, 2,
-                           from_points=(((0, 0), (100, 100))
-                                        , ((100, 100), (50, 100))
-                                        , ((50, 100), (0, 0))
-                                        ))
+# bob3 = pynamics.PhysicsBody(ctx, 100, 100, 100, 100, 2,
+#                            from_points=(((0, 0), (100, 100))
+#                                         , ((100, 100), (50, 100))
+#                                         , ((50, 100), (0, 0))
+#                                         ))
 
-bob2 = pynamics.PhysicsBody(ctx, 500, 750, 1000, 1000, 2, use_gravity=False,use_mass=False
+bob2 = pynamics.PhysicsBody(ctx, 300, 750, 1000, 1000, 2, use_gravity=False,use_mass=False
                            )
-bob.rectitude = 5
+bob.rectitude = 0.7
 
 def condition():
     global thisTime

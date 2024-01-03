@@ -74,6 +74,8 @@ class GameManager(PyNamical):
         self._timedifferencetick = time.time()
         self.deltatime = 0
 
+        self.ticksteplisteners = 1
+
         @self.add_event_listener(event=EventType.KEYDOWN, condition=KeyEvaulator("quoteleft"))
         def open_debugger(n):
 
@@ -122,7 +124,12 @@ class GameManager(PyNamical):
 
             while self.debug != None and self.debug.tickchanger_paused:
                 time.sleep(0.01)
+                if self.debug.tickchanger_stepping > 0:
+                    self.debug.tickchanger_stepping -= 1
+                    break
                 continue
+
+
 
 
 
