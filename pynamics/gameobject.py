@@ -169,11 +169,16 @@ class GameObject(PyNamical):
         return collision
 
     def attach_movement_thread(self):
+        self.parent.ticksteplisteners+= 1
+
         def update_self():
             while self.parent.terminated == False:
 
                 while self.parent.debug != None and self.parent.debug.tickchanger_paused:
                     time.sleep(0.01)
+                    if self.parent.debug.tickchanger_stepping:
+                        self.parent.debug.tickchanger_stepping = 0
+                        break
                     continue
 
                 self.update()

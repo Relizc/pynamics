@@ -216,7 +216,7 @@ class Debugger:
         pass
 
     def _tickman_stepnext(self):
-        self.tickchanger_stepping = 1
+        self.tickchanger_stepping = self.parent.ticksteplisteners
 
     def _tickman_unpause(self):
         self.pp.config(text="Pause Tick", command=self._tickman_pause)
