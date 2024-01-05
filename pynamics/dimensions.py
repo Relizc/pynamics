@@ -107,6 +107,11 @@ class Vector2d():
         self.r = r
         self.f = f
 
+    def from_xy(x, y):
+        value = math.sqrt(x ** 2 + y ** 2)
+        angle = math.degrees(math.atan2(y, x))
+        return Vector2d(angle, value)
+
     def add_self(self, vector):
         q = self.add(vector)
         self.r = q.r
@@ -177,3 +182,6 @@ class Vector2d():
         if not isinstance(other, Vector2d):
             return NotImplemented
         return self.r == other.r and self.f == other.f
+    
+    def __add__(self, other):
+        return self.add(other)

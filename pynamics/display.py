@@ -98,8 +98,9 @@ class ProjectWindow(PyNamical):
                 if (moved and not i.hidden) or i.forcedisplay:
                     
                     #print(i, i.position, i.last_position)
-                    
-                    self.surface.delete(f"ID{i.blit_id}")
+
+                    if i.clear_blit:
+                        self.surface.delete(f"ID{i.blit_id}")
                     #print(f"delete: {(time.time() - a) * 1000}")
                     a = time.time()
 
