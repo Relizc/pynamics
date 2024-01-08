@@ -46,8 +46,11 @@ class ProjectWindow(PyNamical):
         self.surface = tk.Canvas(self._tk, width=size.x, height=size.y, bg="white", highlightthickness=0)
         self.surface.pack()
 
+        self.force_update = 0
+
     def blit(self):
         #self.surface.delete("all")
+        
         for i in self.parent.ghosts:
             self.surface.delete(f"ID{i.blit_id}")
         for i in self.parent.objects:
@@ -62,6 +65,8 @@ class ProjectWindow(PyNamical):
                 a = time.time()
 
                 moved = i.position != i.last_position
+                if self.force_update: 
+                    moved = True
                 if i.hidden:
                     self.surface.delete("all")
                     for j in self.parent.objects:
@@ -127,6 +132,9 @@ class ProjectWindow(PyNamical):
 
                     #print(f"update: {(time.time() - a) * 1000}")
                     a = time.time()
+
+        if self.force_update > 0:
+            self.force_update -= 1
 
 
     def _close_parent_close(self):

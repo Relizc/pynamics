@@ -120,6 +120,7 @@ class GameObject(PyNamical):
             ((self.position.x, self.position.y - self.size.y), (self.position.x, self.position.y)),
 
         ]
+        self.clear_blit = True
         if from_points is not None:
             self.points = []
             for i in from_points:
@@ -337,6 +338,7 @@ class PhysicsBody(GameObject):
         self.use_collide = use_collide
         self.fnet = Vector2d(0, 0)
         self.gravity = -0.1
+        
 
         # self.timeB = time.time()
         # self.timeA = time.time()

@@ -6,19 +6,34 @@ ctx = pynamics.GameManager(pynamics.Dim(10000, 10000), tps=128, fps=0, event_tra
 window = pynamics.ProjectWindow(ctx)
 camera = pynamics.ViewPort(window)
 
+
+
 bob1 = pynamics.GameObject(ctx, 10, 10, 10, 10)
 thisTime = time.time()
 bob = pynamics.PhysicsBody(ctx, 100, 100, 100, 100, 2,
-                           from_points=(((0, 0), (100, 100))
-                                        , ((100, 100), (50, 100))
-                                        , ((50, 100), (0, 0))
+                           from_points=(((0, 0), (0, 100)),
+                                        ((0, 100), (100, 100)),
+                                        ((100, 100), (100, 50)),
+                                        ((100, 50), (50, 50)),
+                                        ((50, 50), (50, 0)),
+                                        ((50, 0), (0, 0))
                                         ))
+nooo= pynamics.PhysicsBody(ctx, 100, 300, 100, 100, 2,
+                           from_points=(((0, 0), (0, 100)),
+                                        ((0, 100), (100, 100)),
+                                        ((100, 100), (100, 50)),
+                                        ((100, 50), (50, 50)),
+                                        ((50, 50), (50, 0)),
+                                        ((50, 0), (0, 0))
+                                        ), use_gravity=False,
+                                        use_mass=False)
 
 #
 
 bob2 = pynamics.PhysicsBody(ctx, 500, 750, 1000, 1000, 2, use_gravity=False,use_mass=False
                            )
 bob.rectitude = 0.5
+nooo.rectitude = 0.5
 
 def condition():
     global thisTime
@@ -54,8 +69,7 @@ def listen(self):
 
 @ctx.add_event_listener(event=pynamics.EventType.KEYDOWN, condition=pynamics.KeyEvaulator(pynamics.K_r))
 def listen(self):
-    bob.position.set(10, 10)
-    bob.clear()
+    camera.position = camera.position.add(0, 10)
 
 
 
