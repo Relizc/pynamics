@@ -69,7 +69,7 @@ def listen(self):
 
 @ctx.add_event_listener(event=pynamics.EventType.KEYDOWN, condition=pynamics.KeyEvaulator(pynamics.K_r))
 def listen(self):
-    camera.position = camera.position.add(0, 10)
+    bob.position.set(10, 10)
 
 
 

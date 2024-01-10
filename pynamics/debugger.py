@@ -3,6 +3,7 @@ import tkinter as tk
 from tkinter import ttk
 import tkinter.messagebox as tkmsg
 from .logger import Logger
+from .dimensions import Dimension, Vector
 from .events import EventType
 import datetime
 import time
@@ -21,7 +22,11 @@ class DebugPropertyEditor:
     SUPPORTED_TYPES = {
         "int": int,
         "str": str,
-        "float": float
+        "float": float,
+        "Dimension": Dimension.format_space_str,
+        "Dim": Dimension.format_space_str,
+        "Vector": Vector.format_space_str,
+        "Vector2d": Vector.format_space_str
     }
 
     def __init__(self, parent, fro, path):
@@ -41,6 +46,8 @@ class DebugPropertyEditor:
         tk.Label(self.tk, text=f"Changing property of", pady=0).grid(row=0)
         tk.Label(self.tk, text=f"<{property.__class__.__name__}> {property}", pady=0).grid(row=1)
 
+        print(property.__class__.__name__)
+
         self.ok = tk.StringVar(value=property.__class__.__name__)
         gg = []
         for i in self.SUPPORTED_TYPES:
@@ -48,7 +55,12 @@ class DebugPropertyEditor:
         self.option = tk.OptionMenu(self.tk, self.ok, *gg)
         self.option.grid(row=2)
 
-        self.e = tk.StringVar(value=str(property))
+        if isinstance(property, (str, int, float)):
+            self.e = tk.StringVar(value=str(property))
+        elif isinstance(property, (Dimension)):
+            self.e = tk.StringVar(value=str(property.x) + ", " + str(property.y))
+        elif isinstance(property, (Vector)):
+            self.e = tk.StringVar(value=str(property.r) + ", " + str(property.f))
 
         self.entry = tk.Entry(self.tk, textvariable=self.e)
         self.entry.grid(row=3)
@@ -98,7 +110,7 @@ class Debugger:
         if self.event_update:
 
 
-            self.l = tk.Label(self.events, text="4700 Events Called. EPS: 370")
+            self.l = tk.Label(self.events, text="0 Events Called. EPS: 0")
             self.l.grid(row=1, column=0, sticky="ew")
 
             self.event = ttk.Treeview(self.events, columns=("epoch", "type", "source"), show='headings')
@@ -198,7 +210,7 @@ class Debugger:
 
         self.points = [0]
         self.graph_x = 0
-        self.graph_x_factor = 5
+        self.graph_x_factor = 2
         self.last = 0
         self.graph_measure = 0
 
@@ -300,7 +312,7 @@ Tick DeltaTime: {self.parent.deltatime}""", font=("Courier", 14))
     def _workspace_property_change(self, e):
         stuff = self.m[int(self.info.focus())]
 
-        if not isinstance(stuff, (int, float, str)):
+        if not isinstance(stuff, (int, float, str, Dimension, Vector)):
             tkmsg.showinfo(f"Unable to edit property", f"The debugger cannot edit the property because the type {stuff.__class__.__name__} is not supported.")
             return
 

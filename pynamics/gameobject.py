@@ -14,10 +14,8 @@ from PIL import Image as ImageUtils
 from PIL import ImageTk
 
 
-class Point:
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
+class Point(Dimension):
+    pass
 
     # Given three collinear points p, q, r, the function checks if
 
@@ -128,46 +126,6 @@ class GameObject(PyNamical):
         self.id = id(self)
 
         self.parent.add_object(self)
-
-    def collide(self, other):
-        collision = False
-        if isinstance(other, GameObject):
-            for j in other.points:
-                for k in self.points:
-                    p1 = (j[0][0] + other.position.x, (j[0][1] + other.position.y) * -1)
-                    p2 = (j[1][0] + other.position.x, (j[1][1] + other.position.y) * -1)
-                    q1 = (k[0][0] + self.position.x, (k[0][1] + self.position.y) * -1)
-                    q2 = (k[1][0] + self.position.x, (k[1][1] + self.position.y) * -1)
-                    p1 = Point(p1[0], p1[1])
-                    p2 = Point(p2[0], p2[1])
-                    q1 = Point(q1[0], q1[1])
-                    q2 = Point(q2[0], q2[1])
-                    if doIntersect(p1, p2, q1, q2):
-                        collision = True
-                        break
-                if collision:
-                    break
-        return collision
-
-    def collide_side(self, other):
-        collision = False
-        if isinstance(other, GameObject):
-            for j in other.points:
-                for k in self.points:
-                    p1 = (j[0][0] + other.position.x, (j[0][1] + other.position.y) * -1)
-                    p2 = (j[1][0] + other.position.x, (j[1][1] + other.position.y) * -1)
-                    q1 = (k[0][0] + self.position.x, (k[0][1] + self.position.y) * -1)
-                    q2 = (k[1][0] + self.position.x, (k[1][1] + self.position.y) * -1)
-                    p1 = Point(p1[0], p1[1])
-                    p2 = Point(p2[0], p2[1])
-                    q1 = Point(q1[0], q1[1])
-                    q2 = Point(q2[0], q2[1])
-                    if doIntersect(p1, p2, q1, q2):
-                        collision = True
-                        break
-                if collision:
-                    break
-        return collision
 
     def attach_movement_thread(self):
         self.parent.ticksteplisteners+= 1
@@ -356,6 +314,46 @@ class PhysicsBody(GameObject):
         #     @self.parent.add_event_listener(event=EventType.TICK , priority = EventPriority.HIGHEST)
         #     def apply_collisions(e):
         #         self.handle_collisions()
+                    
+    def collide(self, other):
+        collision = False
+        if isinstance(other, GameObject):
+            for j in other.points:
+                for k in self.points:
+                    p1 = (j[0][0] + other.position.x, (j[0][1] + other.position.y) * -1)
+                    p2 = (j[1][0] + other.position.x, (j[1][1] + other.position.y) * -1)
+                    q1 = (k[0][0] + self.position.x, (k[0][1] + self.position.y) * -1)
+                    q2 = (k[1][0] + self.position.x, (k[1][1] + self.position.y) * -1)
+                    p1 = Point(p1[0], p1[1])
+                    p2 = Point(p2[0], p2[1])
+                    q1 = Point(q1[0], q1[1])
+                    q2 = Point(q2[0], q2[1])
+                    if doIntersect(p1, p2, q1, q2):
+                        collision = True
+                        break
+                if collision:
+                    break
+        return collision
+
+    def collide_side(self, other):
+        collision = False
+        if isinstance(other, GameObject):
+            for j in other.points:
+                for k in self.points:
+                    p1 = (j[0][0] + other.position.x, (j[0][1] + other.position.y) * -1)
+                    p2 = (j[1][0] + other.position.x, (j[1][1] + other.position.y) * -1)
+                    q1 = (k[0][0] + self.position.x, (k[0][1] + self.position.y) * -1)
+                    q2 = (k[1][0] + self.position.x, (k[1][1] + self.position.y) * -1)
+                    p1 = Point(p1[0], p1[1])
+                    p2 = Point(p2[0], p2[1])
+                    q1 = Point(q1[0], q1[1])
+                    q2 = Point(q2[0], q2[1])
+                    if doIntersect(p1, p2, q1, q2):
+                        collision = True
+                        break
+                if collision:
+                    break
+        return collision
 
     def update(self):
         self.acceleration.r = self.fnet.r

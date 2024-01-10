@@ -16,6 +16,10 @@ class Dimension:
         self.x = x
         self.y = y
 
+    def format_space_str(target):
+        a = list(map(float, target.split(",")))
+        return Dimension(a[0], a[1])
+
     def set(self, x: float, y: float):
         self.x = x
         self.y = y
@@ -86,7 +90,7 @@ class Dimension2d:
     def offset_y(self):
         return self.y.offset_x
 
-class Vector2d():
+class Vector():
     def __init__(self, r, f):
         """
 
@@ -106,6 +110,10 @@ class Vector2d():
         """
         self.r = r
         self.f = f
+
+    def format_space_str(target):
+        a = list(map(float, target.split(",")))
+        return Vector(a[0], a[1])
 
     def from_xy(x, y):
         value = math.sqrt(x ** 2 + y ** 2)
@@ -176,7 +184,7 @@ class Vector2d():
         self.f = 0
 
     def __repr__(self):
-        return f"Vector2d(Angle: {self.r}, Value: {self.f})"
+        return f"Vector(Angle: {self.r}, Value: {self.f})"
     
     def __eq__(self, other):
         if not isinstance(other, Vector2d):
@@ -185,3 +193,5 @@ class Vector2d():
     
     def __add__(self, other):
         return self.add(other)
+
+class Vector2d(Vector): pass

@@ -1,7 +1,7 @@
 from .display import ProjectWindow, ViewPort
 from .gameobject import GameObject, TopViewPhysicsBody, Image
-from .gamemanager import GameManager,PhysicsBody,Vector2d
-from .dimensions import Dimension, Dimension2d
+from .gamemanager import GameManager,PhysicsBody
+from .dimensions import Dimension, Dimension2d, Vector2d, Vector
 from .events import EventHolder, EventType, KeyEvaulator
 from .logger import Logger
 from . import utils
