@@ -9,8 +9,8 @@ camera = pynamics.ViewPort(window)
 bob1 = pynamics.GameObject(ctx, 10, 10, 10, 10)
 thisTime = time.time()
 bob = pynamics.PhysicsBody(ctx, 100, 100, 100, 100, 2,
-                           from_points=(((0, 0), (100, 100))
-                                        , ((100, 100), (50, 100))
+                           from_points=(((0, 0), (100, 50))
+                                        , ((100, 50), (50, 100))
                                         , ((50, 100), (0, 0))
                                         ))
 

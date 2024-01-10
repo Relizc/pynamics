@@ -6,6 +6,7 @@ import numpy as np
 from .events import EventPriority, EventType, KeyEvaulator
 from .interface import PyNamical
 from .dimensions import Dimension, Vector2d
+from .logger import Logger
 import math
 import cmath
 import tkinter as tk
@@ -111,6 +112,7 @@ class GameObject(PyNamical):
         self.absolute = Dimension(x, y)
         self.blit_id = None
         self.forcedisplay = False
+        self.clear_blit = True
         self.points = [
             ((self.position.x, self.position.y), (self.position.x - self.size.x, self.position.y)),
             ((self.position.x - self.size.x, self.position.y),
@@ -120,11 +122,33 @@ class GameObject(PyNamical):
             ((self.position.x, self.position.y - self.size.y), (self.position.x, self.position.y)),
 
         ]
+
+
+
+
+
         if from_points is not None:
             self.points = []
             for i in from_points:
                 self.points.append(i)
         self.id = id(self)
+
+        mx = 0
+        my = 0
+        nx = float("inf")
+        ny = float("inf")
+        for point in self.points:
+            mx = max(mx, max(point[0][0], point[1][0]))
+            my = max(my, max(point[1][0], point[1][1]))
+            nx = min(nx, min(point[0][0], point[1][0]))
+            ny = min(ny, min(point[1][0], point[1][1]))
+        vl = []
+        if (mx - nx) != self.size.x:
+            vl.append(f"deltaX = {mx - nx} while size.x = {self.size.x}")
+        if (my - ny) != self.size.y:
+            vl.append(f"deltaY = {mx - nx} while size.y = {self.size.y}")
+        if len(vl) > 0:
+            Logger.print(f"{self}'s visual size does not equal to programmed size. This might alogrithm issues. ({', '.join(vl)})", 3, prefix="&e[GameObjectDimensionAssertion]")
 
         self.parent.add_object(self)
 

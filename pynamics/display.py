@@ -62,6 +62,12 @@ class ProjectWindow(PyNamical):
                 a = time.time()
 
                 moved = i.position != i.last_position
+                if moved:
+                    #print(i.size)
+                    #print(i.points)
+                    pass
+
+
                 if i.hidden:
                     self.surface.delete("all")
                     for j in self.parent.objects:

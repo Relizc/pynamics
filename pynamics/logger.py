@@ -37,7 +37,7 @@ class Logger:
                 text = text.replace("&" + char, i[1])
         return text + Logger.RESET[1]
 
-    def print(text, channel=None, **kwargs):
+    def print(text, channel: object = None, **kwargs: object) -> object:
         if channel != None:
             if channel == 0:
                 text = f"&a(Client) {text}"
