@@ -108,7 +108,7 @@ class GameObject(PyNamical):
         self.hidden = False
         self.absolute = Dimension(x, y)
         self.blit_id = None
-        self.forcedisplay = False
+        self.force_update = 0
         self.points = [
             ((self.position.x, self.position.y), (self.position.x - self.size.x, self.position.y)),
             ((self.position.x - self.size.x, self.position.y),
@@ -126,24 +126,6 @@ class GameObject(PyNamical):
         self.id = id(self)
 
         self.parent.add_object(self)
-
-    def attach_movement_thread(self):
-        self.parent.ticksteplisteners+= 1
-
-        def update_self():
-            while self.parent.terminated == False:
-
-                while self.parent.debug != None and self.parent.debug.tickchanger_paused:
-                    time.sleep(0.01)
-                    if self.parent.debug.tickchanger_stepping:
-                        self.parent.debug.tickchanger_stepping = 0
-                        break
-                    continue
-
-                self.update()
-                time.sleep(self.parent._epoch_tps)
-
-        threading.Thread(target=update_self).start()
 
     def delete(self):
         if isinstance(self.parent.objects, list):
@@ -314,6 +296,24 @@ class PhysicsBody(GameObject):
         #     @self.parent.add_event_listener(event=EventType.TICK , priority = EventPriority.HIGHEST)
         #     def apply_collisions(e):
         #         self.handle_collisions()
+
+    def attach_movement_thread(self):
+        self.parent.ticksteplisteners+= 1
+
+        def update_self():
+            while self.parent.terminated == False:
+
+                while self.parent.debug != None and self.parent.debug.tickchanger_paused:
+                    time.sleep(0.01)
+                    if self.parent.debug.tickchanger_stepping:
+                        self.parent.debug.tickchanger_stepping = 0
+                        break
+                    continue
+
+                self.update()
+                time.sleep(self.parent._epoch_tps)
+
+        threading.Thread(target=update_self).start()
                     
     def collide(self, other):
         collision = False
@@ -428,32 +428,6 @@ class PhysicsBody(GameObject):
                     if collision:
                         break
             if collision:
-                # while True:
-                #     if self.parent.terminated: break
-                #     collision1 = False
-                #     for j in i.points:
-                #         for k in self.points:
-                #             p11 = (j[0][0] + i.position.x, (j[0][1] + i.position.y) * -1)
-                #             p22 = (j[1][0] + i.position.x, (j[1][1] + i.position.y) * -1)
-                #             q11 = (k[0][0] + self.position.x, (k[0][1] + self.position.y) * -1)
-                #             q22 = (k[1][0] + self.position.x, (k[1][1] + self.position.y) * -1)
-                #             p11 = Point(p11[0], p11[1])
-                #             p22 = Point(p22[0], p22[1])
-                #             q11 = Point(q11[0], q11[1])
-                #             q22 = Point(q22[0], q22[1])
-                #             if doIntersect(p11, p22, q11, q22):
-                #                 collision1 = True
-                #                 break
-                #         if collision1:
-                #             break
-                #
-                #     if collision1:
-                #         vel = Vector2d((self.velocity.r + 180) % 360, 1)
-                #         x1, y1 = vel.cart()
-                #         self.position.x += x1
-                #         self.position.y -= y1
-                #     else:
-                #         break
                 x, y = self.velocity.cart()
                 x += self.position.x
                 y -= self.position.y
@@ -523,6 +497,20 @@ class Text(GameObject):
         w, h = 10, 10
         super().__init__(parent, x, y, w, h)
         self.collision = False
-        self.styles.load_styles(kwargs.get("styles"))
+        self.style.load_styles(kwargs.get("styles"))
         self.text = text
         self.font = font
+        self.i=0
+
+        #self.__setattr__ = self._silent__setattr__
+
+    # This overrides the set attribute function when user does sometext.text = "anotherstring"
+    # Therefore no need to do self.old == self.new
+    def __setattr__(self, key, value):
+        if key == "text":
+            self.force_update += 1
+        super(Text, self).__setattr__(key, value)
+
+    def update(self):
+        print(self.i)
+        self.i+=1

@@ -66,7 +66,7 @@ class ProjectWindow(PyNamical):
 
                 moved = i.position != i.last_position
 
-                if (moved and not i.hidden) or i.forcedisplay:
+                if (moved and not i.hidden) or i.force_update:
                     
                     #print(i, i.position, i.last_position)
 
@@ -87,7 +87,7 @@ class ProjectWindow(PyNamical):
 
                     # If its text
                     elif isinstance(i, Text):
-                        print(i.text)
+                        self.surface.create_text(cam.x, cam.y, text=i.text, fill=i.font.color, font=str(i.font), anchor=NW, tags=f"ID{g}")
 
                     # If its a regular gameobject
                     elif len(i.points) > 0:

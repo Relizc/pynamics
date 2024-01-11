@@ -43,7 +43,6 @@ class GameManager(PyNamical):
         self.length = dimensions.y
         self.object_count = 0
         self.objects = []
-        self.objectpointers = {}
         self.updates = []
         self.listeners = []
         self.tpu = 1
@@ -195,5 +194,3 @@ class GameManager(PyNamical):
 
     def add_object(self, object: GameObject):
         self.objects.append(object)
-        a = self.objects[-1]
-        self.objectpointers[object.id] = id(a)

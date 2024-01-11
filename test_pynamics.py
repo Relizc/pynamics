@@ -29,7 +29,7 @@ nooo= pynamics.PhysicsBody(ctx, 100, 300, 100, 100, 2,
                                         use_mass=False)
 
 
-#hi = pynamics.Text(ctx, 100, 100, "Loser")
+
 
 #
 

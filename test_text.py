@@ -1,15 +1,16 @@
-import pygamepro
+import pynamics
 import random
+import uuid
 
-ctx = pygamepro.GameContext.from_dim(pygamepro.Dimension(500, 500), styles = {
-    "background-color": "white"
-}, tick = 128, maxfps = 144)
+ctx = pynamics.GameManager(pynamics.Dim(100, 100), tps=128, fps=0, event_tracker=True)
+window = pynamics.ProjectWindow(ctx)
+camera = pynamics.ViewPort(window)
 
-text = pygamepro.Text.create(ctx, pygamepro.Text.str("Hello World\nLMFAO"))
+hi = pynamics.Text(ctx, 100, 100, "Loser")
 
-@ctx.addEventListener("keydown", target = pygamepro.K_q)
-def q(self):
-    text.x = random.randint(0, 300)
-    text.y = random.randint(0, 300)
+@ctx.add_event_listener(event=pynamics.EventType.KEYDOWN, condition=pynamics.KeyEvaulator(pynamics.K_r))
+def d(ctx):
+    hi.text = str(uuid.uuid4())
+    print(hi.text)
 
 ctx.start()
