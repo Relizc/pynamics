@@ -105,8 +105,8 @@ class ProjectWindow(PyNamical):
                     #print(f"update: {(time.time() - a) * 1000}")
                     a = time.time()
 
-        if self.force_update > 0:
-            self.force_update -= 1
+        if i.force_update > 0:
+            i.force_update -= 1
 
 
     def _close_parent_close(self):
