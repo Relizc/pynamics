@@ -2,7 +2,7 @@ import tkinter as tk
 from .gamemanager import GameManager
 from .dimensions import Dimension, Dimension2d
 from .interface import PyNamical
-from .gameobject import GameObject
+from .gameobject import GameObject, Text
 from tkinter import NW
 import time
 
@@ -65,41 +65,7 @@ class ProjectWindow(PyNamical):
                 a = time.time()
 
                 moved = i.position != i.last_position
-                if self.force_update: 
-                    moved = True
-                if i.hidden:
-                    self.surface.delete("all")
-                    for j in self.parent.objects:
-                        if isinstance(j,GameObject):
-                            if not j.hidden:
 
-                                a = time.time()
-
-                                g = random.randint(-2 ** 64, 2 ** 64)
-
-                                cam = self.viewport.shift(j.position)
-
-                                if j.content is not None:
-                                    self.surface.create_image(cam.x, cam.y, anchor=NW, image=j.content, tags=f"ID{g}")
-                                    # print(f"point creation: {(time.time() - a) * 1000}")
-                                    a = time.time()
-
-                                elif len(j.points) > 0:
-                                    for j in j.points:
-                                        pos1 = j[0]
-                                        pos2 = j[1]
-                                        self.surface.create_line(pos1[0] + cam.x, pos1[1] + cam.y, pos2[0] + cam.x,
-                                                                 pos2[1] + cam.y, tags=f"ID{g}")
-
-                                    # print(f"multipoint creation: {(time.time() - a) * 1000}")
-                                    a = time.time()
-
-                                i.last_position = Dimension(i.position.x, i.position.y)
-                                i.blit_id = g
-
-                                # print(f"update: {(time.time() - a) * 1000}")
-                                a = time.time()
-                    break
                 if (moved and not i.hidden) or i.forcedisplay:
                     
                     #print(i, i.position, i.last_position)
@@ -112,12 +78,18 @@ class ProjectWindow(PyNamical):
                     g = random.randint(-2**64, 2**64)
 
                     cam = self.viewport.shift(i.position)
-
+                    
+                    # If its a thing with ass image. why would u do it like this but not making another image class
                     if i.content is not None:
                         self.surface.create_image(cam.x, cam.y, anchor=NW, image=i.content, tags=f"ID{g}")
                         #print(f"point creation: {(time.time() - a) * 1000}")
                         a = time.time()
 
+                    # If its text
+                    elif isinstance(i, Text):
+                        print(i.text)
+
+                    # If its a regular gameobject
                     elif len(i.points) > 0:
                         for j in i.points:
                             pos1 = j[0]
