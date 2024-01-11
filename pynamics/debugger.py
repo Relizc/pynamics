@@ -26,7 +26,8 @@ class DebugPropertyEditor:
         "Dimension": Dimension.format_space_str,
         "Dim": Dimension.format_space_str,
         "Vector": Vector.format_space_str,
-        "Vector2d": Vector.format_space_str
+        "Vector2d": Vector.format_space_str,
+        "bool": bool
     }
 
     def __init__(self, parent, fro, path):
