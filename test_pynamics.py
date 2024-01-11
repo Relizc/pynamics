@@ -28,6 +28,9 @@ nooo= pynamics.PhysicsBody(ctx, 100, 300, 100, 100, 2,
                                         ), use_gravity=False,
                                         use_mass=False)
 
+
+#hi = pynamics.Text(ctx, 100, 100, "Loser")
+
 #
 
 bob2 = pynamics.PhysicsBody(ctx, 500, 750, 1000, 1000, 2, use_gravity=False,use_mass=False

@@ -504,3 +504,25 @@ class PhysicsBody(GameObject):
                 self.velocity = Vector2d(phi, rho)
 
                 # time.sleep(self.parent._epoch_tps)
+
+class TextFont:
+
+    def __init__(self, name: str = "Helvetica", size: int = 15, type: str = "", color: str = "black"):
+        self.name = name
+        self.size = size
+        self.type = type
+        self.color = color
+    
+    def __str__(self):
+        return f"{self.name} {self.size} {self.type}"
+
+class Text(GameObject):
+
+    def __init__(self, parent, x, y, text, font=TextFont("Helvetica", 15), **kwargs):
+
+        w, h = 10, 10
+        super().__init__(parent, x, y, w, h)
+        self.collision = False
+        self.styles.load_styles(kwargs.get("styles"))
+        self.text = text
+        self.font = font

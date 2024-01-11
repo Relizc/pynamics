@@ -22,3 +22,4 @@ class PyNamical(EventHolder):
 
     def delete(self):
         pass
+

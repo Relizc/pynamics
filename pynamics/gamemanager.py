@@ -76,6 +76,9 @@ class GameManager(PyNamical):
         self._timedifferencetick = time.time()
         self.deltatime = 0
 
+        self._fpstime = time.time()
+        self.fps_deltatime = 0
+
         self.ticksteplisteners = 1
 
         @self.add_event_listener(event=EventType.KEYDOWN, condition=KeyEvaulator("quoteleft"))
@@ -176,6 +179,10 @@ class GameManager(PyNamical):
         self.f += 1
         self.window.blit()
         self.window.surface.after(int(self._epoch_fps * 1000), self.frame)
+
+        
+        self.fps_deltatime = time.time() - self._fpstime
+        self._fpstime = time.time()
 
     def add_tick_update(self, function):
         self.events[EventType.TICK].append(Executable(function, lambda i: True))

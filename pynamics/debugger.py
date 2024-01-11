@@ -210,6 +210,7 @@ class Debugger:
         self.tickchanger_stepping = 0
 
         self.points = [0]
+        self.fps_points = [0]
         self.graph_x = 0
         self.graph_x_factor = 2
         self.last = 0
@@ -258,15 +259,27 @@ Tick DeltaTime: {self.parent.deltatime}""", font=("Courier", 14))
         asdf = round(((1 / self.parent.deltatime) / (self.parent.tps + int(self.parent.tps * 0.5))) * 100)
         self.points.append(asdf)
 
-        if self.graph_x > 700: self.points.pop(0)
+        p = int((self.parent.fps_deltatime / self.parent._epoch_fps) * 30)
+        self.fps_points.append(p)
+
+        if self.graph_x > 700: 
+            self.points.pop(0)
+            self.fps_points.pop(0)
 
         self.statusgraph.delete("all")
 
-        for x in range(1, len(self.points)):
-            point_a = 100 - self.points[x - 1]
-            point_b = 100 - self.points[x]
+        color = ["red", "blue"]
+        n = 0
 
-            self.statusgraph.create_line((x - 1) * self.graph_x_factor, point_a, x * self.graph_x_factor, point_b, fill="red")
+        for x in range(1, len(self.points)):
+            n = 0
+            for pt in [self.points, self.fps_points]:
+                point_a = 100 - pt[x - 1]
+                point_b = 100 - pt[x]
+
+                self.statusgraph.create_line((x - 1) * self.graph_x_factor, point_a, x * self.graph_x_factor, point_b, fill=color[n])
+
+                n += 1
 
         self.last = asdf
         self.tk.after(10, self._tickman_graph_update)
