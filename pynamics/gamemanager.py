@@ -40,7 +40,7 @@ class GameManager(PyNamical):
         super().__init__(None, no_parent=True)
         self.dimensions = dimensions
         self.width = dimensions.x
-        self.length = dimensions.y
+        self.height = dimensions.y
         self.object_count = 0
         self.objects = []
         self.updates = []

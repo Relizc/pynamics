@@ -137,6 +137,8 @@ class GameObject(PyNamical):
             self.parent.ghosts.remove(self)
             del self
 
+    
+
     def __repr__(self):
         return f"GameObject()"
 
@@ -218,23 +220,6 @@ class TopViewPhysicsBody(GameObject):
         self.acceleration = Vector2d(0, 0)
         self.coefficient = floor_friction
 
-    def init_movement(self, force: int = 1):
-        @self.parent.add_event_listener(event=EventType.KEYHOLD, condition=KeyEvaulator("Up"))
-        def m(ctx):
-            self.force.add_self(Vector2d(90, force))
-
-        @self.parent.add_event_listener(event=EventType.KEYHOLD, condition=KeyEvaulator("Down"))
-        def m(ctx):
-            self.force.add_self(Vector2d(270, force))
-
-        @self.parent.add_event_listener(event=EventType.KEYHOLD, condition=KeyEvaulator("Left"))
-        def m(ctx):
-            self.force.add_self(Vector2d(180, force))
-
-        @self.parent.add_event_listener(event=EventType.KEYHOLD, condition=KeyEvaulator("Right"))
-        def m(ctx):
-            self.force.add_self(Vector2d(0, force))
-
     def update(self):
         self.acceleration = Vector2d(self.force.r, self.force.f / self.mass)
         self.force.clear()
@@ -276,26 +261,33 @@ class PhysicsBody(GameObject):
         self.use_mass = use_mass
         self.collision_type = int(collision_type)
         self.use_collide = use_collide
-        self.fnet = Vector2d(0, 0)
+        self.force = Vector2d(0, 0)
         self.gravity = -0.1
         
 
         # self.timeB = time.time()
         # self.timeA = time.time()
 
-        if self.use_gravity: self.fnet = Vector2d(90, self.gravity * self.mass)
+        if self.use_gravity: self.force = Vector2d(90, self.gravity * self.mass)
         if self.use_mass:
             self.attach_movement_thread()
 
-            def update_self():
-                while not self.parent.terminated:
-                    self.acceleration.r = self.fnet.r
-                    self.acceleration.f = self.fnet.f / self.mass
-        # if self.use_collide and self.use_mass:
-        #     # threading.Thread(target=self.handle_collisions).start()
-        #     @self.parent.add_event_listener(event=EventType.TICK , priority = EventPriority.HIGHEST)
-        #     def apply_collisions(e):
-        #         self.handle_collisions()
+    def init_movement(self, force: int = 1):
+        @self.parent.add_event_listener(event=EventType.KEYHOLD, condition=KeyEvaulator("Up"))
+        def m(ctx):
+            self.force.add_self(Vector2d(90, force))
+
+        @self.parent.add_event_listener(event=EventType.KEYHOLD, condition=KeyEvaulator("Down"))
+        def m(ctx):
+            self.force.add_self(Vector2d(270, force))
+
+        @self.parent.add_event_listener(event=EventType.KEYHOLD, condition=KeyEvaulator("Left"))
+        def m(ctx):
+            self.force.add_self(Vector2d(180, force))
+
+        @self.parent.add_event_listener(event=EventType.KEYHOLD, condition=KeyEvaulator("Right"))
+        def m(ctx):
+            self.force.add_self(Vector2d(0, force))
 
     def attach_movement_thread(self):
         self.parent.ticksteplisteners+= 1
@@ -354,52 +346,59 @@ class PhysicsBody(GameObject):
                 if collision:
                     break
         return collision
+    
+    # Added to avoid repeated code.
+    # Since there are a lot of objects extending PhysicsBody and we dont want the update code to be repeatedly
+    # coded again.
+    def handle_forces(self):
+        """Handles the object's delta-x based on velocity and calculates the delta-v due to gravity"""
 
-    def update(self):
-        self.acceleration.r = self.fnet.r
-        self.acceleration.f = self.fnet.f / self.mass
+        if self.use_gravity: 
+            self.force.add_self(Vector2d(90, self.gravity * self.mass))
 
-        self.velocity = self.velocity.add(
-            Vector2d(self.acceleration.r, self.acceleration.f))
+        self.acceleration.r = self.force.r
+        self.acceleration.f = self.force.f / self.mass
 
-        v = Vector2d(self.velocity.r, self.velocity.f)
-        v.f *= self.parent._epoch_tps
-        if self.use_collide and self.use_mass and self.collision_type == 1:
+        self.velocity = self.velocity.add(Vector2d(self.acceleration.r, self.acceleration.f))
 
-            self.handle_collisions()
-        elif self.use_collide and self.use_mass and self.collision_type == 2:
-            pass
         x3, y3 = self.velocity.cart()
 
         self.position.x += x3
         self.position.y -= y3
 
-        if self.use_gravity: self.fnet = Vector2d(90, self.gravity * self.mass)
+        self.force.clear()
 
-        # if self.use_collide and self.use_mass:
-        #     # threading.Thread(target=self.handle_collisions).start()
-        #     @self.parent.add_event_listener(event=EventType.TICK , priority = EventPriority.HIGHEST)
-        #     def apply_collisions(e):
-        #         self.handle_collisions()
+    def update(self):
+
+        self.handle_forces()
+
+        if self.use_collide and self.use_mass and self.collision_type == 1:
+            self.handle_collisions()
+        elif self.use_collide and self.use_mass and self.collision_type == 2:
+            pass
+        x3, y3 = self.velocity.cart()
 
     def add_force(self, force):
-        self.fnet = self.fnet.add(force)
+        self.force.add_self(force)
+
+    def add_velocity(self, velocity):
+        self.velocity.add_self(velocity)
 
     def apply_force(self, force, duration):
         def add_force():
-            self.fnet = self.fnet.add(force)
+            self.force = self.force.add(force)
             start_time = time.time()
             while True:
                 if time.time() - start_time >= duration:
                     break
                 time.sleep(self.parent._epoch_tps)
-            self.fnet = self.fnet.subtract(force)
+            self.force = self.force.subtract(force)
 
         thread_add_force = threading.Thread(target=add_force)
         thread_add_force.start()
 
     def clear(self):
-        self.fnet.clear()
+        self.force.clear()
         self.velocity.clear()
         self.acceleration.clear()
 
@@ -481,8 +480,47 @@ class PhysicsBody(GameObject):
 
 class Particle(PhysicsBody):
 
-    def __init__(self, parent, x, y, r):
-        super().__init__(parent, x, y, r*2, r*2)
+    def __init__(self, parent, x, y, r, **kwargs):
+        self.radius = r
+        self.r = self.radius # Alias
+        super().__init__(parent, x, y, r*2, r*2, **kwargs)
+
+    def reflect_vector(self, wall_dif = 90):
+        vixself = self.velocity.cart()[0]
+        viyself = self.velocity.cart()[1]
+
+        vixi = 0
+        viyi = 0
+        # print(vixself, viyself, vixi, viyi, i.mass, self.mass)
+
+        
+
+        vfxself = -(((self.mass - 10e19) / (self.mass + 10e19)) * vixself + (
+                (2 * 10e19) / (self.mass + 10e19)) * vixi)
+        vfyself = (((self.mass - 10e19) / (self.mass + 10e19)) * viyself + (
+                (2 * 10e19) / (self.mass + 10e19)) * viyi)
+
+        rho = np.sqrt(vfxself ** 2 + vfyself ** 2)
+        phi = np.arctan2(vfyself, vfxself) * 180 / np.pi
+
+        self.velocity = Vector2d(phi, rho)
+
+    def handle_wall_collisions(self):
+        r = self.x - self.r, self.y - self.r
+        m = self.x + self.r, self.y + self.r
+        # The object collided with a wall:
+        if min(r) < 0 or max(m) > self.parent.width or max(m) > self.parent.height:
+            # Object collided with bottom wall
+            if self.y + self.r > self.parent.height:
+                self.position.set(self.x, self.parent.height - self.r - 1)
+            self.reflect_vector()
+            
+
+    def update(self):
+        self.handle_wall_collisions()
+        self.handle_forces()
+
+    
 
 class TextFont:
 
