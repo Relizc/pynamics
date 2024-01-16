@@ -91,7 +91,8 @@ def doIntersect(p1, q1, p2, q2):
 
 class GameObject(PyNamical):
     def __init__(self, parent: PyNamical, x: float, y: float, width: float, height: float, contents: str = None,
-                 from_points: tuple = None):
+                 from_points: tuple = None,
+                 clear_blit: bool = True):
         """
         :param x: The position of the GameObject, on X-Axis
         :param y: The position of the GameObject, on Y-Axis
@@ -118,7 +119,7 @@ class GameObject(PyNamical):
             ((self.position.x, self.position.y - self.size.y), (self.position.x, self.position.y)),
 
         ]
-        self.clear_blit = True
+        self.clear_blit = clear_blit
         if from_points is not None:
             self.points = []
             for i in from_points:
@@ -234,9 +235,9 @@ class TopViewPhysicsBody(GameObject):
 
 class PhysicsBody(GameObject):
     def __init__(self, parent: PyNamical, x: float, y: float, width: float, height: float, mass: int = 1,
-                 contents: str = None, from_points: tuple = None, row=1.225, use_mass=True, use_collide=True,
-                 collision_type=1, use_gravity=True):
-        super().__init__(parent, x, y, width, height, contents, from_points)
+                 contents: str = None, from_points: tuple = None, row=1.225, rectitude=1, use_mass=True, use_collide=True,
+                 collision_type=1, use_gravity=True, **kwargs):
+        super().__init__(parent, x, y, width, height, contents, from_points, **kwargs)
 
         # @self.parent.add_tick_update
         # def applyAirResistance():
@@ -256,7 +257,7 @@ class PhysicsBody(GameObject):
         self.use_gravity = use_gravity
         self.acceleration = Vector2d(0, 0)
         self.coeff = 0.5
-        self.rectitude = 1
+        self.rectitude = rectitude
         self.row = row
         self.use_mass = use_mass
         self.collision_type = int(collision_type)
@@ -485,7 +486,7 @@ class Particle(PhysicsBody):
         self.r = self.radius # Alias
         super().__init__(parent, x, y, r*2, r*2, **kwargs)
 
-    def reflect_vector(self, wall_dif = 90):
+    def reflect_vector(self):
         vixself = self.velocity.cart()[0]
         viyself = self.velocity.cart()[1]
 
@@ -496,8 +497,28 @@ class Particle(PhysicsBody):
         
 
         vfxself = -(((self.mass - 10e19) / (self.mass + 10e19)) * vixself + (
-                (2 * 10e19) / (self.mass + 10e19)) * vixi)
+                (2 * 10e19) / (self.mass + 10e19)) * vixi) * self.rectitude
         vfyself = (((self.mass - 10e19) / (self.mass + 10e19)) * viyself + (
+                (2 * 10e19) / (self.mass + 10e19)) * viyi) * self.rectitude
+
+        rho = np.sqrt(vfxself ** 2 + vfyself ** 2)
+        phi = np.arctan2(vfyself, vfxself) * 180 / np.pi
+
+        self.velocity = Vector2d(phi, rho)
+
+    def reflect_vector_yaxis(self):
+        r = self.velocity
+
+        vixself = r.cart()[0]
+        viyself = r.cart()[1]
+
+        vixi = 0
+        viyi = 0
+        # print(vixself, viyself, vixi, viyi, i.mass, self.mass)
+
+        vfxself = (((self.mass - 10e19) / (self.mass + 10e19)) * vixself + (
+                (2 * 10e19) / (self.mass + 10e19)) * vixi)
+        vfyself = -(((self.mass - 10e19) / (self.mass + 10e19)) * viyself + (
                 (2 * 10e19) / (self.mass + 10e19)) * viyi)
 
         rho = np.sqrt(vfxself ** 2 + vfyself ** 2)
@@ -506,14 +527,22 @@ class Particle(PhysicsBody):
         self.velocity = Vector2d(phi, rho)
 
     def handle_wall_collisions(self):
-        r = self.x - self.r, self.y - self.r
-        m = self.x + self.r, self.y + self.r
-        # The object collided with a wall:
-        if min(r) < 0 or max(m) > self.parent.width or max(m) > self.parent.height:
-            # Object collided with bottom wall
-            if self.y + self.r > self.parent.height:
-                self.position.set(self.x, self.parent.height - self.r - 1)
+        # Collided to bottom wall
+        if self.y + self.r > self.parent.height:
+            self.position.set(self.x, self.parent.height - self.r - 1)
             self.reflect_vector()
+        # Collided to top wall
+        if self.y - self.r < 0:
+            self.position.set(self.x, self.r + 1)
+            self.reflect_vector()
+        # Collide to right wall
+        if self.x + self.r > self.parent.width:
+            self.position.set(self.parent.width - self.r - 1, self.y)
+            self.reflect_vector_yaxis()
+        # Collide to left wall
+        if self.x - self.r < 0:
+            self.position.set(self.r + 1, self.y)
+            self.reflect_vector_yaxis()
             
 
     def update(self):
