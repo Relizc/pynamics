@@ -2,7 +2,7 @@ import tkinter as tk
 from .gamemanager import GameManager
 from .dimensions import Dimension, Dimension2d
 from .interface import PyNamical
-from .gameobject import GameObject, Text
+from .gameobject import GameObject, Particle, Text
 from tkinter import NW
 import time
 
@@ -87,7 +87,11 @@ class ProjectWindow(PyNamical):
 
                     # If its text
                     elif isinstance(i, Text):
-                        self.surface.create_text(cam.x, cam.y, text=i.text, fill=i.font.color, font=str(i.font), anchor=NW, tags=f"ID{g}")
+                        print(i.text)
+
+                    # If its a Particle
+                    elif isinstance(i, Particle):
+                        self.surface.create_oval(i.x - i.r, i.y - i.r, i.x + i.r, i.y + i.r, tags=f"ID{g}")
 
                     # If its a regular gameobject
                     elif len(i.points) > 0:
@@ -105,8 +109,8 @@ class ProjectWindow(PyNamical):
                     #print(f"update: {(time.time() - a) * 1000}")
                     a = time.time()
 
-        if i.force_update > 0:
-            i.force_update -= 1
+        if self.force_update > 0:
+            self.force_update -= 1
 
 
     def _close_parent_close(self):
