@@ -87,7 +87,7 @@ class ProjectWindow(PyNamical):
 
                     # If its text
                     elif isinstance(i, Text):
-                        self.surface.create_text(cam.x, cam.y, text=i.text, fill=i.font.color, font=str(i.font), anchor=NW, tags=f"ID{g}")
+                        print(i.text)
 
                     # If its a regular gameobject
                     elif len(i.points) > 0:
@@ -105,8 +105,8 @@ class ProjectWindow(PyNamical):
                     #print(f"update: {(time.time() - a) * 1000}")
                     a = time.time()
 
-        if i.force_update > 0:
-            i.force_update -= 1
+        if self.force_update > 0:
+            self.force_update -= 1
 
 
     def _close_parent_close(self):

@@ -248,7 +248,7 @@ class TopViewPhysicsBody(GameObject):
 
 
 class PhysicsBody(GameObject):
-    def __init__(self, parent: PyNamical, x: float, y: float, width: float, height: float, mass: int,
+    def __init__(self, parent: PyNamical, x: float, y: float, width: float, height: float, mass: int = 1,
                  contents: str = None, from_points: tuple = None, row=1.225, use_mass=True, use_collide=True,
                  collision_type=1, use_gravity=True):
         super().__init__(parent, x, y, width, height, contents, from_points)
@@ -478,6 +478,11 @@ class PhysicsBody(GameObject):
                 self.velocity = Vector2d(phi, rho)
 
                 # time.sleep(self.parent._epoch_tps)
+
+class Particle(PhysicsBody):
+
+    def __init__(self, parent, x, y, r):
+        super().__init__(parent, x, y, r*2, r*2)
 
 class TextFont:
 
