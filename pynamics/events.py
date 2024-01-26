@@ -25,6 +25,9 @@ class EventType(enum.Enum):
     KEYPRESSED = 0x15
     APRESSED = 0x16
 
+    HOVER = 0x20
+    NO_HOVER = 0x21
+
 class Executable:
 
     def __init__(self, function, condition):
@@ -55,7 +58,9 @@ class EventHolder:
             EventType.KEYDOWN: [],
             EventType.KEYHOLD: [],
             EventType.KEYUP: [],
-            EventType.TICK: []
+            EventType.TICK: [],
+            EventType.HOVER: [],
+            EventType.NO_HOVER: []
         }
 
     def add_event_listener(self, event: EventType = EventType.NONE, priority: EventPriority=EventPriority.LOWEST, condition=lambda i: True, tick_delay=0):

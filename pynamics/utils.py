@@ -33,3 +33,5 @@ def establish_basic_movement_wasd(manager: GameManager, parent: GameObject):
     @manager.add_event_listener(event=EventType.KEYHOLD, condition=KeyEvaulator("d"))
     def m(ctx):
         parent.position.x += 1
+
+

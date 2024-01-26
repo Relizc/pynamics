@@ -13,6 +13,8 @@ import ctypes
 from PIL import Image as ImageUtils
 from PIL import ImageTk
 
+import random
+
 
 class Point(Dimension):
     pass
@@ -92,7 +94,8 @@ def doIntersect(p1, q1, p2, q2):
 class GameObject(PyNamical):
     def __init__(self, parent: PyNamical, x: float, y: float, width: float, height: float, contents: str = None,
                  from_points: tuple = None,
-                 clear_blit: bool = True):
+                 clear_blit: bool = True,
+                 anchor: str = "nw"):
         """
         :param x: The position of the GameObject, on X-Axis
         :param y: The position of the GameObject, on Y-Axis
@@ -103,13 +106,19 @@ class GameObject(PyNamical):
 
         self.position = Dimension(x, y)
         self.this_position = Dimension(x, y)
-        self.last_position = None
+
+        self.this_display_position = Dimension(self.this_position.x, self.position.y)
+        self.last_display_position = None
         self.size = Dimension(width, height)
-        self.content = contents
+        if contents != None:
+            self.content = ImageTk.PhotoImage(ImageUtils.open(contents))
+        else:
+            self.content = None
         self.hidden = False
         self.absolute = Dimension(x, y)
         self.blit_id = None
         self.force_update = 0
+        self.start_debug_highlight_tracking = False
         self.points = [
             ((self.position.x, self.position.y), (self.position.x - self.size.x, self.position.y)),
             ((self.position.x - self.size.x, self.position.y),
@@ -127,6 +136,8 @@ class GameObject(PyNamical):
         self.id = id(self)
 
         self.parent.add_object(self)
+
+        self.anchor = anchor
 
     def delete(self):
         if isinstance(self.parent.objects, list):
@@ -181,21 +192,39 @@ class GameObject(PyNamical):
         self.parent.frame()
         self.forcedisplay = False
 
+    def _debug_blit_once(self):
+        self.parent.delete_draws(f"DEBUG@{self._debughighlight}")
+        self._debughighlight = random.randint(-2**64, 2**64)
+        self.parent.create_rectangle(self.position.x, self.position.y, self.position.x + self.size.x, self.position.y + self.size.y,
+                                     outline="green",
+                                     width=2,
+                                     tags=f"DEBUG@{self._debughighlight}")
+
     def debug_highlight(self):
-        pass
+        self._debughighlight = random.randint(-2**64, 2**64)
+        self.parent.create_rectangle(self.position.x, self.position.y, self.position.x + self.size.x, self.position.y + self.size.y,
+                                     outline="green",
+                                     width=2,
+                                     tags=f"DEBUG@{self._debughighlight}")
+        self.start_debug_highlight_tracking = True
 
     def debug_unhighlight(self):
-        pass
+        self.start_debug_highlight_tracking = False
+        self.parent.delete_draws(f"DEBUG@{self._debughighlight}")
 
 
 class Image(GameObject):
 
     def __init__(self, parent: GameObject, x: float, y: float, width: float = -1, height: float = -1,
-                 image_path: str = None,
-                 resize_keep_ratio: bool = False):
-        super().__init__(parent, x, y, width, height)
-        self.image_path = image_path
-        self.image = ImageUtils.open(image_path)
+                 path: str = None,
+                 resize_keep_ratio: bool = False,
+                 **kwargs):
+        
+        self.image_path = path
+        self.image = ImageUtils.open(self.image_path)
+
+        super().__init__(parent, x, y, self.image.size[0], self.image.size[1], contents=None, **kwargs)
+
         if width != -1 or height != -1:
             if resize_keep_ratio:
                 self.image.thumbnail((width, height), ImageUtils.ANTIALIAS)
