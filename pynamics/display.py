@@ -91,7 +91,8 @@ class ProjectWindow(PyNamical):
 
                     # If its a Particle
                     elif isinstance(i, Particle):
-                        self.surface.create_oval(i.x - i.r, i.y - i.r, i.x + i.r, i.y + i.r, tags=f"ID{g}")
+                        self.surface.create_oval(i.x - i.r, i.y - i.r, i.x + i.r, i.y + i.r, tags=f"ID{g}",
+                                                 **i.style.property)
 
                     # If its a regular gameobject
                     elif len(i.points) > 0:

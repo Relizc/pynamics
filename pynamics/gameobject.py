@@ -3,7 +3,7 @@ import time
 
 import numpy as np
 
-from .events import EventPriority, EventType, KeyEvaulator
+from .events import EventPriority, EventType, KeyEvaulator, F_EventHolder_PhysicsEventsExclusive
 from .interface import PyNamical
 from .dimensions import Dimension, Vector2d
 import math
@@ -92,7 +92,8 @@ def doIntersect(p1, q1, p2, q2):
 class GameObject(PyNamical):
     def __init__(self, parent: PyNamical, x: float, y: float, width: float, height: float, contents: str = None,
                  from_points: tuple = None,
-                 clear_blit: bool = True):
+                 clear_blit: bool = True,
+                 **kwargs):
         """
         :param x: The position of the GameObject, on X-Axis
         :param y: The position of the GameObject, on Y-Axis
@@ -126,6 +127,7 @@ class GameObject(PyNamical):
                 self.points.append(i)
         self.id = id(self)
 
+        self.style.load_styles(kwargs.get("styles", {}))
         self.parent.add_object(self)
 
     def delete(self):
@@ -273,6 +275,8 @@ class PhysicsBody(GameObject):
         if self.use_mass:
             self.attach_movement_thread()
 
+        F_EventHolder_PhysicsEventsExclusive(self)
+
     def init_movement(self, force: int = 1):
         @self.parent.add_event_listener(event=EventType.KEYHOLD, condition=KeyEvaulator("Up"))
         def m(ctx):
@@ -307,46 +311,7 @@ class PhysicsBody(GameObject):
                 time.sleep(self.parent._epoch_tps)
 
         threading.Thread(target=update_self).start()
-                    
-    def collide(self, other):
-        collision = False
-        if isinstance(other, GameObject):
-            for j in other.points:
-                for k in self.points:
-                    p1 = (j[0][0] + other.position.x, (j[0][1] + other.position.y) * -1)
-                    p2 = (j[1][0] + other.position.x, (j[1][1] + other.position.y) * -1)
-                    q1 = (k[0][0] + self.position.x, (k[0][1] + self.position.y) * -1)
-                    q2 = (k[1][0] + self.position.x, (k[1][1] + self.position.y) * -1)
-                    p1 = Point(p1[0], p1[1])
-                    p2 = Point(p2[0], p2[1])
-                    q1 = Point(q1[0], q1[1])
-                    q2 = Point(q2[0], q2[1])
-                    if doIntersect(p1, p2, q1, q2):
-                        collision = True
-                        break
-                if collision:
-                    break
-        return collision
 
-    def collide_side(self, other):
-        collision = False
-        if isinstance(other, GameObject):
-            for j in other.points:
-                for k in self.points:
-                    p1 = (j[0][0] + other.position.x, (j[0][1] + other.position.y) * -1)
-                    p2 = (j[1][0] + other.position.x, (j[1][1] + other.position.y) * -1)
-                    q1 = (k[0][0] + self.position.x, (k[0][1] + self.position.y) * -1)
-                    q2 = (k[1][0] + self.position.x, (k[1][1] + self.position.y) * -1)
-                    p1 = Point(p1[0], p1[1])
-                    p2 = Point(p2[0], p2[1])
-                    q1 = Point(q1[0], q1[1])
-                    q2 = Point(q2[0], q2[1])
-                    if doIntersect(p1, p2, q1, q2):
-                        collision = True
-                        break
-                if collision:
-                    break
-        return collision
     
     # Added to avoid repeated code.
     # Since there are a lot of objects extending PhysicsBody and we dont want the update code to be repeatedly
@@ -428,6 +393,7 @@ class PhysicsBody(GameObject):
                     if collision:
                         break
             if collision:
+                self.call_event_listeners(EventType.PHYSICS_COLLIDE)
                 x, y = self.velocity.cart()
                 x += self.position.x
                 y -= self.position.y
@@ -467,7 +433,7 @@ class PhysicsBody(GameObject):
                 viyi = i.velocity.cart()[1]
                 # print(vixself, viyself, vixi, viyi, i.mass, self.mass)
 
-                vfxself = (((self.mass - i.mass) / (self.mass + i.mass)) * vixself + (
+                vfxself = -(((self.mass - i.mass) / (self.mass + i.mass)) * vixself + (
                         (2 * i.mass) / (self.mass + i.mass)) * vixi) * min(self.rectitude, i.rectitude)
                 vfyself = (((self.mass - i.mass) / (self.mass + i.mass)) * viyself + (
                         (2 * i.mass) / (self.mass + i.mass)) * viyi) * min(self.rectitude, i.rectitude)
@@ -484,6 +450,7 @@ class Particle(PhysicsBody):
     def __init__(self, parent, x, y, r, **kwargs):
         self.radius = r
         self.r = self.radius # Alias
+        self.ignore_collide = False
         super().__init__(parent, x, y, r*2, r*2, **kwargs)
 
     def reflect_vector(self):
@@ -526,28 +493,86 @@ class Particle(PhysicsBody):
 
         self.velocity = Vector2d(phi, rho)
 
+    # Moves away from the other particle
+    def move_away(self, other):
+
+        delta_x = other.position.x - self.position.x
+        delta_y = other.position.y - self.position.y
+
+        half_x = self.position.x + delta_x / 2
+        half_y = self.position.y + delta_y / 2
+
+        self_angle = math.degrees(math.atan((self.position.y - half_y) / (self.position.x - half_x))) + 180
+        self_move = self.r + 1 - self.position.distance(Dimension(half_x, half_y))
+        self_move_x = self_move * math.cos(math.radians(self_angle))
+        self_move_y = self_move * math.sin(math.radians(self_angle))
+
+        self.position.add_self(self_move_x, self_move_y)
+        other.position.add_self(-self_move_x, -self_move_y)
+
+        momentum_self = self.mass * self.velocity.f
+        momentum_other = other.mass * other.velocity.f
+        print(momentum_self, momentum_other)
+
+
+        self.velocity.f = momentum_other / self.mass
+        other.velocity.f = momentum_self / other.mass
+        print(self.velocity.f, other.velocity.f)
+
+
+
+
+
+    def handle_other_particle(self):
+
+
+        for other in self.parent.objects:
+            if other is self:
+                continue
+            if other.ignore_collide:
+                continue
+            if isinstance(other, Particle):
+                distance = self.position.distance(other.position)
+
+                if distance < self.r + other.r:
+                    self.ignore_collide = True
+                    other.ignore_collide = True
+                    print("collide")
+                    self.move_away(other)
+                    self.ignore_collide = False
+                    other.ignore_collide = False
+
+
     def handle_wall_collisions(self):
         # Collided to bottom wall
         if self.y + self.r > self.parent.height:
+            self.call_event_listeners(EventType.PHYSICS_COLLIDE)
             self.position.set(self.x, self.parent.height - self.r - 1)
             self.reflect_vector()
         # Collided to top wall
         if self.y - self.r < 0:
+            self.call_event_listeners(EventType.PHYSICS_COLLIDE)
             self.position.set(self.x, self.r + 1)
             self.reflect_vector()
+
         # Collide to right wall
         if self.x + self.r > self.parent.width:
+            self.call_event_listeners(EventType.PHYSICS_COLLIDE)
             self.position.set(self.parent.width - self.r - 1, self.y)
             self.reflect_vector_yaxis()
+
         # Collide to left wall
         if self.x - self.r < 0:
+            self.call_event_listeners(EventType.PHYSICS_COLLIDE)
             self.position.set(self.r + 1, self.y)
             self.reflect_vector_yaxis()
+
             
 
     def update(self):
         self.handle_wall_collisions()
         self.handle_forces()
+        self.handle_other_particle()
 
     
 

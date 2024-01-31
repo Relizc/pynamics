@@ -8,6 +8,10 @@ def change_debug_attacher(func):
     global DebugAttacher
     DebugAttacher = func
 
+# Initializes PhysicsObject events such as collide
+def F_EventHolder_PhysicsEventsExclusive(obj):
+    obj.events[EventType.PHYSICS_COLLIDE] = []
+
 class EventType(enum.Enum):
 
     NONE = 0x00
@@ -24,6 +28,9 @@ class EventType(enum.Enum):
     KEYHOLD_FRAMEBIND = 0x14
     KEYPRESSED = 0x15
     APRESSED = 0x16
+
+    # Physicsbody Exclusive
+    PHYSICS_COLLIDE = 0x100
 
 class Executable:
 
@@ -73,7 +80,7 @@ class EventHolder:
 
         return inner
 
-    def call_event_listeners(self, event: EventType = EventType.NONE, condition=None):
+    def call_event_listeners(self, event: EventType = EventType.NONE, condition=None, *args, **kwargs):
         """
         Call all event listeners with optional condition that will be passed into a function's condition lambda event
         :param event: The event name, EventType
@@ -83,4 +90,4 @@ class EventHolder:
         for func in self.events[event]:
             if func.condition(condition):
                 DebugAttacher(event, self, func)
-                func(self)
+                func(self, *args, **kwargs)

@@ -34,6 +34,9 @@ class Dimension:
         self.x += x
         self.y += y
 
+    def distance(self, other):
+        return math.sqrt((other.x - self.x) ** 2 + (other.y - self.y) ** 2)
+
     def add_dim_self(self, dim):
         self.x += dim.x
         self.y += dim.y
