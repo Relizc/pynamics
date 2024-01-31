@@ -4,7 +4,7 @@ import random
 
 ctx = pynamics.GameManager(pynamics.Dim(10000, 10000), tps=128, fps=0, event_tracker=True)
 window = pynamics.ProjectWindow(ctx)
-camera = pynamics.ViewPort(window)
+camera = pynamics.ViewPort(window, position=pynamics.Dimension(0, 0))
 
 
 
@@ -29,7 +29,7 @@ nooo= pynamics.PhysicsBody(ctx, 100, 300, 100, 100, 2,
                                         use_mass=False)
 
 
-
+#hi = pynamics.Text(ctx, 100, 100, "Loser")
 
 #
 

@@ -64,26 +64,26 @@ class ProjectWindow(PyNamical):
 
                 a = time.time()
 
-                moved = i.position != i.last_position
+                moved = i.position != i.last_display_position
 
                 if (moved and not i.hidden) or i.force_update:
-                    
+    
                     #print(i, i.position, i.last_position)
 
                     if i.clear_blit:
                         self.surface.delete(f"ID{i.blit_id}")
-                    #print(f"delete: {(time.time() - a) * 1000}")
-                    a = time.time()
+
+                    if i.start_debug_highlight_tracking:
+                        i._debug_blit_once()
 
                     g = random.randint(-2**64, 2**64)
 
                     cam = self.viewport.shift(i.position)
+                    self.this_display_position = Dimension(cam.x, cam.y)
                     
                     # If its a thing with ass image. why would u do it like this but not making another image class
                     if i.content is not None:
-                        self.surface.create_image(cam.x, cam.y, anchor=NW, image=i.content, tags=f"ID{g}")
-                        #print(f"point creation: {(time.time() - a) * 1000}")
-                        a = time.time()
+                        self.surface.create_image((cam.x, cam.y), image=i.content, anchor=i.anchor, tags=f"ID{g}")
 
                     # If its text
                     elif isinstance(i, Text):
@@ -99,16 +99,10 @@ class ProjectWindow(PyNamical):
                         for j in i.points:
                             pos1 = j[0]
                             pos2 = j[1]
-                            self.surface.create_line(pos1[0] + cam.x,pos1[1] + cam.y,pos2[0] + cam.x,pos2[1]+ cam.y, tags=f"ID{g}")
-
-                        #print(f"multipoint creation: {(time.time() - a) * 1000}")
-                        a = time.time()
+                            self.surface.create_line(pos1[0] + cam.x, pos1[1] + cam.y, pos2[0] + cam.x, pos2[1] + cam.y, tags=f"ID{g}")
                     
-                    i.last_position = Dimension(i.position.x, i.position.y)
+                    i.last_display_position = Dimension(i.position.x, i.position.y)
                     i.blit_id = g
-
-                    #print(f"update: {(time.time() - a) * 1000}")
-                    a = time.time()
 
         if self.force_update > 0:
             self.force_update -= 1

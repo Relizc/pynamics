@@ -338,7 +338,7 @@ Tick DeltaTime: {self.parent.deltatime}""", font=("Courier", 14))
         stuff = self.q[int(self.explorer.focus())]
         if self.lastLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL != None:
             self.lastLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL.debug_unhighlight()
-        stuff.debug_unhighlight()
+        stuff.debug_highlight()
         self.lastLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL = stuff
 
 

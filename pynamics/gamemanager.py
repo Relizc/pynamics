@@ -70,6 +70,8 @@ class GameManager(PyNamical):
         self.ghosts = []
         self.pressed = {}
 
+        self.mouse = Dimension(-1, -1)
+
         self.debug = None
 
         self._timedifferencetick = time.time()
@@ -118,7 +120,13 @@ class GameManager(PyNamical):
         self.window._tk.after(100, self.frame)
         self.window._tk.bind("<KeyPress>", self._key)
         self.window._tk.bind("<KeyRelease>", self._key)
+        self.window._tk.bind("<Motion>", self._mouse)
         self.window.start()
+
+    def _mouse(self, event):
+        x, y = event.x, event.y
+        self.mouse.x = x
+        self.mouse.y = y
 
     def update(self):
 
@@ -134,11 +142,13 @@ class GameManager(PyNamical):
                 continue
 
 
-
+            
 
 
             self.deltatime = time.time() - self._timedifferencetick
             self._timedifferencetick = time.time()
+
+            self.check_mouse_events()
 
             self.call_event_listeners(EventType.TICK)
 
@@ -155,6 +165,13 @@ class GameManager(PyNamical):
             time.sleep(self._epoch_tps)
             # time.sleep(0.0001)
             # time.sleep(random.randint(0, 100) / 1000)
+
+    # Checks if the mouse is hovering or clicking anything.
+    def check_mouse_events(self):
+        for i in self.objects:
+            if isinstance(i, GameObject):
+                pass
+
 
     def listen(self):
         while True:
@@ -194,3 +211,12 @@ class GameManager(PyNamical):
 
     def add_object(self, object: GameObject):
         self.objects.append(object)
+
+    def set_title(self, str):
+        self.window._tk.title(str)
+
+    def create_rectangle(self, x1, y1, x2, y2, **kwargs):
+        self.window.surface.create_rectangle(x1, y1, x2, y2, **kwargs)
+
+    def delete_draws(self, id):
+        self.window.surface.delete(id)
