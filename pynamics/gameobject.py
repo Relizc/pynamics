@@ -496,7 +496,7 @@ class PhysicsBody(GameObject):
                 viyi = i.velocity.cart()[1]
                 # print(vixself, viyself, vixi, viyi, i.mass, self.mass)
 
-                vfxself = (((self.mass - i.mass) / (self.mass + i.mass)) * vixself + (
+                vfxself = -(((self.mass - i.mass) / (self.mass + i.mass)) * vixself + (
                         (2 * i.mass) / (self.mass + i.mass)) * vixi) * min(self.rectitude, i.rectitude)
                 vfyself = (((self.mass - i.mass) / (self.mass + i.mass)) * viyself + (
                         (2 * i.mass) / (self.mass + i.mass)) * viyi) * min(self.rectitude, i.rectitude)

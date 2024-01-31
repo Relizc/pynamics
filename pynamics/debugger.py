@@ -16,6 +16,14 @@ def change(s, a, b, c):
     s.parent._workspace_select(None)
     s.tk.destroy()
 
+class Console:
+
+    def __init__(self, parent):
+        self.parent = parent
+
+    def execute(self):
+        pass
+
 
 class DebugPropertyEditor:
 
@@ -102,6 +110,21 @@ class Debugger:
 
         self._tps = tk.Label(self.general, text=f"TPS: ? (Set: {self.parent.tps})")
         self._tps.grid(row=1, column=0, sticky="w")
+
+        ### Console ###
+
+        self.console = tk.Frame(self.nb)
+        self.console.pack(fill="both", expand=True)
+        self.nb.add(self.console, text="Console")
+
+        self.consoletext = tk.Text(self.console, height=0)
+        self.consoletext.pack(fill="both", expand=True)
+
+        self.consoleinput = tk.Entry(self.console, width=0, font=("Consolas", 11))
+        self.consoleinput.pack(fill="both", expand=True, side="left")
+
+        self.consolesend = tk.Button(self.console, text="Execute", command=self._console_execute)
+        self.consolesend.pack(side="left")
 
         ### Event Tracker ###
         self.events = ttk.Frame(self.nb)
@@ -216,6 +239,10 @@ class Debugger:
         self.last = 0
         self.graph_measure = 0
 
+    def _console_execute(self):
+        q = self.consoleinput.get()
+        exec(f"print({q})")
+
     def _tickman_change_tps(self):
         f = self._tickinput.get()
         #print(f)
@@ -297,6 +324,7 @@ Tick DeltaTime: {self.parent.deltatime}""", font=("Courier", 14))
 
         for i in start:
             self._ws_prop_iid += 1
+
             if isinstance(start, list):
                 bb = f"ListIndex({ind})<{i.__class__.__name__}> = {i}"
                 item = i
@@ -354,7 +382,7 @@ Tick DeltaTime: {self.parent.deltatime}""", font=("Courier", 14))
 
         self.m = {}
 
-        for i in stuff.__dict__:
+        for i in sorted(stuff.__dict__):
             thing = stuff.__dict__[i]
             if isinstance(thing, list):
                 bb = f"[Iterable List({len(thing)})]"
@@ -377,6 +405,8 @@ Tick DeltaTime: {self.parent.deltatime}""", font=("Courier", 14))
         self.explorer.insert('', tk.END, text=next.__class__.__name__, open=False, iid=self._workspace_iid)
         self.q[self._workspace_iid] = next
         self.explorer.move(self._workspace_iid, fr, 2147483647)
+
+
 
         for i in next.children:
             self._workspace_dfs(i, c)
