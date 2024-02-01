@@ -7,6 +7,7 @@ from .dimensions import Dimension, Vector
 from .events import EventType
 import datetime
 import time
+import traceback
 import inspect
 import random
 
@@ -18,11 +19,28 @@ def change(s, a, b, c):
 
 class Console:
 
-    def __init__(self, parent):
+    def __init__(self, parent, root, output):
         self.parent = parent
+        self.output = output
 
-    def execute(self):
-        pass
+        self.output.insert(tk.END, "Console is now enabled.\nUse \"main\" to access root GameManager.\n")
+        self.root = root
+
+    def log(self, text):
+        self.output.insert(tk.END, str(text) + "\n")
+        self.output.see(tk.END)
+
+    def execute(self, query):
+
+        main = self.root
+
+        try:
+            exec(f"self.log({query})")
+        except:
+            try:
+                exec(f"{query}")
+            except:
+                self.log(traceback.format_exc())
 
 
 class DebugPropertyEditor:
@@ -122,9 +140,12 @@ class Debugger:
 
         self.consoleinput = tk.Entry(self.console, width=0, font=("Consolas", 11))
         self.consoleinput.pack(fill="both", expand=True, side="left")
+        self.consoleinput.bind("<Return>", lambda i: self._console_execute())
 
         self.consolesend = tk.Button(self.console, text="Execute", command=self._console_execute)
         self.consolesend.pack(side="left")
+
+        self.consoleobj = Console(self, self.parent, self.consoletext)
 
         ### Event Tracker ###
         self.events = ttk.Frame(self.nb)
@@ -241,7 +262,8 @@ class Debugger:
 
     def _console_execute(self):
         q = self.consoleinput.get()
-        exec(f"print({q})")
+        self.consoleinput.delete(0, tk.END)
+        self.consoleobj.execute(q)
 
     def _tickman_change_tps(self):
         f = self._tickinput.get()
