@@ -13,16 +13,16 @@ class ClockResizer:
 class Dimension:
 
     def __init__(self, x: float, y: float):
-        self.x = x
-        self.y = y
+        self.x = round(x, 2)
+        self.y = round(y, 2)
 
     def format_space_str(target):
         a = list(map(float, target.split(",")))
         return Dimension(a[0], a[1])
 
     def set(self, x: float, y: float):
-        self.x = x
-        self.y = y
+        self.x = round(x, 2)
+        self.y = round(y, 2)
 
     def add(self, x: float, y: float):
         return Dimension(self.x + x, self.y + y)
@@ -111,8 +111,8 @@ class Vector():
             etc.
         :param f: the value of the vector
         """
-        self.r = r
-        self.f = f
+        self.r = round(r, 2)
+        self.f = round(f, 2)
 
     def format_space_str(target):
         a = list(map(float, target.split(",")))

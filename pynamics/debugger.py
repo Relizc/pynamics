@@ -34,6 +34,8 @@ class Console:
 
         main = self.root
 
+
+
         try:
             exec(f"self.log({query})")
         except:
