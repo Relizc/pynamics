@@ -548,6 +548,7 @@ class DedicatedServer(PyNamical):
             threading.Thread(target=self.process, args=(connection, ip)).start()
 
     def network_edit(self, object, key, value):
+        print(object, key, value)
         packet = P_DownstreamResourceEdit(object.uuid, key)
         packet.write_with_type(value)
         for i in self.users:

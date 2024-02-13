@@ -21,8 +21,9 @@ q = 0
 def ccccc(this):
     global q
     q += 1
-    if q == 20:
+    if q == 128:
         q = 0
-        circle61.position = pn.Dim(random.randint(1, 100), random.randint(1, 100))
+        circle61.velocity = pn.Vector(random.randint(0, 360), random.randint(1, 5))
+
 
 ctx.start()

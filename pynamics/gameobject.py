@@ -268,7 +268,7 @@ class TopViewPhysicsBody(GameObject):
 
         self.velocity.add_self(v)
 
-
+@socket_whitelisted_attributes("position", "velocity")
 class PhysicsBody(GameObject):
     def __init__(self, parent: PyNamical, x: float = 0, y: float = 0, width: float = 10, height: float = 10, mass: int = 1,
                  contents: str = None, from_points: tuple = None, row=1.225, rectitude=1, use_mass=True, use_collide=True,
@@ -396,7 +396,7 @@ class PhysicsBody(GameObject):
         self.acceleration.r = self.force.r
         self.acceleration.f = self.force.f / self.mass
 
-        self.velocity = self.velocity.add(Vector2d(self.acceleration.r, self.acceleration.f))
+        self.velocity.add_self(Vector2d(self.acceleration.r, self.acceleration.f))
 
         x3, y3 = self.velocity.cart()
 
@@ -413,7 +413,6 @@ class PhysicsBody(GameObject):
             self.handle_collisions()
         elif self.use_collide and self.use_mass and self.collision_type == 2:
             pass
-        x3, y3 = self.velocity.cart()
 
     def add_force(self, force):
         self.force.add_self(force)
@@ -514,7 +513,7 @@ class PhysicsBody(GameObject):
                 self.velocity = Vector2d(phi, rho)
 
                 # time.sleep(self.parent._epoch_tps)
-@socket_whitelisted_attributes("position")
+
 class Particle(PhysicsBody):
 
     def __init__(self, parent, x = 0, y = 0, r = 10, **kwargs):
