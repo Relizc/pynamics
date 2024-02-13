@@ -8,7 +8,7 @@ vcam = pn.DedicatedServer(ctx)
 vcam.DOWNSTREAM_PING_TIMEOUT = 5
 vcam.UPSTREAM_PACKET_WAIT_TIME = 2
 
-circle61 = pn.Particle(ctx, 80, 10, 10, use_gravity=True, rectitude=0.5, clear_blit=True, mass=10)
+circle61 = pn.Particle(ctx, 80, 10, 10, use_gravity=True, rectitude=0.5, clear_blit=True, mass=20)
 
 large = pn.ExampleLargeBinaryObject(ctx)
 print(large.uuid)

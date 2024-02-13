@@ -38,7 +38,6 @@ class GameManager(PyNamical):
                  tps: int = 128,
                  fps: int = 0,
                  event_tracker: bool = False):
-
         super().__init__(None, no_parent=True)
         self.dimensions = dimensions
         self.width = dimensions.x

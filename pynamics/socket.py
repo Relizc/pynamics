@@ -6,6 +6,8 @@ import threading
 import time
 from .logger import Logger
 import pickle
+import struct
+from numpy import float32, float64
 
 # Helper Object (Byte)
 class u_int8(int): pass
@@ -37,11 +39,18 @@ class bytesArray(bytes): pass
 # Helper Object (Regular Int)
 class VarInt(int): pass
 
+# Helper Object (Extended Float)
+class double(float64): pass
+
 T_TypeToInt = {
     int: 0x08,
     str: 0x09,
     bytes: 0x0b,
-    bool: 0x0c
+    bool: 0x0c,
+    float: 0x0d,
+    double: 0x0e,
+    float32: 0x0d,
+    float64: 0x0e
 }
 
 T_IntToType = {
@@ -57,7 +66,9 @@ T_IntToType = {
     0x09: str,
     0x0a: uuid.UUID,
     0x0b: bytes,
-    0x0c: bool
+    0x0c: bool,
+    0x0d: float,
+    0x0e: double
 }
 
 class Packet:
@@ -65,9 +76,15 @@ class Packet:
     fields = []
 
     def __init__(self, *args, buffer=b"", write_packetid=True):
-        self.buffer = buffer
+        self.buffer = b""
+        self.read_pointer = 1
+
+        if write_packetid:
+            self.write_uint8(self.packetid)
+
+        self.buffer += buffer
         self.objects = []
-        self.read_pointer = 0
+
         self.T_PacketCorrespondingTypeWriter = {
             int: self.write_varint,
             u_int8: self.write_uint8,
@@ -82,27 +99,31 @@ class Packet:
             uuid.UUID: self.write_UUID,
             bytes: self.write_bytes,
             VarInt: self.write_varint,
-            bool: self.write_bool
+            bool: self.write_bool,
+            float: self.write_float,
+            double: self.write_double,
+            float64: self.write_double
         }
         self.T_PacketCorrespondingTypeReader = {
-            int: self.write_varint,
+            int: self.read_varint,
             u_int8: self.read_uint8,
             u_int16: self.read_uint16,
             u_int32: self.read_uint32,
             u_int64: self.read_uint64,
-            int8: self.write_int8,
-            int16: self.write_int16,
-            int32: self.write_int32,
-            int64: self.write_int64,
+            int8: None,
+            int16: None,
+            int32: None,
+            int64: None,
             str: self.read_string,
             uuid.UUID: self.read_UUID, 
             bytes: self.read_bytes,
             VarInt: self.read_varint,
-            bool: self.write_bool
+            bool: self.read_bool,
+            float: self.read_float,
+            double: self.read_double,
+            float64: self.read_double
         }
-        if write_packetid:
-            self.write_uint8(self.packetid)
-            self.read_pointer = 1
+
         if len(args) != 0:
             for kw in range(len(self.fields)):
                 f = self.fields[kw]
@@ -123,9 +144,14 @@ class Packet:
         else:
             self.write_uint8(0)
 
+    def write_float(self, var):
+        x = struct.pack("f", var)
+        self.buffer += x
+
+
     def write_with_type(self, var):
         typeint = T_TypeToInt[var.__class__]
-        self.write_int8(typeint)
+        self.write_varint(typeint)
         self.T_PacketCorrespondingTypeWriter[var.__class__](var)
 
     def type_write(self, var, type):
@@ -232,6 +258,16 @@ class Packet:
         b = self.buffer[self.read_pointer : self.read_pointer + l]
         self.read_pointer += l
         return b
+
+    def read_with_type(self):
+        typeint = self.read_varint()
+        readed = self.T_PacketCorrespondingTypeReader[T_IntToType[typeint]]()
+        return readed
+
+    def read_float(self):
+        x = struct.unpack("f", self.buffer[self.read_pointer : self.read_pointer + 4])[0]
+        self.read_pointer += 4
+        return x
     
     def read_all(self):
         for i in self.fields:
@@ -240,6 +276,15 @@ class Packet:
     def size(self):
         """Gets the packet size, in number of bytes"""
         return len(self.buffer)
+
+    def write_double(self, var):
+        c = struct.pack("d", var)
+        self.buffer += c
+
+    def read_double(self):
+        x = struct.unpack("d", self.buffer[self.read_pointer : self.read_pointer + 8])[0]
+        self.read_pointer += 8
+        return x
     
     def __repr__(self):
         n = ", ".join(map(lambda i: i.__name__, self.fields))
@@ -273,7 +318,7 @@ def obj_to_bytes(obj: PyNamical):
 
     stream = Packet(write_packetid=False)
 
-    if obj.parent == None:
+    if obj.parent is None or obj.parent.parent is None:
         stream.write_uint8(0)
     else:
         stream.write_uint8(1)
@@ -285,13 +330,16 @@ def obj_to_bytes(obj: PyNamical):
     for i in dir(obj):
         
         if isinstance(obj.__getattribute__(i), tuple(T_TypeToInt.keys())):
-            #print(i)
             stream.write_string(i)
             stream.write_with_type(obj.__getattribute__(i))
 
     return stream
 
-
+@PacketId(0x00)
+class P_DownstreamSayNothing(Packet):
+    """0x00 Say Nothing: Server has nothing to say to client. Usually a response when client pings and there are no packets to send to client
+    """
+    pass
 
 @PacketFields(uuid.UUID)
 @PacketId(0x01)
@@ -308,9 +356,8 @@ class P_UpstreamHandshake(Packet):
         for i in parent.parent.children:
             if isinstance(i, DedicatedServer):
                 continue
-
-            packet = P_DownstreamResource(buffer=obj_to_bytes(i).buffer)
-
+            k = obj_to_bytes(i).buffer
+            packet = P_DownstreamResource(buffer=k)
             parent.send(x, packet)
 
 @PacketId(0x02)
@@ -327,12 +374,16 @@ class P_UpstreamStayAlive(Packet):
         while True:
             if len(user.packets) > 0:
                 pack = user.packets.pop(0)
-                Logger.print(f"&eUpstream   &b-> {ip[0]}:{ip[1]} : {pack} ({H_FormatBytes(pack.size())})", prefix="[DedicatedServer]")
-                #print(f"Sth to esnd, packet size: {pack.buffer}")
+                Logger.print(f"&eUpstream   &b-> {ip[0]}:{ip[1]} : {pack} ({H_FormatBytes(pack.size())})",
+                             prefix="[DedicatedServer]")
+                # print(f"Sth to esnd, packet size: {pack.buffer}")
                 connection.send(pack.buffer)
                 break
             if time.time() - n > parent.UPSTREAM_PACKET_WAIT_TIME:
-                connection.send(b"\x00")
+                pack = P_DownstreamSayNothing()
+                Logger.print(f"&eUpstream   &b-> {ip[0]}:{ip[1]} : {pack} ({H_FormatBytes(pack.size())})",
+                             prefix="[DedicatedServer]")
+                connection.send(pack.buffer)
                 break
             time.sleep(0.01)
 
@@ -354,7 +405,28 @@ class P_DownstreamResource(Packet):
     """bytes[0]: Object path - Picked Object Path
     0x04 Resource: Tells the client to spawn or create a specific resource
     """
-    pass
+    def handle(self, parent, connection, ip):
+        hasparent = self.read_bool()
+        if hasparent:
+            pp = self.read_UUID()
+            p = PyNamical.LINKER[pp]
+        else:
+            p = parent.parent
+
+        id = self.read_UUID()
+        clazz = pickle.loads(self.read_bytes())
+        loaded = clazz(p)
+        setattr(loaded, "Replicated", True)
+
+        while self.read_pointer < self.size():
+            key = self.read_string()
+            if key == "Replicated":
+                continue
+            value = self.read_with_type()
+            print(key, value)
+            setattr(loaded, key, value)
+
+        print(p, id, loaded)
 
 # https://stackoverflow.com/questions/12523586/python-format-size-application-converting-b-to-kb-mb-gb-tb
 def H_FormatBytes(size):
@@ -379,7 +451,7 @@ class DedicatedServer(PyNamical):
     UPSTREAM_PACKET_WAIT_TIME = 15
     DOWNSTREAM_PING_TIMEOUT = 30
 
-    def __init__(self, parent, address="0.0.0.0", port=11027):
+    def __init__(self, parent, address="127.0.0.1", port=11027):
         PyNamical.__init__(self, parent)
         self.address = address
         self.port = port
@@ -399,15 +471,19 @@ class DedicatedServer(PyNamical):
         packet.handle(self, connection, ip)
         connection.close()
 
-    def H_check_timeout(self):
+    def disconnect(self, user, reason="Disconnected", exception=TimeoutError):
         r = dict(self.users)
+        u = self.users[user]
+        e = exception(reason)
+        Logger.print(f"&cUser {u} disconnected: {str(e)}", prefix="[DedicatedServer]")
+        del r[user]
+        self.users = r
+
+    def H_check_timeout(self):
         for user in self.users:
             u = self.users[user]
             if time.time() - u.last_renewed > self.DOWNSTREAM_PING_TIMEOUT:
-                e = TimeoutError("Connection Timed Out after not recieving a ping for more than 30 seconds.")
-                Logger.print(f"&cUser {u} disconnected: {str(e)}", prefix="[DedicatedServer]")
-                del r[user]
-        self.users = r
+                self.disconnect(user, reason="Timeout after not pinging for 30 seconds.")
 
     def update(self):
         self._timer_check_timeout += 1
@@ -435,7 +511,7 @@ class DedicatedServer(PyNamical):
 
 class DedicatedClient(PyNamical):
 
-    def __init__(self, parent, address="0.0.0.0", port=11027):
+    def __init__(self, parent, address="127.0.0.1", port=11027):
         PyNamical.__init__(self, parent)
         self.parent.client = self
         self.address = address
@@ -468,16 +544,15 @@ class DedicatedClient(PyNamical):
                 self.ping_backed = False
             time.sleep(0.01)
 
-    def parse_packets(self, buffer):
-        if len(buffer) > 0:
-            self.ping_backed = True
-
     def true_send(self, packet):
         self.connect()
         self.socket.send(packet.buffer)
         try:
             data = self.socket.recv(2**20)
-            packets = self.parse_packets(data)
+            if len(data) > 0:
+                self.ping_backed = True
+                packet = P_PacketIdFinder[data[0]](buffer=data, write_packetid=False)
+                packet.handle(self, None, None)
         except Exception as e:
             Logger.print(f"Bad Packet: {str(e)}", channel=4)
             data = b""

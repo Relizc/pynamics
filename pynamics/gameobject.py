@@ -92,7 +92,7 @@ def doIntersect(p1, q1, p2, q2):
 
 
 class GameObject(PyNamical):
-    def __init__(self, parent: PyNamical, x: float, y: float, width: float, height: float, contents: str = None,
+    def __init__(self, parent: PyNamical, x: float = 0, y: float = 0, width: float = 10, height: float = 10, contents: str = None,
                  from_points: tuple = None,
                  clear_blit: bool = True,
                  anchor: str = "nw"):
@@ -215,7 +215,7 @@ class GameObject(PyNamical):
 
 class Image(GameObject):
 
-    def __init__(self, parent: GameObject, x: float, y: float, width: float = -1, height: float = -1,
+    def __init__(self, parent: GameObject, x: float = 0, y: float = 0, width: float = -1, height: float = -1,
                  path: str = None,
                  resize_keep_ratio: bool = False,
                  **kwargs):
@@ -239,7 +239,7 @@ class Image(GameObject):
 
 class TopViewPhysicsBody(GameObject):
 
-    def __init__(self, parent: GameObject, x: float, y: float, width: float, height: float, mass: int,
+    def __init__(self, parent: GameObject, x: float = 0, y: float = 0, width: float = 10, height: float = 10, mass: int = 1,
                  contents: str = None, from_points: tuple = None,
                  floor_friction: float = 0.1):
         super().__init__(parent, x, y, width, height, contents, from_points)
@@ -263,7 +263,7 @@ class TopViewPhysicsBody(GameObject):
 
 
 class PhysicsBody(GameObject):
-    def __init__(self, parent: PyNamical, x: float, y: float, width: float, height: float, mass: int = 1,
+    def __init__(self, parent: PyNamical, x: float = 0, y: float = 0, width: float = 10, height: float = 10, mass: int = 1,
                  contents: str = None, from_points: tuple = None, row=1.225, rectitude=1, use_mass=True, use_collide=True,
                  collision_type=1, use_gravity=True, **kwargs):
         super().__init__(parent, x, y, width, height, contents, from_points, **kwargs)
@@ -510,7 +510,7 @@ class PhysicsBody(GameObject):
 
 class Particle(PhysicsBody):
 
-    def __init__(self, parent, x, y, r, **kwargs):
+    def __init__(self, parent, x = 0, y = 0, r = 10, **kwargs):
         self.radius = r
         self.r = self.radius # Alias
         super().__init__(parent, x, y, r*2, r*2, **kwargs)
@@ -593,7 +593,7 @@ class TextFont:
 
 class Text(GameObject):
 
-    def __init__(self, parent, x, y, text, font=TextFont("Helvetica", 15), **kwargs):
+    def __init__(self, parent, x = 0, y = 0, text = "Hello PyNamics World!", font=TextFont("Helvetica", 15), **kwargs):
 
         w, h = 10, 10
         super().__init__(parent, x, y, w, h)
