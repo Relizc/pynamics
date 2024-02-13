@@ -12,6 +12,7 @@ import random
 class ViewPort(PyNamical):
 
     def __init__(self, parent, position: Dimension = Dimension(0, 0)):
+        super().__init__(parent)
         parent.viewport = self
         self.position = position
         self.size = parent.size
@@ -36,6 +37,7 @@ class ProjectWindow(PyNamical):
         self.parent.window = self
 
         self.size = size
+        self.title = title
 
         self.viewport = ViewPort(self, position = Dimension(0, 0))
         self.cropped_viewport = self.viewport.crop_add()
@@ -105,6 +107,9 @@ class ProjectWindow(PyNamical):
 
         if self.force_update > 0:
             self.force_update -= 1
+
+    def update(self):
+        pass
 
 
     def _close_parent_close(self):

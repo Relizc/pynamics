@@ -15,6 +15,7 @@ class EventType(enum.Enum):
     KEYDOWN = 0x01
     KEYHOLD = 0x02
     KEYUP = 0x03
+    STARTUP = 0x04
 
     FRAME = 0x00
     TICK = 0x10
@@ -27,6 +28,8 @@ class EventType(enum.Enum):
 
     HOVER = 0x20
     NO_HOVER = 0x21
+
+    
 
 class Executable:
 
@@ -60,7 +63,8 @@ class EventHolder:
             EventType.KEYUP: [],
             EventType.TICK: [],
             EventType.HOVER: [],
-            EventType.NO_HOVER: []
+            EventType.NO_HOVER: [],
+            EventType.STARTUP: []
         }
 
     def add_event_listener(self, event: EventType = EventType.NONE, priority: EventPriority=EventPriority.LOWEST, condition=lambda i: True, tick_delay=0):

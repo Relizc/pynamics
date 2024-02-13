@@ -4,6 +4,9 @@ from .gamemanager import GameManager,PhysicsBody
 from .dimensions import Dimension, Dimension2d, Vector2d, Vector
 from .events import EventHolder, EventType, KeyEvaulator
 from .logger import Logger
+from .socket import DedicatedServer, DedicatedClient
+from .socket import *
+from .utils import ExampleLargeBinaryObject
 from . import utils
 import pickle
 # Aliases

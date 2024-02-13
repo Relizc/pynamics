@@ -1,5 +1,7 @@
 import tkinter
 
+from pynamics.socket import DedicatedServer
+
 from .gameobject import *
 from .interface import PyNamical
 from .events import EventType, Executable, KeyEvaulator, change_debug_attacher
@@ -71,6 +73,7 @@ class GameManager(PyNamical):
         self.pressed = {}
 
         self.mouse = Dimension(-1, -1)
+        self.client = None
 
         self.debug = None
 
@@ -104,7 +107,13 @@ class GameManager(PyNamical):
             self.call_event_listeners(EventType.KEYUP, str(e.keysym))
         pass
 
-    def start(self):
+    def start(self, alternative_listener=None):
+        # if alternative_listener is not None:
+        #     Logger.print(f"{alternative_listener} is now responsible of ", channel=3)
+        if self.client is not None:
+            Logger.print(f"{self.client} is responsible of sending and recieving game data!", channel=2)
+            # self.client.listen()
+
         self.updatethread.start()
         self.listenthread.start()
 
@@ -117,11 +126,18 @@ class GameManager(PyNamical):
 
         self.starttime = time.time()
 
-        self.window._tk.after(100, self.frame)
-        self.window._tk.bind("<KeyPress>", self._key)
-        self.window._tk.bind("<KeyRelease>", self._key)
-        self.window._tk.bind("<Motion>", self._mouse)
-        self.window.start()
+        self.call_event_listeners(EventType.STARTUP)
+
+        if isinstance(self.window, DedicatedServer):
+            Logger.print("Using DedicatedServer as display port!", channel=2)
+            self.window.listen()
+        else:
+            self.window._tk.after(100, self.frame)
+            self.window._tk.bind("<KeyPress>", self._key)
+            self.window._tk.bind("<KeyRelease>", self._key)
+            self.window._tk.bind("<Motion>", self._mouse)
+            self.window.start()
+
 
     def _mouse(self, event):
         x, y = event.x, event.y
@@ -162,6 +178,13 @@ class GameManager(PyNamical):
             for i in self.updates:
                 i()
 
+            self.window.update()
+            
+            # TODO: Fix Deltatime since time.sleep yeilds more delay than specificed
+            # x = self.deltatime - self._epoch_tps
+            # k = self._epoch_tps - x - 0.0005
+            # if k < 0: k = self._epoch_tps
+            # print(k)
             time.sleep(self._epoch_tps)
             # time.sleep(0.0001)
             # time.sleep(random.randint(0, 100) / 1000)
