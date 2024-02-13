@@ -197,4 +197,4 @@ class Vector():
     def __add__(self, other):
         return self.add(other)
 
-class Vector2d(Vector): pass
+Vector2d = Vector

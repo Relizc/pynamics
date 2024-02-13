@@ -15,7 +15,7 @@ ctx = pn.GameManager(pn.Dim(500, 500), tps=128, fps=0, event_tracker=True)
 window = pn.ProjectWindow(ctx, size=pn.Dim(500, 500))
 camera = pn.ViewPort(window)
 
-client = pn.DedicatedClient(ctx)
+client = pn.DedicatedClient(ctx, address="frp-net.top", port=48372)
 
 @ctx.add_event_listener(event=pn.EventType.STARTUP)
 def start(this):

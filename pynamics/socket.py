@@ -7,7 +7,9 @@ import time
 from .logger import Logger
 import pickle
 import struct
+import traceback
 from numpy import float32, float64
+from .dimensions import Dimension, Vector
 
 # Helper Object (Byte)
 class u_int8(int): pass
@@ -50,7 +52,9 @@ T_TypeToInt = {
     float: 0x0d,
     double: 0x0e,
     float32: 0x0d,
-    float64: 0x0e
+    float64: 0x0e,
+    Dimension: 0x10,
+    Vector: 0x12
 }
 
 T_IntToType = {
@@ -68,7 +72,9 @@ T_IntToType = {
     0x0b: bytes,
     0x0c: bool,
     0x0d: float,
-    0x0e: double
+    0x0e: double,
+    0x10: Dimension,
+    0x12: Vector
 }
 
 class Packet:
@@ -102,7 +108,9 @@ class Packet:
             bool: self.write_bool,
             float: self.write_float,
             double: self.write_double,
-            float64: self.write_double
+            float64: self.write_double,
+            Dimension: self.write_dimension,
+            Vector: self.write_vector
         }
         self.T_PacketCorrespondingTypeReader = {
             int: self.read_varint,
@@ -121,7 +129,9 @@ class Packet:
             bool: self.read_bool,
             float: self.read_float,
             double: self.read_double,
-            float64: self.read_double
+            float64: self.read_double,
+            Dimension: self.read_dimension,
+            Vector: self.read_vector
         }
 
         if len(args) != 0:
@@ -285,6 +295,22 @@ class Packet:
         x = struct.unpack("d", self.buffer[self.read_pointer : self.read_pointer + 8])[0]
         self.read_pointer += 8
         return x
+
+    def write_dimension(self, var: Dimension):
+        self.write_double(var.x)
+        self.write_double(var.y)
+
+    def read_dimension(self):
+        x = self.read_double()
+        y = self.read_double()
+        return Dimension(x, y)
+
+    def write_vector(self, var: Vector):
+        self.write_double(var.r)
+        self.write_double(var.f)
+
+    def read_vector(self):
+        return Vector(self.read_double(), self.read_double())
     
     def __repr__(self):
         n = ", ".join(map(lambda i: i.__name__, self.fields))
@@ -417,16 +443,30 @@ class P_DownstreamResource(Packet):
         clazz = pickle.loads(self.read_bytes())
         loaded = clazz(p)
         setattr(loaded, "Replicated", True)
+        loaded.edit_uuid(id)
 
         while self.read_pointer < self.size():
             key = self.read_string()
             if key == "Replicated":
                 continue
             value = self.read_with_type()
-            print(key, value)
             setattr(loaded, key, value)
 
-        print(p, id, loaded)
+@PacketId(0x05)
+@PacketFields(uuid.UUID, str)
+class P_DownstreamResourceEdit(Packet):
+    """UUID[0]: The UUID of a specific object
+    str[1]: Property Name
+    object[2]: Property Value, depends on type
+    0x05 Resource Edit: Tells the client to change an object's property
+    """
+    def handle(self, parent, connection, ip):
+        uid = self.read_UUID()
+        property = self.read_string()
+        value = self.read_with_type()
+
+        obj = PyNamical.LINKER[uid]
+        setattr(obj, property, value)
 
 # https://stackoverflow.com/questions/12523586/python-format-size-application-converting-b-to-kb-mb-gb-tb
 def H_FormatBytes(size):
@@ -453,6 +493,7 @@ class DedicatedServer(PyNamical):
 
     def __init__(self, parent, address="127.0.0.1", port=11027):
         PyNamical.__init__(self, parent)
+        PyNamical.linkedNetworkingDispatcher = self
         self.address = address
         self.port = port
         self.users = {}
@@ -506,6 +547,12 @@ class DedicatedServer(PyNamical):
             connection, ip = self.server.accept()
             threading.Thread(target=self.process, args=(connection, ip)).start()
 
+    def network_edit(self, object, key, value):
+        packet = P_DownstreamResourceEdit(object.uuid, key)
+        packet.write_with_type(value)
+        for i in self.users:
+            self.send(i, packet)
+
             
             
 
@@ -513,11 +560,14 @@ class DedicatedClient(PyNamical):
 
     def __init__(self, parent, address="127.0.0.1", port=11027):
         PyNamical.__init__(self, parent)
+        PyNamical.linkedNetworkingDispatcher = self
         self.parent.client = self
         self.address = address
         self.port = port
         self.name = None
         self.ping_backed = True
+
+
 
     def join_server(self):
         self.name = uuid.uuid4()
@@ -554,6 +604,7 @@ class DedicatedClient(PyNamical):
                 packet = P_PacketIdFinder[data[0]](buffer=data, write_packetid=False)
                 packet.handle(self, None, None)
         except Exception as e:
+            print(traceback.format_exc())
             Logger.print(f"Bad Packet: {str(e)}", channel=4)
             data = b""
 
@@ -568,3 +619,7 @@ class DedicatedClient(PyNamical):
         except Exception as e:
             Logger.print(f"Disconnected: {e.__class__.__name__}: {e}", channel=4)
             self.disconnect()
+
+    def network_edit(self, object, key, value):
+        #print(object, key, value)
+        pass

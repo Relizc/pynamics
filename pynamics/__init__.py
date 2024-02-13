@@ -10,8 +10,8 @@ from .utils import ExampleLargeBinaryObject
 from . import utils
 import pickle
 # Aliases
-class Dim(Dimension): pass
-class Dim2d(Dimension2d): pass
+Dim = Dimension
+Dim2d = Dimension2d
 
 K_UP = "Up"
 K_DOWN = "Down"

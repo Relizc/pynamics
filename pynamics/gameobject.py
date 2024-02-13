@@ -22,6 +22,13 @@ class Point(Dimension):
     # Given three collinear points p, q, r, the function checks if
 
 
+def socket_whitelisted_attributes(*args, **kwargs):
+    def add_fields(obj):
+        obj.P_whitelisted = args
+        return obj
+
+    return add_fields
+
 # point q lies on line segment 'pr'
 def onSegment(p, q, r):
     if ((q.x <= max(p.x, r.x)) and (q.x >= min(p.x, r.x)) and
@@ -507,7 +514,7 @@ class PhysicsBody(GameObject):
                 self.velocity = Vector2d(phi, rho)
 
                 # time.sleep(self.parent._epoch_tps)
-
+@socket_whitelisted_attributes("position")
 class Particle(PhysicsBody):
 
     def __init__(self, parent, x = 0, y = 0, r = 10, **kwargs):
