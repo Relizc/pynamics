@@ -197,4 +197,7 @@ class Vector():
     def __add__(self, other):
         return self.add(other)
 
+    def __mul__(self, other):
+        return Vector2d(self.r, self.f * other)
+
 Vector2d = Vector

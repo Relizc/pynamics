@@ -34,6 +34,16 @@ class PyNamical(EventHolder):
         if PyNamical.linkedNetworkingDispatcher is not None and key in self.P_whitelisted:
             PyNamical.linkedNetworkingDispatcher.network_edit(self, key, value)
 
+    def add_children(self, obj):
+        self.children.append(obj)
+        obj.parent = self
+
+    def set_parent(self, obj):
+        obj.children.append(self)
+        self.parent = obj
+
+
+
     def debug_unhighlight(self):
         pass
 
@@ -48,3 +58,5 @@ class PyNamical(EventHolder):
     def delete(self):
         pass
 
+def find_object_by_id(uid):
+    return PyNamical.LINKER[uid]

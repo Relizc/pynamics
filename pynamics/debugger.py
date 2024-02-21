@@ -5,6 +5,7 @@ import tkinter.messagebox as tkmsg
 from .logger import Logger
 from .dimensions import Dimension, Vector
 from .events import EventType
+from .socket import DedicatedClient
 import datetime
 import time
 import traceback
@@ -130,6 +131,9 @@ class Debugger:
 
         self._tps = tk.Label(self.general, text=f"TPS: ? (Set: {self.parent.tps})")
         self._tps.grid(row=1, column=0, sticky="w")
+
+        self._network = tk.Label(self.general, text=f"Loading Networking...")
+        self._network.grid(row=2, column=0, sticky="w")
 
         ### Console ###
 
@@ -261,6 +265,8 @@ class Debugger:
         self.graph_x_factor = 2
         self.last = 0
         self.graph_measure = 0
+
+        self.parent.pressed["quoteleft"] = False
 
     def _console_execute(self):
         q = self.consoleinput.get()
@@ -467,6 +473,20 @@ Tick DeltaTime: {self.parent.deltatime}""", font=("Courier", 14))
 
         self.tk.after(1000, self._tick_tps_op)
 
+    def _tick_packeting_op(self):
+        if isinstance(self.parent.client, DedicatedClient):
+            if self.parent.client.connected:
+                self._network.config(text=f"rx: {self.parent.client._rx}, tx: {self.parent.client._tx}, loss: {self.parent.client._loss} ({round((self.parent.client._loss / max(1, self.parent.client._tx)) * 100, 2)}%) / {int(self.parent.client.latency * 1000)}ms")
+                self.parent.client._rx = 0
+                self.parent.client._tx = 0
+                self.parent.client._loss = 0
+            else:
+                self._network.config(text=f"Networking: Not connected to server")
+        else:
+            self._network.config(text=f"Networking: No connection established")
+
+        self.tk.after(1000, self._tick_packeting_op)
+
     def _tick_event_update(self):
         if not self.event_update: return
 
@@ -494,6 +514,7 @@ Tick DeltaTime: {self.parent.deltatime}""", font=("Courier", 14))
         if not self.opened:
             self.tk.after(1000, self._tick_fps_op)
             self.tk.after(1000, self._tick_tps_op)
+            self.tk.after(1000, self._tick_packeting_op)
             self.tk.after(1, self._tick_event_update)
             self.tk.after(1000, self._tick_event_update_sec)
             self.tk.after(1, self._tickman_update)

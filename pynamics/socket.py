@@ -5,11 +5,13 @@ import socket
 import threading
 import time
 from .logger import Logger
+from .events import EventType
 import pickle
 import struct
 import traceback
 from numpy import float32, float64
 from .dimensions import Dimension, Vector
+from .events import *
 
 # Helper Object (Byte)
 class u_int8(int): pass
@@ -376,6 +378,8 @@ class P_UpstreamHandshake(Packet):
     def handle(self, parent, connection, ip):
         x = self.read_UUID()
         parent.users[x] = ConnectedClient(parent, x)
+
+        parent.call_event_listeners(event=EventType.CLIENT_CONNECTED, client=parent.users[x])
         Logger.print(f"User {parent.users[x]} has logged on!", prefix="[DedicatedServer]")
 
         # Sending Resources to User
@@ -383,7 +387,9 @@ class P_UpstreamHandshake(Packet):
             if isinstance(i, DedicatedServer):
                 continue
             k = obj_to_bytes(i).buffer
-            packet = P_DownstreamResource(buffer=k)
+            packet = P_DownstreamResource()
+            packet.write_uint8(0) # General PyNamics Object
+            packet.buffer += k
             parent.send(x, packet)
 
 @PacketId(0x02)
@@ -432,6 +438,8 @@ class P_DownstreamResource(Packet):
     0x04 Resource: Tells the client to spawn or create a specific resource
     """
     def handle(self, parent, connection, ip):
+        type = self.read_uint8()
+
         hasparent = self.read_bool()
         if hasparent:
             pp = self.read_UUID()
@@ -440,17 +448,21 @@ class P_DownstreamResource(Packet):
             p = parent.parent
 
         id = self.read_UUID()
-        clazz = pickle.loads(self.read_bytes())
-        loaded = clazz(p)
-        setattr(loaded, "Replicated", True)
-        loaded.edit_uuid(id)
 
-        while self.read_pointer < self.size():
-            key = self.read_string()
-            if key == "Replicated":
-                continue
-            value = self.read_with_type()
-            setattr(loaded, key, value)
+        if type == 0x00:
+            clazz = pickle.loads(self.read_bytes())
+            loaded = clazz(p)
+            setattr(loaded, "Replicated", True)
+            loaded.edit_uuid(id)
+
+            while self.read_pointer < self.size():
+                key = self.read_string()
+                if key == "Replicated":
+                    continue
+                value = self.read_with_type()
+                setattr(loaded, key, value)
+
+            Logger.print(f"Replicated {loaded} from server!", channel=2)
 
 @PacketId(0x05)
 @PacketFields(uuid.UUID, str)
@@ -467,6 +479,52 @@ class P_DownstreamResourceEdit(Packet):
 
         obj = PyNamical.LINKER[uid]
         setattr(obj, property, value)
+
+@PacketId(0x06)
+@PacketFields(u_int8)
+class P_DownstreamRegisterEvents(Packet):
+
+    def handle(self, parent, connection, ip):
+        e = self.read_uint8()
+        event = dict(EventType.__dict__)
+        event = list(event.keys())[list(event.values()).index(e)]
+
+
+        @parent.parent.add_event_listener(event=getattr(EventType, event))
+        def call(self, *args, **kwargs):
+            packet = P_UpstreamEventCalled(parent.uuid, u_int8(e))
+            packet.write_uint8(len(args))
+            for i in args:
+                packet.write_with_type(i)
+            packet.write_uint8(len(kwargs))
+            for k, v in kwargs.items():
+                packet.write_string(k)
+                packet.write_with_type(v)
+            parent.send(packet)
+
+
+@PacketId(0x07)
+@PacketFields(uuid.UUID, u_int8)
+class P_UpstreamEventCalled(Packet):
+
+    def handle(self, parent, connection, ip):
+        usr = parent.users[self.read_UUID()]
+
+
+        e = self.read_uint8()
+        event = dict(EventType.__dict__)
+        event = list(event.keys())[list(event.values()).index(e)]
+
+        args = []
+        for i in range(self.read_uint8()):
+            args.append(self.read_with_type())
+        kwargs = {}
+        for i in range(self.read_uint8()):
+            k, v = self.read_string(), self.read_with_type()
+            kwargs[k] = v
+
+        usr.call_event_listeners(event=getattr(EventType, event), *args, **kwargs)
+
 
 # https://stackoverflow.com/questions/12523586/python-format-size-application-converting-b-to-kb-mb-gb-tb
 def H_FormatBytes(size):
@@ -486,6 +544,31 @@ class ConnectedClient(PyNamical):
         self.last_renewed = time.time()
         self.packets = []
 
+    def add_object(self, object): # Replacing function of GameManager
+        pass
+
+    def send_packet(self, packet):
+        self.packets.append(packet)
+
+    def sync(self, object: PyNamical):
+
+        for i in object.P_whitelisted:
+            packet = P_DownstreamResourceEdit(object.uuid, i)
+            packet.write_with_type(getattr(object, i))
+            self.send_packet(packet)
+
+    def add_event_listener(self, event: EventType = EventType.NONE, priority: EventPriority=EventPriority.LOWEST, condition=lambda i: True, tick_delay=0, replicated=False):
+        # Overriding Events because we are sending event creation
+        def inner(function):
+            PyNamical.add_event_listener(self, event, priority, condition, tick_delay, replicated)(function)
+
+        packet = P_DownstreamRegisterEvents(u_int8(event))
+        self.packets.append(packet)
+
+
+        return inner
+
+
 class DedicatedServer(PyNamical):
 
     UPSTREAM_PACKET_WAIT_TIME = 15
@@ -502,15 +585,23 @@ class DedicatedServer(PyNamical):
 
         self._timer_check_timeout = 0
 
+        self.events[EventType.CLIENT_CONNECTED] = []
+
 
     def process(self, connection, ip):
-        content = connection.recv(1)
-        content += connection.recv(1048575)
-        packet = P_PacketIdFinder[content[0]](buffer=content, write_packetid=False)
-        packet.read_pointer = 1
-        Logger.print(f"&aDownstream &b<- {ip[0]}:{ip[1]} : {packet} ({H_FormatBytes(packet.size())})", prefix="[DedicatedServer]")
-        packet.handle(self, connection, ip)
-        connection.close()
+
+        try:
+            content = connection.recv(1)
+            content += connection.recv(1048575)
+            packet = P_PacketIdFinder[content[0]](buffer=content, write_packetid=False)
+            packet.read_pointer = 1
+            if not isinstance(packet, P_UpstreamStayAlive):
+                Logger.print(f"&aDownstream &b<- {ip[0]}:{ip[1]} : {packet} ({H_FormatBytes(packet.size())})",
+                             prefix="[DedicatedServer]")
+            packet.handle(self, connection, ip)
+            connection.close()
+        except:
+            connection.close()
 
     def disconnect(self, user, reason="Disconnected", exception=TimeoutError):
         r = dict(self.users)
@@ -532,6 +623,11 @@ class DedicatedServer(PyNamical):
             self.H_check_timeout()
             self._timer_check_timeout = 0
 
+    def sync(self, obj: PyNamical):
+
+        for i in obj.P_whitelisted:
+            print(i)
+
     def send(self, userid, packet):
         self.users[userid].packets.append(packet)
 
@@ -548,7 +644,6 @@ class DedicatedServer(PyNamical):
             threading.Thread(target=self.process, args=(connection, ip)).start()
 
     def network_edit(self, object, key, value):
-        print(object, key, value)
         packet = P_DownstreamResourceEdit(object.uuid, key)
         packet.write_with_type(value)
         for i in self.users:
@@ -559,22 +654,39 @@ class DedicatedServer(PyNamical):
 
 class DedicatedClient(PyNamical):
 
-    def __init__(self, parent, address="127.0.0.1", port=11027):
+    def __init__(self, parent: PyNamical, address="127.0.0.1", port=11027):
         PyNamical.__init__(self, parent)
         PyNamical.linkedNetworkingDispatcher = self
         self.parent.client = self
         self.address = address
         self.port = port
         self.name = None
+
         self.ping_backed = True
+        self.last_ping_sent = time.time()
+
+        self.connected = False
+        self._rx = 0
+        self._tx = 0
+        self._loss = 0
+
+        self.PING_PACKET_WAIT_TIME = 15
+
+        self.p = None
+        self.socket = None
+
+        self.latency = -1
+
 
 
 
     def join_server(self):
         self.name = uuid.uuid4()
+        self.edit_uuid(self.name)
         packet = P_UpstreamHandshake(self.name)
         self.send(packet)
 
+        self.connected = True
         self.H_pinger_thread = threading.Thread(target=self.H_pinger)
         self.H_pinger_thread.start()
 
@@ -583,13 +695,15 @@ class DedicatedClient(PyNamical):
         self.port = None
 
     def connect(self):
+        self.socket = None
         self.socket = socket.socket()
         self.socket.connect((self.address, self.port))
 
     def H_pinger(self):
         time.sleep(1)
         while not self.parent.terminated:
-            if self.ping_backed:
+            if self.ping_backed or time.time() - self.last_ping_sent > self.PING_PACKET_WAIT_TIME:
+                self.last_ping_sent = time.time()
                 packet = P_UpstreamStayAlive(self.name)
                 self.send(packet)
                 self.ping_backed = False
@@ -597,13 +711,26 @@ class DedicatedClient(PyNamical):
 
     def true_send(self, packet):
         self.connect()
-        self.socket.send(packet.buffer)
+        try:
+            a = time.time()
+            self.socket.send(packet.buffer)
+        except:
+            self._loss += 1
+            Logger.print(f"Unable to send packet", channel=4)
+        self._tx += 1
         try:
             data = self.socket.recv(2**20)
+
             if len(data) > 0:
+                self.latency = time.time() - a
+                self._rx += 1
                 self.ping_backed = True
                 packet = P_PacketIdFinder[data[0]](buffer=data, write_packetid=False)
                 packet.handle(self, None, None)
+        except ConnectionAbortedError:
+            pass
+        except OSError:
+            pass
         except Exception as e:
             print(traceback.format_exc())
             Logger.print(f"Bad Packet: {str(e)}", channel=4)
@@ -613,13 +740,19 @@ class DedicatedClient(PyNamical):
 
     def send(self, packet: Packet):
         try:
-            p = threading.Thread(target=self.true_send, args=(packet,))
-            p.start()
+            if self.socket is not None:
+                self.socket.close()
+                self.ping_backed = True
+            self.p = threading.Thread(target=self.true_send, args=(packet,))
+            self.p.start()
             
             
         except Exception as e:
             Logger.print(f"Disconnected: {e.__class__.__name__}: {e}", channel=4)
             self.disconnect()
+
+    def send_packet(self, packet: Packet):
+        self.send(packet)
 
     def network_edit(self, object, key, value):
         #print(object, key, value)

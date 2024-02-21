@@ -10,7 +10,7 @@ vcam = pn.DedicatedServer(ctx)
 vcam.DOWNSTREAM_PING_TIMEOUT = 30
 vcam.UPSTREAM_PACKET_WAIT_TIME = 15
 
-circle61 = pn.Particle(ctx, 80, 10, 10, use_gravity=True, rectitude=0.5, clear_blit=True, mass=20)
+circle61 = pn.GameObject(ctx, 80, 10, 10, 20)
 
 # large = pn.ExampleLargeBinaryObject(ctx)
 # print(large.uuid)
@@ -23,7 +23,11 @@ def ccccc(this):
     q += 1
     if q == 128:
         q = 0
-        circle61.velocity = pn.Vector(random.randint(0, 360), random.randint(1, 5))
+        circle61.position = pn.Dim(random.randint(0, 500), random.randint(0, 500))
+
+@vcam.add_event_listener(event=pn.EventType.CLIENT_CONNECTED)
+def join(this, client):
+    print(client)
 
 
 ctx.start()

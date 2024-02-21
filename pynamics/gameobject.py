@@ -97,7 +97,7 @@ def doIntersect(p1, q1, p2, q2):
     # If none of the cases
     return False
 
-
+@socket_whitelisted_attributes("position", "velocity")
 class GameObject(PyNamical):
     def __init__(self, parent: PyNamical, x: float = 0, y: float = 0, width: float = 10, height: float = 10, contents: str = None,
                  from_points: tuple = None,
@@ -220,6 +220,8 @@ class GameObject(PyNamical):
         self.parent.delete_draws(f"DEBUG@{self._debughighlight}")
 
 
+
+
 class Image(GameObject):
 
     def __init__(self, parent: GameObject, x: float = 0, y: float = 0, width: float = -1, height: float = -1,
@@ -242,7 +244,6 @@ class Image(GameObject):
 
     def __repr__(self):
         return f"Image(file={self.image_path})"
-
 
 class TopViewPhysicsBody(GameObject):
 
@@ -267,12 +268,11 @@ class TopViewPhysicsBody(GameObject):
         v = Vector2d(self.velocity.r + 180, self.velocity.f * self.coefficient)
 
         self.velocity.add_self(v)
-
-@socket_whitelisted_attributes("position", "velocity")
+\
 class PhysicsBody(GameObject):
     def __init__(self, parent: PyNamical, x: float = 0, y: float = 0, width: float = 10, height: float = 10, mass: int = 1,
                  contents: str = None, from_points: tuple = None, row=1.225, rectitude=1, use_mass=True, use_collide=True,
-                 collision_type=1, use_gravity=True, **kwargs):
+                 collision_type=1, use_gravity=True, use_airres=False, **kwargs):
         super().__init__(parent, x, y, width, height, contents, from_points, **kwargs)
 
         # @self.parent.add_tick_update
@@ -510,7 +510,8 @@ class PhysicsBody(GameObject):
                 rho = np.sqrt(vfxself ** 2 + vfyself ** 2)
                 phi = np.arctan2(vfyself, vfxself) * 180 / np.pi
 
-                self.velocity = Vector2d(phi, rho)
+                self.velocity.r = phi
+                self.velocity.f = rho
 
                 # time.sleep(self.parent._epoch_tps)
 
@@ -539,7 +540,8 @@ class Particle(PhysicsBody):
         rho = np.sqrt(vfxself ** 2 + vfyself ** 2)
         phi = np.arctan2(vfyself, vfxself) * 180 / np.pi
 
-        self.velocity = Vector2d(phi, rho)
+        self.velocity.r = phi
+        self.velocity.f = rho
 
     def reflect_vector_yaxis(self):
         r = self.velocity
@@ -559,7 +561,8 @@ class Particle(PhysicsBody):
         rho = np.sqrt(vfxself ** 2 + vfyself ** 2)
         phi = np.arctan2(vfyself, vfxself) * 180 / np.pi
 
-        self.velocity = Vector2d(phi, rho)
+        self.velocity.r = phi
+        self.velocity.f = rho
 
     def handle_wall_collisions(self):
         # Collided to bottom wall
@@ -578,11 +581,17 @@ class Particle(PhysicsBody):
         if self.x - self.r < 0:
             self.position.set(self.r + 1, self.y)
             self.reflect_vector_yaxis()
+
+    def handle_air_res(self):
+        self.velocity.f *= 0.8
+        if self.velocity.f < 0.1:
+            self.velocity.f = 0
             
 
     def update(self):
         self.handle_wall_collisions()
         self.handle_forces()
+        self.handle_air_res()
 
     
 
