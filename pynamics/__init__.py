@@ -7,11 +7,12 @@ from .logger import Logger
 from .socket import DedicatedServer, DedicatedClient
 from .socket import *
 from .utils import ExampleLargeBinaryObject
+from .interface import PyNamical, find_object_by_id
 from . import utils
 import pickle
 # Aliases
-class Dim(Dimension): pass
-class Dim2d(Dimension2d): pass
+Dim = Dimension
+Dim2d = Dimension2d
 
 K_UP = "Up"
 K_DOWN = "Down"

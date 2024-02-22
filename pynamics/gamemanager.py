@@ -38,7 +38,6 @@ class GameManager(PyNamical):
                  tps: int = 128,
                  fps: int = 0,
                  event_tracker: bool = False):
-
         super().__init__(None, no_parent=True)
         self.dimensions = dimensions
         self.width = dimensions.x
@@ -85,8 +84,15 @@ class GameManager(PyNamical):
 
         self.ticksteplisteners = 1
 
-        @self.add_event_listener(event=EventType.KEYDOWN, condition=KeyEvaulator("quoteleft"))
-        def open_debugger(n):
+
+
+
+
+
+
+    def _key(self, e):
+        if e.keysym == "quoteleft":
+
 
             if self.debug == None:
                 Logger.print("Debugger not found! Creating window instance", channel=5)
@@ -94,17 +100,17 @@ class GameManager(PyNamical):
 
                 change_debug_attacher(self.debug._call_callevent)
 
+
             self.debug.run()
 
-    def _key(self, e):
         eventCode = int(e.type)
         if eventCode == 2:
             # KeyPress
             self.pressed[e.keysym] = True
-            self.call_event_listeners(EventType.KEYDOWN, str(e.keysym))
+            self.call_event_listeners(EventType.KEYDOWN, str(e.keysym), key=str(e.keysym))
         elif eventCode == 3:  # KeyUp
             self.pressed[e.keysym] = False
-            self.call_event_listeners(EventType.KEYUP, str(e.keysym))
+            self.call_event_listeners(EventType.KEYUP, str(e.keysym), key=str(e.keysym))
         pass
 
     def start(self, alternative_listener=None):
@@ -132,6 +138,7 @@ class GameManager(PyNamical):
             Logger.print("Using DedicatedServer as display port!", channel=2)
             self.window.listen()
         else:
+
             self.window._tk.after(100, self.frame)
             self.window._tk.bind("<KeyPress>", self._key)
             self.window._tk.bind("<KeyRelease>", self._key)
@@ -168,9 +175,13 @@ class GameManager(PyNamical):
 
             self.call_event_listeners(EventType.TICK)
 
+
+
             for i in self.pressed:
                 if self.pressed[i]:
-                    self.call_event_listeners(EventType.KEYHOLD, i)
+                    self.call_event_listeners(EventType.KEYHOLD, i, key=i)
+
+            self.pressed["quoteleft"] = False
 
             self.ticks += 1
             self.t += 1

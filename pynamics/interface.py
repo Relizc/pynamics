@@ -2,23 +2,47 @@ from .styling import StyleLoader
 from .events import EventType, EventHolder
 import uuid as ulib
 
-LINKER = {}
+
 
 
 class PyNamical(EventHolder):
 
+    LINKER = {}
+    linkedNetworkingDispatcher = None
+    P_whitelisted = set()
+
     def __init__(self, parent, no_parent=False, uuid=None):
         super().__init__()
+        self.Replicated = False
         self.style = StyleLoader()
         self.parent = parent
         self.uuid = uuid
+
         if self.uuid is None:
             self.uuid = ulib.uuid4()
-        LINKER[self.uuid] = self
+        PyNamical.LINKER[self.uuid] = self
 
         if not no_parent:
             self.parent.children.append(self)
         self.children = []
+
+    def __setattr__(self, key, value):
+        try:
+            object.__setattr__(self, key, value)
+        except:
+            return
+        if PyNamical.linkedNetworkingDispatcher is not None and key in self.P_whitelisted:
+            PyNamical.linkedNetworkingDispatcher.network_edit(self, key, value)
+
+    def add_children(self, obj):
+        self.children.append(obj)
+        obj.parent = self
+
+    def set_parent(self, obj):
+        obj.children.append(self)
+        self.parent = obj
+
+
 
     def debug_unhighlight(self):
         pass
@@ -26,6 +50,13 @@ class PyNamical(EventHolder):
     def debug_highlight(self):
         pass
 
+    def edit_uuid(self, new):
+        del PyNamical.LINKER[self.uuid]
+        PyNamical.LINKER[new] = self
+        self.uuid = new
+
     def delete(self):
         pass
 
+def find_object_by_id(uid):
+    return PyNamical.LINKER[uid]
