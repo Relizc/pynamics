@@ -353,13 +353,17 @@ def obj_to_bytes(obj: PyNamical):
         stream.write_UUID(obj.parent.uuid)
 
     stream.write_UUID(obj.uuid)
+
     stream.write_bytes(pickle.dumps(obj.__class__))
 
     for i in dir(obj):
-        
-        if isinstance(obj.__getattribute__(i), tuple(T_TypeToInt.keys())):
-            stream.write_string(i)
-            stream.write_with_type(obj.__getattribute__(i))
+        try:
+            if isinstance(obj.__getattribute__(i), tuple(T_TypeToInt.keys())):
+                stream.write_string(i)
+                stream.write_with_type(obj.__getattribute__(i))
+        except Exception as e:
+            Logger.print(f"Error while writing property {i} of {obj}: {e}", channel=4, prefix="[DedicatedServer]")
+
 
     return stream
 
@@ -377,9 +381,9 @@ class P_UpstreamHandshake(Packet):
     """
     def handle(self, parent, connection, ip):
         x = self.read_UUID()
+
         parent.users[x] = ConnectedClient(parent, x)
 
-        parent.call_event_listeners(event=EventType.CLIENT_CONNECTED, client=parent.users[x])
         Logger.print(f"User {parent.users[x]} has logged on!", prefix="[DedicatedServer]")
 
         # Sending Resources to User
@@ -391,6 +395,8 @@ class P_UpstreamHandshake(Packet):
             packet.write_uint8(0) # General PyNamics Object
             packet.buffer += k
             parent.send(x, packet)
+
+        parent.call_event_listeners(event=EventType.CLIENT_CONNECTED, client=parent.users[x])
 
 @PacketId(0x02)
 @PacketFields(uuid.UUID)
@@ -576,7 +582,10 @@ class DedicatedServer(PyNamical):
 
     def __init__(self, parent, address="127.0.0.1", port=11027):
         PyNamical.__init__(self, parent)
+
         PyNamical.linkedNetworkingDispatcher = self
+        Logger.print("Completed setting linked Network Dispatcher!", channel=2)
+
         self.address = address
         self.port = port
         self.users = {}
@@ -646,6 +655,14 @@ class DedicatedServer(PyNamical):
     def network_edit(self, object, key, value):
         packet = P_DownstreamResourceEdit(object.uuid, key)
         packet.write_with_type(value)
+        for i in self.users:
+            self.send(i, packet)
+
+    def network_newly_created(self, object: PyNamical):
+        k = obj_to_bytes(object).buffer
+        packet = P_DownstreamResource()
+        packet.write_uint8(0) # General PyNamics Object
+        packet.buffer += k
         for i in self.users:
             self.send(i, packet)
 
@@ -756,4 +773,7 @@ class DedicatedClient(PyNamical):
 
     def network_edit(self, object, key, value):
         #print(object, key, value)
+        pass
+
+    def network_newly_created(self, obj):
         pass

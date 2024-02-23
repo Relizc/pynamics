@@ -47,31 +47,31 @@ def condition():
 
 
 @ctx.add_event_listener(event=pynamics.EventType.KEYHOLD, condition=pynamics.KeyEvaulator(pynamics.K_UP))
-def listen(self):
+def listen(self, key):
     # bob.apply_force(pynamics.Vector2d(90, 1),ctx._epoch_tps)
     bob.add_force(pynamics.Vector2d(90, 1))
 
 
 @ctx.add_event_listener(event=pynamics.EventType.KEYHOLD, condition=pynamics.KeyEvaulator(pynamics.K_DOWN))
-def listen(self):
+def listen(self, key):
     # bob.apply_force(pynamics.Vector2d(270, 1),ctx._epoch_tps)
     bob.add_force(pynamics.Vector2d(270, 1))
 
 
 @ctx.add_event_listener(event=pynamics.EventType.KEYHOLD, condition=pynamics.KeyEvaulator(pynamics.K_LEFT))
-def listen(self):
+def listen(self, key):
     # bob.apply_force(pynamics.Vector2d(180, 1),ctx._epoch_tps)
     bob.add_force(pynamics.Vector2d(180, 1))
 
 
 @ctx.add_event_listener(event=pynamics.EventType.KEYHOLD, condition=pynamics.KeyEvaulator(pynamics.K_RIGHT))
-def listen(self):
+def listen(self, key):
     # bob.apply_force(pynamics.Vector2d(0, 1),10)
     bob.add_force(pynamics.Vector2d(0, 1))
 
 
 @ctx.add_event_listener(event=pynamics.EventType.KEYDOWN, condition=pynamics.KeyEvaulator(pynamics.K_r))
-def listen(self):
+def listen(self, key):
     bob.position.set(10, 10)
 
 

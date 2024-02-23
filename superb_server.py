@@ -4,7 +4,10 @@ import uuid
 import time
 
 ctx = pn.GameManager(dimensions=pn.Dim(500, 500))
-view = pn.DedicatedServer(ctx)
+view = pn.DedicatedServer(ctx, port=random.randint(1024, 65536))
+
+view.DOWNSTREAM_PING_TIMEOUT = 5
+view.UPSTREAM_PACKET_WAIT_TIME = 3
 
 matcher = {}
 
@@ -18,8 +21,12 @@ class AnyNameYouWantButSamePacketId(pn.Packet):
 
 @view.add_event_listener(event=pn.EventType.CLIENT_CONNECTED)
 def join(this, client: pn.ConnectedClient):
+
     circle = pn.Particle(ctx, random.randint(100, 400), random.randint(100, 400), use_gravity=False, use_airres=True)
+
     circle.dedicated_user_id = client.uuid
+
+    
 
     #client.add_object(circle)
 
@@ -34,9 +41,9 @@ def join(this, client: pn.ConnectedClient):
         if key == "Down":
             matcher[self.uuid].velocity.add_self(pn.Vector(-90, 1))
 
-        for i in this.users:
-            if i != client.uuid:
-                this.users[i].sync(matcher[client.uuid])
+        # for i in this.users:
+        #     if i != client.uuid:
+        #         this.users[i].sync(matcher[client.uuid])
 
     client.send_packet(AnyNameYouWantButSamePacketId(circle.uuid))
     matcher[client.uuid] = circle

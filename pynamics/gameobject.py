@@ -4,7 +4,7 @@ import time
 import numpy as np
 
 from .events import EventPriority, EventType, KeyEvaulator
-from .interface import PyNamical
+from .interface import PyNamical, network_transferrable
 from .dimensions import Dimension, Vector2d
 import math
 import cmath
@@ -98,6 +98,7 @@ def doIntersect(p1, q1, p2, q2):
     return False
 
 @socket_whitelisted_attributes("position", "velocity")
+@network_transferrable
 class GameObject(PyNamical):
     def __init__(self, parent: PyNamical, x: float = 0, y: float = 0, width: float = 10, height: float = 10, contents: str = None,
                  from_points: tuple = None,
@@ -258,6 +259,8 @@ class TopViewPhysicsBody(GameObject):
         self.acceleration = Vector2d(0, 0)
         self.coefficient = floor_friction
 
+        self.finish_creating()
+
     def update(self):
         self.acceleration = Vector2d(self.force.r, self.force.f / self.mass)
         self.force.clear()
@@ -268,7 +271,7 @@ class TopViewPhysicsBody(GameObject):
         v = Vector2d(self.velocity.r + 180, self.velocity.f * self.coefficient)
 
         self.velocity.add_self(v)
-\
+
 class PhysicsBody(GameObject):
     def __init__(self, parent: PyNamical, x: float = 0, y: float = 0, width: float = 10, height: float = 10, mass: int = 1,
                  contents: str = None, from_points: tuple = None, row=1.225, rectitude=1, use_mass=True, use_collide=True,
@@ -518,9 +521,11 @@ class PhysicsBody(GameObject):
 class Particle(PhysicsBody):
 
     def __init__(self, parent, x = 0, y = 0, r = 10, **kwargs):
+        
         self.radius = r
         self.r = self.radius # Alias
         super().__init__(parent, x, y, r*2, r*2, **kwargs)
+        
 
     def reflect_vector(self):
         vixself = self.velocity.cart()[0]

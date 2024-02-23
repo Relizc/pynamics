@@ -1,8 +1,11 @@
 import pynamics as pn
+import sys
+
+port = int(sys.argv[1])
 
 ctx = pn.GameManager(dimensions=pn.Dim(500, 500), event_tracker=False)
-view = pn.ProjectWindow(ctx)
-client = pn.DedicatedClient(ctx)
+view = pn.ProjectWindow(ctx, size=pn.Dim(500, 500))
+client = pn.DedicatedClient(ctx, port=port)
 
 global my_circle
 my_circle = None

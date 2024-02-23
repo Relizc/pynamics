@@ -11,6 +11,7 @@ import time
 import traceback
 import inspect
 import random
+import enum
 
 def change(s, a, b, c):
     print(c)
@@ -445,10 +446,13 @@ Tick DeltaTime: {self.parent.deltatime}""", font=("Courier", 14))
 
 
     def _call_callevent(self, event, obj, func):
+        
+
         if self.event_update:
+            e = list(EventType.__dict__)[list(EventType.__dict__.values()).index(event)]
             self.await_push.append([
                 datetime.datetime.now().strftime("%H:%m:%S.%f"),
-                EventType(event).name,
+                e,
                 f"{func.function.__module__}:{inspect.findsource(func.function)[1]}"
             ])
             self.event_iid += 1
