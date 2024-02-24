@@ -13,6 +13,8 @@ import ctypes
 from PIL import Image as ImageUtils
 from PIL import ImageTk
 
+
+
 import random
 
 
@@ -101,6 +103,7 @@ def doIntersect(p1, q1, p2, q2):
 @network_transferrable
 class GameObject(PyNamical):
     def __init__(self, parent: PyNamical, x: float = 0, y: float = 0, width: float = 10, height: float = 10, contents: str = None,
+                 rotation = 0,
                  from_points: tuple = None,
                  clear_blit: bool = True,
                  anchor: str = "nw"):
@@ -127,6 +130,9 @@ class GameObject(PyNamical):
         self.blit_id = None
         self.force_update = 0
         self.start_debug_highlight_tracking = False
+        self.rotation = rotation
+        self.last_display_rotation = None
+        self.this_display_position = rotation
         self.points = [
             ((self.position.x, self.position.y), (self.position.x - self.size.x, self.position.y)),
             ((self.position.x - self.size.x, self.position.y),
@@ -231,7 +237,7 @@ class Image(GameObject):
                  **kwargs):
         
         self.image_path = path
-        self.image = ImageUtils.open(self.image_path)
+        self.image = ImageUtils.open(self.image_path).convert("RGBA")
 
         super().__init__(parent, x, y, self.image.size[0], self.image.size[1], contents=None, **kwargs)
 
@@ -241,7 +247,7 @@ class Image(GameObject):
             else:
                 self.image = self.image.resize((width, height))
 
-        self.content = ImageTk.PhotoImage(self.image)
+        self.content = ImageTk.PhotoImage(self.image.rotate(self.rotation))
 
     def __repr__(self):
         return f"Image(file={self.image_path})"

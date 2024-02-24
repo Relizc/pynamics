@@ -84,10 +84,11 @@ class GameManager(PyNamical):
 
         self.ticksteplisteners = 1
 
+        PyNamical.MAIN_GAMEMANAGER = self
 
 
-
-
+    def set_as_main_manager(self):
+        PyNamical.MAIN_GAMEMANAGER = self
 
 
     def _key(self, e):

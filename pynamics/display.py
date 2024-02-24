@@ -3,6 +3,7 @@ from .gamemanager import GameManager
 from .dimensions import Dimension, Dimension2d
 from .interface import PyNamical
 from .gameobject import GameObject, Particle, Text
+from PIL import ImageTk
 from tkinter import NW
 import time
 
@@ -67,8 +68,9 @@ class ProjectWindow(PyNamical):
                 a = time.time()
 
                 moved = i.position != i.last_display_position
+                rotated = i.rotation != i.last_display_rotation
 
-                if (moved and not i.hidden) or i.force_update:
+                if ((moved or rotated) and not i.hidden) or i.force_update:
     
                     #print(i, i.position, i.last_position)
 
@@ -81,10 +83,11 @@ class ProjectWindow(PyNamical):
                     g = random.randint(-2**64, 2**64)
 
                     cam = self.viewport.shift(i.position)
-                    self.this_display_position = Dimension(cam.x, cam.y)
                     
                     # If its a thing with ass image. why would u do it like this but not making another image class
                     if i.content is not None:
+                        if rotated:
+                            i.content = ImageTk.PhotoImage(i.image.rotate(i.rotation))
                         self.surface.create_image((cam.x, cam.y), image=i.content, anchor=i.anchor, tags=f"ID{g}")
 
                     # If its text
@@ -103,6 +106,7 @@ class ProjectWindow(PyNamical):
                             self.surface.create_line(pos1[0] + cam.x, pos1[1] + cam.y, pos2[0] + cam.x, pos2[1] + cam.y, tags=f"ID{g}")
                     
                     i.last_display_position = Dimension(i.position.x, i.position.y)
+                    i.last_display_rotation = i.rotation
                     i.blit_id = g
 
         if self.force_update > 0:

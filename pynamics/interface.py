@@ -34,8 +34,6 @@ def build_class_tree():
                 self.__real_init__(*args, **kwargs)
                 self.finish_creating()
             element.__init__ = __init__wrapper
-        
-
 
 class PyNamical(EventHolder):
 
@@ -43,6 +41,7 @@ class PyNamical(EventHolder):
     linkedNetworkingDispatcher = None
     P_whitelisted = set()
     P_can_io_classes = ()
+    MAIN_GAMEMANAGER = None
 
     def __init__(self, parent, no_parent=False, uuid=None):
         super().__init__()

@@ -36,12 +36,17 @@ class EventType():
 
 class Executable:
 
-    def __init__(self, function, condition):
+    def __init__(self, function, condition, killafter = 0):
         self.function = function
+        self.runs = 0
+        self.killafter = killafter
         self.condition = condition # lambda
 
     def __call__(self, *args, **kwargs):
+        self.runs += 1
         self.function(*args, **kwargs)
+        if self.runs == self.killafter:
+            self.function = None
 
 class KeyEvaulator:
 
@@ -70,7 +75,7 @@ class EventHolder:
             EventType.STARTUP: []
         }
 
-    def add_event_listener(self, event: EventType = EventType.NONE, priority: EventPriority=EventPriority.LOWEST, condition=lambda i: True, tick_delay=0, replicated=False):
+    def add_event_listener(self, event: EventType = EventType.NONE, priority: EventPriority=EventPriority.LOWEST, condition=lambda i: True, tick_delay=0, replicated=False, killafter:int = 0):
         """
 
         :param replicated: `Boolean` **ONLY USE THIS WHEN THERE IS AN AVALIABLE SERVER** A replicated event that will run on the client side.
@@ -82,7 +87,7 @@ class EventHolder:
         """
 
         def inner(function):
-            self.events[event].insert(2147483647 - priority, Executable(function, condition))
+            self.events[event].insert(2147483647 - priority, Executable(function, condition, killafter=killafter))
 
         return inner
 
@@ -95,5 +100,8 @@ class EventHolder:
         """
         for func in self.events[event]:
             if func.condition(condition):
-                DebugAttacher(event, self, func)
-                func(self, *args, **kwargs)
+                if func.function is None:
+                    self.events[event].remove(func)
+                else:
+                    DebugAttacher(event, self, func)
+                    func(self, *args, **kwargs)

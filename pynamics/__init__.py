@@ -8,6 +8,7 @@ from .socket import DedicatedServer, DedicatedClient
 from .socket import *
 from .utils import ExampleLargeBinaryObject
 from .interface import PyNamical, find_object_by_id, build_class_tree
+from .animation import *
 from . import utils
 import pickle
 # Aliases

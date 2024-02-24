@@ -55,6 +55,11 @@ class Dimension:
     def __tuple__(self):
         return (self.x, self.y)
     
+    def __getitem__(self, i):
+        if i:
+            return self.y
+        return self.x
+    
     def __eq__(self, other):
         if not isinstance(other, Dimension):
             return NotImplemented
