@@ -59,13 +59,14 @@ class PyNamical(EventHolder):
             self.parent.children.append(self)
         self.children = []
 
+    def unbind(self):
+        self.parent.children.remove(self)
+
     def finish_creating(self):
         # Making sure PN doesnt crash when creating a ConnectedClient PyNamical class when connecting
         if PyNamical.linkedNetworkingDispatcher is not None: 
             
             PyNamical.linkedNetworkingDispatcher.network_newly_created(self)
-
-        print("Finish creating " + str(self))
 
     def __setattr__(self, key, value):
         try:

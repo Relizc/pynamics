@@ -225,15 +225,17 @@ class GameManager(PyNamical):
     def test(self):
         print(1)
 
-    def frame(self):
+    def frame(self, recursion=True):
         self.call_event_listeners(EventType.FRAME)
         self.f += 1
         self.window.blit()
-        self.window.surface.after(int(self._epoch_fps * 1000), self.frame)
 
-        
-        self.fps_deltatime = time.time() - self._fpstime
-        self._fpstime = time.time()
+        if recursion:
+            self.window.surface.after(int(self._epoch_fps * 1000), self.frame)
+
+            
+            self.fps_deltatime = time.time() - self._fpstime
+            self._fpstime = time.time()
 
     def add_tick_update(self, function):
         self.events[EventType.TICK].append(Executable(function, lambda i: True))

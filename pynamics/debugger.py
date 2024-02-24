@@ -136,6 +136,9 @@ class Debugger:
         self._network = tk.Label(self.general, text=f"Loading Networking...")
         self._network.grid(row=2, column=0, sticky="w")
 
+        self._obj_guide = tk.Label(self.general, text=f"E: ? / R: ?")
+        self._obj_guide.grid(row=3, column=0, sticky="w")
+
         ### Console ###
 
         self.console = tk.Frame(self.nb)
@@ -474,6 +477,9 @@ Tick DeltaTime: {self.parent.deltatime}""", font=("Courier", 14))
         self._tps.config(text=f"TPS: {self.parent.t} (Set: {self.parent.tps})")
         self.insttps.config(text=f"Instantaneous TPS: {self.parent.t}")
         self.parent.t = 0
+        
+        self._obj_guide.config(text=f"C: {len(self.parent.children)} / E: {len(self.parent.objects)} / R: {self.parent.window._blits}")
+        self.parent.window._blits = 0
 
         self.tk.after(1000, self._tick_tps_op)
 

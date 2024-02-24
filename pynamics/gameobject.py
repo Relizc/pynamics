@@ -155,14 +155,12 @@ class GameObject(PyNamical):
 
     def delete(self):
         if isinstance(self.parent.objects, list):
-            aid = self.parent.objectpointers[self.id]
-            val = ctypes.cast(aid, ctypes.py_object).value
-            self.parent.objects.remove(val)
+            self.parent.objects.remove(self)
             self.parent.ghosts.append(self)
-            self.parent.frame()
+            self.parent.frame(recursion=False)
             self.parent.ghosts.remove(self)
+            self.unbind()
             del self
-
     
 
     def __repr__(self):
@@ -299,6 +297,7 @@ class PhysicsBody(GameObject):
         else:
             self.mass = mass
         self.velocity = Vector2d(0, 0)
+        self.use_airres = use_airres
         self.use_gravity = use_gravity
         self.acceleration = Vector2d(0, 0)
         self.coeff = 0.5
@@ -600,9 +599,11 @@ class Particle(PhysicsBody):
             
 
     def update(self):
-        self.handle_wall_collisions()
+        if self.use_collide:
+            self.handle_wall_collisions()
         self.handle_forces()
-        self.handle_air_res()
+        if self.use_airres:
+            self.handle_air_res()
 
     
 

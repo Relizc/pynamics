@@ -9,7 +9,7 @@ circle = pn.Particle(ctx, 250, 250, use_gravity=False)
 
 k = pn.Animation(pn.CubicBezier(
     0, 1, 1, 0
-), fields=("x",))
+), fields=("rotation",))
 # n = 0
 
 # a = []
@@ -27,7 +27,7 @@ k = pn.Animation(pn.CubicBezier(
 # plot.show()
 @ctx.add_event_listener(event=pn.EventType.KEYDOWN, condition=pn.KeyEvaulator(pn.K_a))
 def press_a(self, key):
-    circle.position.x = 250
-    k.play(circle.position, (449,))
+    circle.rotation = 0
+    k.play(circle, (90,))
 
 ctx.start()

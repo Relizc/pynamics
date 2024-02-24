@@ -91,6 +91,8 @@ class Animation(PyNamical):
                     v = initial[tar] + d
                 setattr(play_at, self.fields[tar], v)
             self.age += 1
+            if self.age == self.duration:
+                setattr(play_at, self.fields[tar], final_value[tar])
 
         
 

@@ -49,6 +49,8 @@ class ProjectWindow(PyNamical):
         self.surface = tk.Canvas(self._tk, width=size.x, height=size.y, bg="white", highlightthickness=0)
         self.surface.pack()
 
+        self._blits = 0
+
         self.force_update = 0
 
     def blit(self):
@@ -57,6 +59,7 @@ class ProjectWindow(PyNamical):
         for i in self.parent.ghosts:
             self.surface.delete(f"ID{i.blit_id}")
         for i in self.parent.objects:
+
             if isinstance(i, GameObject):
 
                 #print("check")
@@ -71,6 +74,8 @@ class ProjectWindow(PyNamical):
                 rotated = i.rotation != i.last_display_rotation
 
                 if ((moved or rotated) and not i.hidden) or i.force_update:
+
+                    self._blits += 1
     
                     #print(i, i.position, i.last_position)
 
