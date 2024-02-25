@@ -1,6 +1,6 @@
 import tkinter
 
-from .socket import DedicatedServer
+from pynamics.socket import DedicatedServer
 
 from .gameobject import *
 from .interface import PyNamical
