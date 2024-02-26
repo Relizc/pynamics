@@ -1,5 +1,6 @@
 import math
 
+
 class ClockResizer:
 
     def __init__(self, value, timescale):
@@ -30,7 +31,7 @@ class Dimension:
     def add_dim(self, dim):
         return Dimension(self.x + dim.x, self.y + dim.y)
 
-    def add_self(self, x:float, y: float):
+    def add_self(self, x: float, y: float):
         self.x += x
         self.y += y
 
@@ -54,12 +55,12 @@ class Dimension:
 
     def __tuple__(self):
         return (self.x, self.y)
-    
+
     def __getitem__(self, i):
         if i:
             return self.y
         return self.x
-    
+
     def __eq__(self, other):
         if not isinstance(other, Dimension):
             return NotImplemented
@@ -80,8 +81,6 @@ class Dimension2d:
         self.x = Dimension(scale_x, offset_x)
         self.y = Dimension(scale_y, offset_y)
 
-    
-
     @property
     def scale_x(self):
         return self.x.scale_x
@@ -97,6 +96,29 @@ class Dimension2d:
     @property
     def offset_y(self):
         return self.y.offset_x
+
+
+class Color:
+
+    def __init__(self, r = 255, g = 255, b = 255):
+        if isinstance(r, str):
+            if r.lower() == "white":
+                self.r, self.g, self.b = 255, 255, 255
+            return
+
+        self.r = r
+        self.g = g
+        self.b = b
+
+    def __str__(self):
+        return "#%02x%02x%02x" % (int(self.r), int(self.g), int(self.b))
+
+    def __iter__(self):
+        return (self.r, self.g, self.b)
+
+    def __eq__(self, other):
+        return self.r == other.r and self.g == other.g and self.b == other.b
+
 
 class Vector():
     def __init__(self, r, f):
@@ -193,16 +215,17 @@ class Vector():
 
     def __repr__(self):
         return f"Vector(Angle: {self.r}, Value: {self.f})"
-    
+
     def __eq__(self, other):
         if not isinstance(other, Vector2d):
             return NotImplemented
         return self.r == other.r and self.f == other.f
-    
+
     def __add__(self, other):
         return self.add(other)
 
     def __mul__(self, other):
         return Vector2d(self.r, self.f * other)
+
 
 Vector2d = Vector

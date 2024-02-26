@@ -139,13 +139,16 @@ class GameManager(PyNamical):
             Logger.print("Using DedicatedServer as display port!", channel=2)
             self.window.listen()
         else:
-
             self.window._tk.after(100, self.frame)
             self.window._tk.bind("<KeyPress>", self._key)
             self.window._tk.bind("<KeyRelease>", self._key)
             self.window._tk.bind("<Motion>", self._mouse)
             self.window.start()
 
+    def after(self, duration=0):
+
+        def inner(func):
+            self.window._tk
 
     def _mouse(self, event):
         x, y = event.x, event.y

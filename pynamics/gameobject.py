@@ -5,7 +5,7 @@ import numpy as np
 
 from .events import EventPriority, EventType, KeyEvaulator
 from .interface import PyNamical, network_transferrable
-from .dimensions import Dimension, Vector2d
+from .dimensions import Dimension, Vector2d, Color
 import math
 import cmath
 import tkinter as tk
@@ -231,19 +231,25 @@ class Image(GameObject):
 
     def __init__(self, parent: GameObject, x: float = 0, y: float = 0, width: float = -1, height: float = -1,
                  path: str = None,
-                 resize_keep_ratio: bool = False,
+                 ratio: int = 1,
                  **kwargs):
         
         self.image_path = path
         self.image = ImageUtils.open(self.image_path).convert("RGBA")
+        self.color = Color()
+        self.alpha = 255
 
         super().__init__(parent, x, y, self.image.size[0], self.image.size[1], contents=None, **kwargs)
 
-        if width != -1 or height != -1:
-            if resize_keep_ratio:
-                self.image.thumbnail((width, height), ImageUtils.ANTIALIAS)
-            else:
-                self.image = self.image.resize((width, height))
+        w = self.image.width
+        h = self.image.height
+
+        if width != -1:
+            w = width
+        if height != -1:
+            h = height
+
+        self.image = self.image.resize((int(w * ratio), int(h * ratio)), resample=ImageUtils.BOX)
 
         self.content = ImageTk.PhotoImage(self.image.rotate(self.rotation))
 

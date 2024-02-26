@@ -1,7 +1,7 @@
 from typing import Iterable
 from .interface import PyNamical
 from .events import EventHolder
-from .dimensions import Dimension
+from .dimensions import Dimension, Color
 from .events import EventType
 import enum
 
@@ -65,7 +65,25 @@ class Animation(PyNamical):
                 self.tick_value[x] = iy
                 f += stepsize
 
-    def play(self, play_at = None, final_value: Iterable = []):
+    def play(self, play_at = None, final_value = [], function = None):
+
+        # if not isinstance(play_at, iter):
+        #     delta = final_value - play_at
+        #
+        #     @PyNamical.MAIN_GAMEMANAGER.add_event_listener(event=EventType.TICK, killafter=self.duration)
+        #     def t(this):
+        #         for tar in range(len(self.fields)):
+        #             d = delta[tar] * self.tick_value.get(self.age, 0)
+        #             if d == 0:
+        #                 v = play_at
+        #             else:
+        #                 v = play_at + d
+        #             setattr(play_at, self.fields[tar], v)
+        #         self.age += 1
+        #         if self.age == self.duration:
+        #             setattr(play_at, self.fields[tar], final_value[tar])
+        #
+        #     return
 
         if len(self.fields) != len(final_value):
             raise ValueError(
@@ -83,8 +101,14 @@ class Animation(PyNamical):
 
         @PyNamical.MAIN_GAMEMANAGER.add_event_listener(event=EventType.TICK, killafter=self.duration)
         def t(this):
+            n = self.tick_value.get(self.age, 0)
+
+            if function is not None:
+                function(n)
+
             for tar in range(len(self.fields)):
-                d = delta[tar] * self.tick_value.get(self.age, 0)
+                d = delta[tar] * n
+                # print(d)
                 if d == 0:
                     v = getattr(play_at, self.fields[tar])
                 else:
@@ -92,7 +116,10 @@ class Animation(PyNamical):
                 setattr(play_at, self.fields[tar], v)
             self.age += 1
             if self.age == self.duration:
-                setattr(play_at, self.fields[tar], final_value[tar])
+                if function is not None:
+                    function(1)
+                else:
+                    setattr(play_at, self.fields[tar], final_value[tar])
 
         
 

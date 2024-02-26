@@ -1,6 +1,6 @@
 import tkinter as tk
 from .gamemanager import GameManager
-from .dimensions import Dimension, Dimension2d
+from .dimensions import Dimension, Dimension2d, Color
 from .interface import PyNamical
 from .gameobject import GameObject, Particle, Text
 from PIL import ImageTk
@@ -30,10 +30,13 @@ class ViewPort(PyNamical):
     def shift(self, other: Dimension):
         return other.add_dim(self.position)
 
+def rgb_to_hex(i):
+    return f"#%02x%02x%02x" % tuple(i)
 
 class ProjectWindow(PyNamical):
 
-    def __init__(self, parent: GameManager, size: Dimension = Dimension(1000, 1000), title: str = "ViewPort Frame"):
+    def __init__(self, parent: GameManager, size: Dimension = Dimension(1000, 1000), title: str = "ViewPort Frame",
+                 color: Color = Color(255, 255, 255)):
         super().__init__(parent)
         self.parent.window = self
 
@@ -46,7 +49,9 @@ class ProjectWindow(PyNamical):
         self._tk.geometry(f"{size.x}x{size.y}")
         self._tk.resizable(False, False)
         self._tk.title(title)
-        self.surface = tk.Canvas(self._tk, width=size.x, height=size.y, bg="white", highlightthickness=0)
+        self.color = color
+        self._curcolor = color
+        self.surface = tk.Canvas(self._tk, width=size.x, height=size.y, bg=rgb_to_hex(color), highlightthickness=0)
         self.surface.pack()
 
         self._blits = 0
@@ -55,6 +60,10 @@ class ProjectWindow(PyNamical):
 
     def blit(self):
         #self.surface.delete("all")
+
+        if self._curcolor != self.color:
+            self._curcolor = self.color
+            self.surface.config(bg=rgb_to_hex(self.color))
         
         for i in self.parent.ghosts:
             self.surface.delete(f"ID{i.blit_id}")

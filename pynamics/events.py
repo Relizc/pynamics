@@ -1,5 +1,6 @@
 
 import enum
+import threading
 
 def commit(e, s, a):
     None
@@ -104,4 +105,6 @@ class EventHolder:
                     self.events[event].remove(func)
                 else:
                     DebugAttacher(event, self, func)
-                    func(self, *args, **kwargs)
+                    #func(self, *args, **kwargs)
+                    n = threading.Thread(target=lambda: func(self, *args, **kwargs))
+                    n.start()
