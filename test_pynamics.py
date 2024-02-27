@@ -18,15 +18,14 @@ bob = pynamics.PhysicsBody(ctx, 100, 100, 100, 100, 2,
                                         ((50, 50), (50, 0)),
                                         ((50, 0), (0, 0))
                                         ))
-nooo= pynamics.PhysicsBody(ctx, 100, 300, 100, 100, 2,
+nooo= pynamics.PhysicsBody(ctx, 300, 100, 100, 100, 2,
                            from_points=(((0, 0), (0, 100)),
                                         ((0, 100), (100, 100)),
                                         ((100, 100), (100, 50)),
                                         ((100, 50), (50, 50)),
                                         ((50, 50), (50, 0)),
                                         ((50, 0), (0, 0))
-                                        ), use_gravity=False,
-                                        use_mass=False)
+                                        ))
 
 
 #hi = pynamics.Text(ctx, 100, 100, "Loser")
@@ -36,7 +35,7 @@ nooo= pynamics.PhysicsBody(ctx, 100, 300, 100, 100, 2,
 bob2 = pynamics.PhysicsBody(ctx, 500, 750, 1000, 1000, 2, use_gravity=False,use_mass=False
                            )
 bob.rectitude = 1
-nooo.rectitude = 1
+nooo.rectitude = 0.5
 
 def condition():
     global thisTime

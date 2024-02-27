@@ -2,7 +2,7 @@ import threading
 import time
 
 import numpy as np
-
+import copy
 from .events import EventPriority, EventType, KeyEvaulator
 from .interface import PyNamical, network_transferrable
 from .dimensions import Dimension, Vector2d, Color
@@ -14,8 +14,22 @@ from PIL import Image as ImageUtils
 from PIL import ImageTk
 
 
-
 import random
+
+class LimitedArray():
+    def __init__(self, size: int, initialArray=[]):
+        self.size = size
+        if len(initialArray) > self.size:
+            raise IndexError("The initial array exceeds the alloted size.")
+        else:
+            self.arr = initialArray
+    def push_add(self,element):
+        self.arr.append(element)
+        if len(self.arr) > self.size:
+            self.arr.pop(0)
+    def push_extend(self,extendings:list):
+        for i in extendings:
+            self.push_add(i)
 
 
 class Point(Dimension):
@@ -311,11 +325,12 @@ class PhysicsBody(GameObject):
         self.rectitude = rectitude
         self.row = row
         self.use_mass = use_mass
+
         self.collision_type = int(collision_type)
         self.use_collide = use_collide
         self.force = Vector2d(0, 0)
         self.gravity = -0.1
-        
+        self.past_positions = LimitedArray(self.parent.tps)
 
         # self.timeB = time.time()
         # self.timeA = time.time()
@@ -421,7 +436,7 @@ class PhysicsBody(GameObject):
         self.force.clear()
 
     def update(self):
-
+        self.past_positions.push_add(copy.deepcopy(self.position))
         self.handle_forces()
 
         if self.use_collide and self.use_mass and self.collision_type == 1:
@@ -460,7 +475,7 @@ class PhysicsBody(GameObject):
         # if self.parent.terminated: break
         coeff = 0
         for i in objects:
-            if isinstance(i, PhysicsBody) and i != self:
+            if isinstance(i, PhysicsBody) and i.uuid != self.uuid:
                 for j in i.points:
                     for k in self.points:
                         p1 = (j[0][0] + i.position.x, (j[0][1] + i.position.y) * -1)
@@ -481,35 +496,35 @@ class PhysicsBody(GameObject):
                 x, y = self.velocity.cart()
                 x += self.position.x
                 y -= self.position.y
-                pointx, pointy = self.position.x, self.position.y
-                if pointx - x == 0:
-                    num = pointx
-                    collisions = []
-                    collDist = 0
-
-                    for k in self.points:
-                        q11 = (k[0][0] + self.position.x, (k[0][1] + self.position.y) * -1)
-                        q22 = (k[1][0] + self.position.x, (k[1][1] + self.position.y) * -1)
-                        if min(q11[0], q22[0]) <= num <= max(q11[0], q22[0]):
-                            if q11[0] == q22[0]:
-
-                                collDist = max(abs(-self.position.y - min(q11[1], q22[1])), collDist)
-
-
-                            else:
-                                q1x, q1y = (q11[0], q11[1])
-                                q2x, q2y = (q22[0], q22[1])
-                                m = (q1y - q2y) / (q1x - q2x)
-                                b = q2y - m * q2x
-
-                                # intersection
-                                yd = m * num + b
-                                intersection = (num, yd)
-                                if min(q11[0], q22[0]) <= intersection[0] <= max(q11[0], q22[0]) and min(q11[1],
-                                                                                                         q22[1]) <= \
-                                        intersection[1] <= max(q11[1], q22[1]):
-                                    collDist = max(collDist, abs(-self.position.y - intersection[1]))
-
+                # pointx, pointy = self.position.x, self.position.y
+                # if pointx - x == 0:
+                #     num = pointx
+                #     collisions = []
+                #     collDist = 0
+                #
+                #     for k in self.points:
+                #         q11 = (k[0][0] + self.position.x, (k[0][1] + self.position.y) * -1)
+                #         q22 = (k[1][0] + self.position.x, (k[1][1] + self.position.y) * -1)
+                #         if min(q11[0], q22[0]) <= num <= max(q11[0], q22[0]):
+                #             if q11[0] == q22[0]:
+                #
+                #                 collDist = max(abs(-self.position.y - min(q11[1], q22[1])), collDist)
+                #
+                #
+                #             else:
+                #                 q1x, q1y = (q11[0], q11[1])
+                #                 q2x, q2y = (q22[0], q22[1])
+                #                 m = (q1y - q2y) / (q1x - q2x)
+                #                 b = q2y - m * q2x
+                #
+                #                 # intersection
+                #                 yd = m * num + b
+                #                 intersection = (num, yd)
+                #                 if min(q11[0], q22[0]) <= intersection[0] <= max(q11[0], q22[0]) and min(q11[1],
+                #                                                                                          q22[1]) <= \
+                #                         intersection[1] <= max(q11[1], q22[1]):
+                #                     collDist = max(collDist, abs(-self.position.y - intersection[1]))
+                self.position = self.past_positions.arr[-1]
                 vixself = self.velocity.cart()[0]
                 viyself = self.velocity.cart()[1]
 
