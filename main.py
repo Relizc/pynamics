@@ -17,7 +17,7 @@ x.velocity.r = random.randint(0, 180)
 x.velocity.f = random.randint(0, 20)
 
 @ctx.add_event_listener(event=pn.EventType.STARTUP)
-def move(self):
+def move(this):
     @ctx.add_event_listener(event=pn.EventType.TICK, killafter=100*2)
     def c(a):
         log.position.x = x.x
