@@ -1,7 +1,7 @@
 import pynamics as pn
 import sys
-
-port = int(sys.argv[1])
+import random
+port = random.randint(10000,99999)
 
 ctx = pn.GameManager(dimensions=pn.Dim(500, 500), event_tracker=False)
 view = pn.ProjectWindow(ctx, size=pn.Dim(500, 500))
@@ -42,14 +42,10 @@ def up(self, key):
 def up(self, key):
     global my_circle
     if not isinstance(my_circle, pn.Particle): my_circle = pn.find_object_by_id(my_circle)
-
     my_circle.velocity.add_self(pn.Vector(180, f))
-
 @ctx.add_event_listener(event=pn.EventType.KEYHOLD, condition=pn.KeyEvaulator(pn.K_RIGHT ))
 def up(self, key):
     global my_circle
     if not isinstance(my_circle, pn.Particle): my_circle = pn.find_object_by_id(my_circle)
-
     my_circle.velocity.add_self(pn.Vector(0, f))
-
 ctx.start()
