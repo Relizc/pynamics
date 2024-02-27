@@ -145,8 +145,15 @@ class GameManager(PyNamical):
             self.window._tk.bind("<KeyPress>", self._key)
             self.window._tk.bind("<KeyRelease>", self._key)
             self.window._tk.bind("<Motion>", self._mouse)
+            self.window._tk.bind("<Button-1>", lambda i: self._click(i, 0))
             self.window.start()
 
+    def _click(self, event, click_type):
+        if click_type == 0:
+            for i in self.objects:
+                if i.position.x <= event.x <= i.position.x + i.size.x and i.position.y <= event.y <= i.position.y + i.size.y:
+
+                    i.call_event_listeners(EventType.ONCLICK)
     def after(self, duration=0):
 
         def inner(func):

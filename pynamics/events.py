@@ -1,8 +1,9 @@
 
 import enum
 import threading
+import random
 
-def commit(e, s, a):
+def commit(e, s, a, kill=False, special=None):
     None
 DebugAttacher = commit
 def change_debug_attacher(func):
@@ -30,24 +31,43 @@ class EventType():
     HOVER = 0x20
     NO_HOVER = 0x21
 
+    ONCLICK = 0x22
+
 
     CLIENT_CONNECTED = 0x100
 
-    
+event_name_linker = {
+    EventType.NONE: "NullEvent",
+    EventType.KEYDOWN: "KeyboardListenerPress",
+    EventType.KEYUP: "KeyboardListenerUnpress",
+    EventType.KEYHOLD: "KeyboardListenerHold",
+    EventType.TICK: "GamemanagerTick",
+    EventType.STARTUP: "GamemanagerStartup",
+    EventType.ONCLICK: "UserInterfaceClick"
+}
+events_first = list(EventType.__dict__.keys())
+events_second = list(EventType.__dict__.values())
 
 class Executable:
 
-    def __init__(self, function, condition, killafter = 0):
+    def __init__(self, function, condition, killafter = 0, name="GenericEvent", belong_group = "Event"):
         self.function = function
         self.runs = 0
         self.killafter = killafter
         self.condition = condition # lambda
+        self.type = name
+        self.belong_group = belong_group
+        self.event_id = random.randint(-2147483648, 2147483647)
+        self.debug_del = None
 
     def __call__(self, *args, **kwargs):
         self.runs += 1
-        self.function(*args, **kwargs)
+        self.function(self, *args, **kwargs)
         if self.runs == self.killafter:
             self.function = None
+
+    def terminate(self):
+        self.function = None
 
 class KeyEvaulator:
 
@@ -61,6 +81,19 @@ class EventPriority:
     HIGHEST = 0
     LOWEST = 2147483647
 
+registered_events = set()
+def get_registered_events():
+    return len(registered_events)
+
+def event_registered(exe):
+    global registered_events
+    registered_events.add(exe)
+    DebugAttacher(exe, exe, exe, special=0)
+
+def event_unregistered(exe):
+    global registered_events
+    registered_events.remove(exe)
+    DebugAttacher(exe, exe, exe, special=1)
 
 class EventHolder:
 
@@ -76,7 +109,8 @@ class EventHolder:
             EventType.STARTUP: []
         }
 
-    def add_event_listener(self, event: EventType = EventType.NONE, priority: EventPriority=EventPriority.LOWEST, condition=lambda i: True, tick_delay=0, replicated=False, killafter:int = 0):
+    def add_event_listener(self, event: EventType = EventType.NONE, priority: EventPriority=EventPriority.LOWEST, condition=lambda i: True, tick_delay=0, replicated=False, killafter:int = 0,
+                           name: str = None):
         """
 
         :param replicated: `Boolean` **ONLY USE THIS WHEN THERE IS AN AVALIABLE SERVER** A replicated event that will run on the client side.
@@ -87,8 +121,14 @@ class EventHolder:
         :return:
         """
 
+        if name is None:
+            name = event_name_linker[event]
+
         def inner(function):
-            self.events[event].insert(2147483647 - priority, Executable(function, condition, killafter=killafter))
+            func = Executable(function, condition, killafter=killafter, name=name, belong_group=events_first[events_second.index(event)])
+
+            event_registered(func)
+            self.events[event].insert(2147483647 - priority, func)
 
         return inner
 
@@ -99,12 +139,15 @@ class EventHolder:
         :param condition: The value that will be passed into the lambda function's i value and asserted.
         :return: None, call events with lambda functions that returns true
         """
+
         for func in self.events[event]:
             if func.condition(condition):
                 if func.function is None:
+                    DebugAttacher(event, self, func, kill=True)
                     self.events[event].remove(func)
+                    event_unregistered(func)
                 else:
                     DebugAttacher(event, self, func)
                     #func(self, *args, **kwargs)
-                    n = threading.Thread(target=lambda: func(self, *args, **kwargs))
+                    n = threading.Thread(target=lambda: func(*args, **kwargs))
                     n.start()

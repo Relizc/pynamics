@@ -4,7 +4,7 @@ from tkinter import ttk
 import tkinter.messagebox as tkmsg
 from .logger import Logger
 from .dimensions import Dimension, Vector
-from .events import EventType
+from .events import EventType, get_registered_events
 from .socket import DedicatedClient
 import datetime
 import time
@@ -113,6 +113,7 @@ class Debugger:
 
         self._eps = 0
         self.eps = 0
+        self._ekps = 0
 
         self.tk.geometry("800x500")
         self.tk.title("Debug Tools")
@@ -139,6 +140,9 @@ class Debugger:
         self._obj_guide = tk.Label(self.general, text=f"E: ? / R: ?")
         self._obj_guide.grid(row=3, column=0, sticky="w")
 
+        self._event_monitor = tk.Label(self.general, text=f"Events: ? / Suspended: ? / KPS: ?")
+        self._event_monitor.grid(row=4, column=0, sticky="w")
+
         ### Console ###
 
         self.console = tk.Frame(self.nb)
@@ -164,20 +168,25 @@ class Debugger:
 
         if self.event_update:
 
-
-            self.l = tk.Label(self.events, text="0 Events Called. EPS: 0")
-            self.l.grid(row=1, column=0, sticky="ew")
-
-            self.event = ttk.Treeview(self.events, columns=("epoch", "type", "source"), show='headings')
+            self.event = ttk.Treeview(self.events, columns=("epoch", "name", "type", "source", "threaded", "eventid"), show='headings')
 
             self.event.column("epoch", anchor=tk.W, width=100)
-            self.event.heading("epoch", text="Time", anchor=tk.W)
+            self.event.heading("epoch", text="Last Called", anchor=tk.W)
+
+            self.event.column("name", anchor=tk.W, width=200)
+            self.event.heading("name", text="Event Name", anchor=tk.W)
 
             self.event.column("type", anchor=tk.W, width=100)
             self.event.heading("type", text="Event Type", anchor=tk.W)
 
             self.event.column("source", anchor=tk.W, width=200)
             self.event.heading("source", text="Function Source", anchor=tk.W)
+
+            self.event.column("threaded", anchor=tk.W, width=200)
+            self.event.heading("threaded", text="Is Threaded", anchor=tk.W)
+
+            self.event.column("eventid", anchor=tk.W, width=100)
+            self.event.heading("eventid", text="Event ID", anchor=tk.W)
 
             self.event.grid(row=2, column=0, sticky="ewns")
 
@@ -448,17 +457,45 @@ Tick DeltaTime: {self.parent.deltatime}""", font=("Courier", 14))
 
 
 
-    def _call_callevent(self, event, obj, func):
+    def _call_callevent(self, event, obj, func, kill=False, special=None):
         
+        if kill:
+            self._ekps += 1
+            return
 
-        if self.event_update:
-            e = list(EventType.__dict__)[list(EventType.__dict__.values()).index(event)]
-            self.await_push.append([
+        if special is None:
+            if func.debug_del is None: return
+            self.await_push.append(func)
+
+        if special == 0: # register
+
+            event.debug_del = self.event.insert("", 'end', values=(
                 datetime.datetime.now().strftime("%H:%m:%S.%f"),
-                e,
-                f"{func.function.__module__}:{inspect.findsource(func.function)[1]}"
-            ])
-            self.event_iid += 1
+                event.type,
+                event.belong_group,
+                f"{func.function.__module__}:{inspect.findsource(func.function)[1]}",
+                True,
+                event.event_id
+            ))
+            return
+        elif special == 1: #unregister
+            if event.debug_del is not None:
+                self.event.delete(event.debug_del)
+            return
+
+
+
+
+
+
+        # if self.event_update:
+        #     e = list(EventType.__dict__)[list(EventType.__dict__.values()).index(event)]
+        #     self.await_push.append([
+        #         datetime.datetime.now().strftime("%H:%m:%S.%f"),
+        #         e,
+        #         f"{func.function.__module__}:{inspect.findsource(func.function)[1]}"
+        #     ])
+        #     self.event_iid += 1
 
 
     def close(self):
@@ -481,6 +518,9 @@ Tick DeltaTime: {self.parent.deltatime}""", font=("Courier", 14))
         self._obj_guide.config(text=f"C: {len(self.parent.children)} / E: {len(self.parent.objects)} / R: {self.parent.window._blits}")
         self.parent.window._blits = 0
 
+        self._event_monitor.config(text=f"Events: {get_registered_events()} / Suspended: ? / EPS: {self._eps} / KPS: {self._ekps}")
+        self._ekps = 0
+
         self.tk.after(1000, self._tick_tps_op)
 
     def _tick_packeting_op(self):
@@ -498,25 +538,24 @@ Tick DeltaTime: {self.parent.deltatime}""", font=("Courier", 14))
         self.tk.after(1000, self._tick_packeting_op)
 
     def _tick_event_update(self):
-        if not self.event_update: return
-
         for i in self.await_push:
-            self.event.insert(parent='',index='end',text='', values=i)
-        self.log += len(self.await_push)
-        self._eps += len(self.await_push)
-        self.event.yview_moveto(1)
+            if i.type is None or i.belong_group is None or i.function is None or i.event_id is None: continue
+            self.event.item(i.debug_del, values=(
+                datetime.datetime.now().strftime("%H:%m:%S.%f"),
+                i.type,
+                i.belong_group,
+                f"{i.function.__module__}:{inspect.findsource(i.function)[1]}",
+                True,
+                i.event_id
+            ))
         self.await_push = []
 
-        self.l.config(text=f"{self.log} events called. EPS: {self.eps}")
-
-        self.tk.after(1, self._tick_event_update)
+        self.tk.after(100, self._tick_event_update)
 
     def _tick_event_update_sec(self):
         self.eps = self._eps
         self._eps = 0
-        self.l.config(text=f"{self.log} events called. EPS: {self.eps}")
 
-        self.tk.after(1000, self._tick_event_update_sec)
 
     def _run(self):
         self.tk.focus_force()

@@ -134,6 +134,8 @@ class GameObject(PyNamical):
         self.position = Dimension(x, y)
         self.this_position = Dimension(x, y)
 
+        self.events[EventType.ONCLICK] = []
+
         self.this_display_position = Dimension(self.this_position.x, self.position.y)
         self.last_display_position = None
         self.size = Dimension(width, height)
@@ -259,12 +261,17 @@ class Image(GameObject):
         w = self.image.width
         h = self.image.height
 
+
+
         if width != -1:
             w = width
         if height != -1:
             h = height
 
         self.image = self.image.resize((int(w * ratio), int(h * ratio)), resample=ImageUtils.BOX)
+
+        self.size.x = int(w * ratio)
+        self.size.y = int(h * ratio)
 
         self.content = ImageTk.PhotoImage(self.image.rotate(self.rotation))
 

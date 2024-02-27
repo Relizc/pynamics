@@ -99,7 +99,7 @@ class Animation(PyNamical):
         for i in range(len(self.fields)):
             initial.append(getattr(play_at, self.fields[i]))
 
-        @PyNamical.MAIN_GAMEMANAGER.add_event_listener(event=EventType.TICK, killafter=self.duration)
+        @PyNamical.MAIN_GAMEMANAGER.add_event_listener(event=EventType.TICK, killafter=self.duration, name="AnimationProgressionEvent")
         def t(this):
             n = self.tick_value.get(self.age, 0)
 
