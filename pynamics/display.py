@@ -109,7 +109,7 @@ class ProjectWindow(PyNamical):
 
                     # If its text
                     elif isinstance(i, Text):
-                        print(i.text)
+                        self.surface.create_text(i.x, i.y, text=i.text, fill=i.font.color, font=str(i.font), tags=f"ID{g}")
 
                     # If its a Particle
                     elif isinstance(i, Particle):
