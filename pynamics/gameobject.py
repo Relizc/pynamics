@@ -106,7 +106,8 @@ class GameObject(PyNamical):
                  rotation = 0,
                  from_points: tuple = None,
                  clear_blit: bool = True,
-                 anchor: str = "nw"):
+                 anchor: str = "nw",
+                 no_display=False):
         """
         :param x: The position of the GameObject, on X-Axis
         :param y: The position of the GameObject, on Y-Axis
@@ -125,7 +126,7 @@ class GameObject(PyNamical):
             self.content = ImageTk.PhotoImage(ImageUtils.open(contents))
         else:
             self.content = None
-        self.hidden = False
+        self.hidden = no_display
         self.absolute = Dimension(x, y)
         self.blit_id = None
         self.force_update = 0
