@@ -84,6 +84,8 @@ class GameManager(PyNamical):
 
         self.ticksteplisteners = 1
 
+        self.displayorder = []
+
         PyNamical.MAIN_GAMEMANAGER = self
 
 
@@ -251,6 +253,8 @@ class GameManager(PyNamical):
 
     def add_object(self, object: GameObject):
         self.objects.append(object)
+        self.displayorder.append(object)
+        self.displayorder.sort(key=lambda i: i.zindex)
 
     def set_title(self, str):
         self.window._tk.title(str)

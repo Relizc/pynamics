@@ -130,8 +130,14 @@ class ProjectWindow(PyNamical):
             if i.force_update > 0:
                 i.force_update -= 1
 
+        for i in self.parent.displayorder:
+            self.surface.tag_raise(f"ID{i.blit_id}")
+
     def update(self):
         pass
+
+    def remove(self, obj):
+        self.surface.delete(f"ID{obj.blit_id}")
 
     def _close_parent_close(self):
         self.parent.terminated = True

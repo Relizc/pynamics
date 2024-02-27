@@ -38,13 +38,13 @@ def start(self):
 
     time.sleep(3)
     ani = pn.Animation(pn.CubicBezier(0, 0, 0.58, 1), duration=32, fields=["r", "g", "b"])
-    ani.play(view.color, [0, 0, 0])
+    ani.play(view.color, [135, 206, 235])
 
     time.sleep(0.8)
 
     tit = pn.Image(ctx, path="title.png", ratio=3, x=392, y=-100)
     tit2 = pn.Image(ctx, path="playbtn.png", ratio=0.1, x=420, y=600)
-    tex = pn.Text(ctx, text="Superb Game\nCopyright 2024 DumbAbra Studio", x=480, y=910, font=pn.TextFont("Courier", color="white"))
+    tex = pn.Text(ctx, text="Copyright 2024 DumbAbra Studio", x=480, y=910, font=pn.TextFont("Courier", color="black", size=8), zindex=99)
 
     pn.Animation(pn.CubicBezier(.0, 0, 0.58, 1), duration=32, fields=["y"]).play(tit.position, [80])
     pn.Animation(pn.CubicBezier(.0, 0, 0.58, 1), duration=32, fields=["y"]).play(tit2.position, [190])
@@ -56,24 +56,40 @@ def start(self):
     ctx.aa = 0
     ctx.b = 0
 
-    pn.Animation(pn.CubicBezier(.0, 0, 0.58, 1), duration=64 * 5, fields=["r", "g", "b"]).play(view.color, [10, 8, 255])
+    self.kk = []
 
     @ctx.add_event_listener(event=pn.EventType.TICK)
     def t(self):
-        ctx.aa += 1
+        k = random.randint(0, 256)
+        if k == 256:
+            i = pn.Image(ctx, path="building0.png", ratio=3, x=1000, y=450, zindex=-1)
+            pn.Animation(pn.CubicBezier(0, 0, 1, 1), duration=128*3, fields=["x"]).play(i.position, [-200])
+            self.kk.append(i)
+        if k == 147:
+            i = pn.Image(ctx, path="building1.png", ratio=5, x=1000, y=400, zindex=-1)
+            pn.Animation(pn.CubicBezier(0, 0, 1, 1), duration=128 * 3, fields=["x"]).play(i.position, [-200])
+            self.kk.append(i)
+        if k == 15:
+            i = pn.Image(ctx, path="building2.png", ratio=4, x=1000, y=420, zindex=-1)
+            pn.Animation(pn.CubicBezier(0, 0, 1, 1), duration=128 * 3, fields=["x"]).play(i.position, [-200])
+            self.kk.append(i)
+        cc = random.randint(0, 400)
+        if cc == 231:
+            i = pn.Image(ctx, path=f"building{random.randint(3, 4)}.png", ratio=4, x=1000, y=20 + random.randint(-10, 50), zindex=-1)
+            pn.Animation(pn.CubicBezier(0, 0, 1, 1), duration=128 * 8, fields=["x"]).play(i.position, [-200])
+            self.kk.append(i)
 
-        if ctx.aa == 64 * 5:
+    @ctx.add_event_listener(event=pn.EventType.TICK)
+    def check(self):
+        n = list(self.kk)
+        for i in self.kk:
+            if i.x < -100:
+                i.delete()
+                n.remove(i)
+        self.kk = n
 
-            if ctx.b == 1:
-                pn.Animation(pn.CubicBezier(.0, 0, 0.58, 1), duration=64 * 5, fields=["r", "g", "b"]).play(view.color,
-                                                                                                           [10, 8, 255])
-                ctx.b = 0
-            else:
-                pn.Animation(pn.CubicBezier(.0, 0, 0.58, 1), duration=64 * 5, fields=["r", "g", "b"]).play(view.color,
-                                                                                                           [0, 0, 0])
-                ctx.b = 1
 
-            ctx.aa = 0
+
 
 
 ctx.start()

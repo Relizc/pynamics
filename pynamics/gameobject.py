@@ -107,7 +107,8 @@ class GameObject(PyNamical):
                  from_points: tuple = None,
                  clear_blit: bool = True,
                  anchor: str = "nw",
-                 no_display=False):
+                 no_display=False,
+                 zindex=1):
         """
         :param x: The position of the GameObject, on X-Axis
         :param y: The position of the GameObject, on Y-Axis
@@ -144,6 +145,7 @@ class GameObject(PyNamical):
 
         ]
         self.clear_blit = clear_blit
+        self.zindex = zindex
         if from_points is not None:
             self.points = []
             for i in from_points:
@@ -157,9 +159,7 @@ class GameObject(PyNamical):
     def delete(self):
         if isinstance(self.parent.objects, list):
             self.parent.objects.remove(self)
-            self.parent.ghosts.append(self)
-            self.parent.frame(recursion=False)
-            self.parent.ghosts.remove(self)
+            self.parent.window.remove(self)
             self.unbind()
             del self
     
@@ -645,6 +645,9 @@ class Text(GameObject):
         if key == "text":
             self.force_update += 1
         super(Text, self).__setattr__(key, value)
+
+    def __repr__(self):
+        return f"Text(\"{self.text}\")"
 
     def update(self):
         print(self.i)
