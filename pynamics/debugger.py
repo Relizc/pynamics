@@ -171,7 +171,7 @@ class Debugger:
             self.event = ttk.Treeview(self.events, columns=("epoch", "name", "type", "source", "threaded", "eventid"), show='headings')
 
             self.event.column("epoch", anchor=tk.W, width=100)
-            self.event.heading("epoch", text="Last Called", anchor=tk.W)
+            self.event.heading("epoch", text="Time Created", anchor=tk.W)
 
             self.event.column("name", anchor=tk.W, width=200)
             self.event.heading("name", text="Event Name", anchor=tk.W)
@@ -463,9 +463,9 @@ Tick DeltaTime: {self.parent.deltatime}""", font=("Courier", 14))
             self._ekps += 1
             return
 
-        if special is None:
-            if func.debug_del is None: return
-            self.await_push.append(func)
+        # if special is None:
+        #     if func.debug_del is None: return
+        #     self.await_push.append(func)
 
         if special == 0: # register
 
@@ -538,19 +538,20 @@ Tick DeltaTime: {self.parent.deltatime}""", font=("Courier", 14))
         self.tk.after(1000, self._tick_packeting_op)
 
     def _tick_event_update(self):
-        for i in self.await_push:
-            if i.type is None or i.belong_group is None or i.function is None or i.event_id is None: continue
-            self.event.item(i.debug_del, values=(
-                datetime.datetime.now().strftime("%H:%m:%S.%f"),
-                i.type,
-                i.belong_group,
-                f"{i.function.__module__}:{inspect.findsource(i.function)[1]}",
-                True,
-                i.event_id
-            ))
-        self.await_push = []
+        # for i in self.await_push:
+        #     if i.type is None or i.belong_group is None or i.function is None or i.event_id is None: continue
+        #     self.event.item(i.debug_del, values=(
+        #         datetime.datetime.now().strftime("%H:%m:%S.%f"),
+        #         i.type,
+        #         i.belong_group,
+        #         f"{i.function.__module__}:{inspect.findsource(i.function)[1]}",
+        #         True,
+        #         i.event_id
+        #     ))
+        # self.await_push = []
 
-        self.tk.after(100, self._tick_event_update)
+        # self.tk.after(100, self._tick_event_update)
+        pass
 
     def _tick_event_update_sec(self):
         self.eps = self._eps

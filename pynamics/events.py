@@ -43,7 +43,8 @@ event_name_linker = {
     EventType.KEYHOLD: "KeyboardListenerHold",
     EventType.TICK: "GamemanagerTick",
     EventType.STARTUP: "GamemanagerStartup",
-    EventType.ONCLICK: "UserInterfaceClick"
+    EventType.ONCLICK: "UserInterfaceClick",
+    EventType.CLIENT_CONNECTED: "NetworkClientConnected"
 }
 events_first = list(EventType.__dict__.keys())
 events_second = list(EventType.__dict__.values())

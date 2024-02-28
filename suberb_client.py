@@ -1,7 +1,7 @@
 import pynamics as pn
 import sys
 import random
-port = random.randint(10000,99999)
+port = int(sys.argv[1])
 
 ctx = pn.GameManager(dimensions=pn.Dim(500, 500), event_tracker=False)
 view = pn.ProjectWindow(ctx, size=pn.Dim(500, 500))
