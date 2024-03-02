@@ -149,8 +149,8 @@ def start(self):
             i = pn.Image(ctx, path="building2.png", ratio=4, x=1000, y=420, zindex=-1)
             pn.Animation(pn.CubicBezier(0, 0, 1, 1), duration=128 * 3, fields=["x"]).play(i.position, [-200])
             ctx.kk.append(i)
-        cc = random.randint(0, 400)
-        if cc == 231:
+        cc = random.randint(0, 200)
+        if cc == 100:
             i = pn.Image(ctx, path=f"building{random.randint(3, 4)}.png", ratio=4, x=1000, y=20 + random.randint(-10, 50), zindex=-1)
             pn.Animation(pn.CubicBezier(0, 0, 1, 1), duration=128 * 8, fields=["x"]).play(i.position, [-200])
             ctx.kk.append(i)
