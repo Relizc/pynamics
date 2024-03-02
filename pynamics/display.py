@@ -120,8 +120,8 @@ class ProjectWindow(PyNamical):
                         for j in i.points:
                             pos1 = j[0]
                             pos2 = j[1]
-                            self.surface.create_line(pos1[0] + cam.x, pos1[1] + cam.y, pos2[0] + cam.x, pos2[1] + cam.y,
-                                                     tags=f"ID{g}")
+                            self.surface.create_line(pos1[0] + i.x, pos1[1] + i.y, pos2[0] + i.x, pos2[1] + i.y,
+                                                     tags=f"ID{g}", fill=i.color)
 
                     i.last_display_position = Dimension(i.position.x, i.position.y)
                     i.last_display_rotation = i.rotation
