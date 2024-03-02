@@ -122,7 +122,8 @@ class GameObject(PyNamical):
                  clear_blit: bool = True,
                  anchor: str = "nw",
                  no_display=False,
-                 zindex=1):
+                 zindex=1,
+                 color: str = "black"):
         """
         :param x: The position of the GameObject, on X-Axis
         :param y: The position of the GameObject, on Y-Axis
@@ -151,14 +152,12 @@ class GameObject(PyNamical):
         self.rotation = rotation
         self.last_display_rotation = None
         self.this_display_position = rotation
+        self.color = color
         self.points = [
-            ((self.position.x, self.position.y), (self.position.x - self.size.x, self.position.y)),
-            ((self.position.x - self.size.x, self.position.y),
-             (self.position.x - self.size.x, self.position.y - self.size.y)),
-            ((self.position.x - self.size.x, self.position.y - self.size.y),
-             (self.position.x, self.position.y - self.size.y)),
-            ((self.position.x, self.position.y - self.size.y), (self.position.x, self.position.y)),
-
+            ((0, 0), (0, self.size.y)),
+            ((0, self.size.y), (self.size.x, self.size.y)),
+            ((self.size.x, self.size.y), (self.size.x, 0)),
+            ((self.size.x, 0), (0, 0))
         ]
         self.clear_blit = clear_blit
         self.zindex = zindex
@@ -174,9 +173,13 @@ class GameObject(PyNamical):
 
     def delete(self):
         if isinstance(self.parent.objects, list):
-            self.parent.objects.remove(self)
-            self.parent.window.remove(self)
-            self.unbind()
+            try:
+                self.parent.objects.remove(self)
+                self.parent.window.remove(self)
+                self.unbind()
+            except:
+                pass
+            
             del self
     
 
@@ -278,31 +281,7 @@ class Image(GameObject):
     def __repr__(self):
         return f"Image(file={self.image_path})"
 
-class TopViewPhysicsBody(GameObject):
 
-    def __init__(self, parent: GameObject, x: float = 0, y: float = 0, width: float = 10, height: float = 10, mass: int = 1,
-                 contents: str = None, from_points: tuple = None,
-                 floor_friction: float = 0.1):
-        super().__init__(parent, x, y, width, height, contents, from_points)
-
-        self.mass = mass
-        self.force = Vector2d(0, 0)
-        self.velocity = Vector2d(0, 0)
-        self.acceleration = Vector2d(0, 0)
-        self.coefficient = floor_friction
-
-        self.finish_creating()
-
-    def update(self):
-        self.acceleration = Vector2d(self.force.r, self.force.f / self.mass)
-        self.force.clear()
-        self.velocity.add_self(self.acceleration)
-        self.acceleration.clear()
-        self.position.add_vector(self.velocity)
-
-        v = Vector2d(self.velocity.r + 180, self.velocity.f * self.coefficient)
-
-        self.velocity.add_self(v)
 
 class PhysicsBody(GameObject):
     def __init__(self, parent: PyNamical, x: float = 0, y: float = 0, width: float = 10, height: float = 10, mass: int = 1,
@@ -551,6 +530,47 @@ class PhysicsBody(GameObject):
                 self.velocity.f = rho
 
                 # time.sleep(self.parent._epoch_tps)
+
+class TopViewPhysicsBody(PhysicsBody):
+
+    def __init__(self, parent: GameObject, x: float = 0, y: float = 0, width: float = 10, height: float = 10, mass: int = 1,
+                 contents: str = None, from_points: tuple = None, use_airress=True,
+                 floor_friction: float = 0.1, *args, **kwargs):
+        self.coefficient = floor_friction
+        super().__init__(parent, x, y, width, height, mass, contents, from_points, use_gravity=False, use_airres=use_airress, *args, **kwargs)
+        
+
+    def update(self):
+        self.acceleration = Vector2d(self.force.r, self.force.f / self.mass)
+        self.force.clear()
+        self.velocity.add_self(self.acceleration)
+        self.acceleration.clear()
+        self.position.add_vector(self.velocity)
+
+        if self.use_airres:
+            v = Vector2d(self.velocity.r + 180, self.velocity.f * self.coefficient)
+
+            self.velocity.add_self(v)
+
+        if self.velocity.f < 0.1:
+            self.velocity.f = 0
+
+    def init_movement(self, force: int = 1):
+        @self.parent.add_event_listener(event=EventType.KEYHOLD, condition=KeyEvaulator("Up"), name="PhysicsBodyMovement")
+        def m(ctx, key):
+            self.force.add_self(Vector2d(90, force))
+
+        @self.parent.add_event_listener(event=EventType.KEYHOLD, condition=KeyEvaulator("Down"), name="PhysicsBodyMovement")
+        def m(ctx, key):
+            self.force.add_self(Vector2d(270, force))
+
+        @self.parent.add_event_listener(event=EventType.KEYHOLD, condition=KeyEvaulator("Left"), name="PhysicsBodyMovement")
+        def m(ctx, key):
+            self.force.add_self(Vector2d(180, force))
+
+        @self.parent.add_event_listener(event=EventType.KEYHOLD, condition=KeyEvaulator("Right"), name="PhysicsBodyMovement")
+        def m(ctx, key):
+            self.force.add_self(Vector2d(0, force))
 
 class Particle(PhysicsBody):
 

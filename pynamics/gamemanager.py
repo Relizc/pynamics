@@ -188,10 +188,9 @@ class GameManager(PyNamical):
 
             self.call_event_listeners(EventType.TICK)
 
-
-
             for i in self.pressed:
                 if self.pressed[i]:
+                    
                     self.call_event_listeners(EventType.KEYHOLD, i, key=i)
 
             self.pressed["quoteleft"] = False

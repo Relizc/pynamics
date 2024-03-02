@@ -33,13 +33,13 @@ def join(this, client: pn.ConnectedClient):
     @client.add_event_listener(event=pn.EventType.KEYHOLD)
     def cpress(self, key):
         if key == "Left":
-            matcher[self.uuid].velocity.add_self(pn.Vector(180, 1))
+            matcher[client.uuid].velocity.add_self(pn.Vector(180, 1))
         if key == "Right":
-            matcher[self.uuid].velocity.add_self(pn.Vector(0, 1))
+            matcher[client.uuid].velocity.add_self(pn.Vector(0, 1))
         if key == "Up":
-            matcher[self.uuid].velocity.add_self(pn.Vector(90, 1))
+            matcher[client.uuid].velocity.add_self(pn.Vector(90, 1))
         if key == "Down":
-            matcher[self.uuid].velocity.add_self(pn.Vector(-90, 1))
+            matcher[client.uuid].velocity.add_self(pn.Vector(-90, 1))
 
         # for i in this.users:
         #     if i != client.uuid:

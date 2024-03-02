@@ -93,8 +93,12 @@ def event_registered(exe):
 
 def event_unregistered(exe):
     global registered_events
-    registered_events.remove(exe)
-    DebugAttacher(exe, exe, exe, special=1)
+    try:
+        registered_events.remove(exe)
+        DebugAttacher(exe, exe, exe, special=1)
+    except:
+        pass
+    
 
 class EventHolder:
 

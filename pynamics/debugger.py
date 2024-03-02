@@ -4,7 +4,7 @@ from tkinter import ttk
 import tkinter.messagebox as tkmsg
 from .logger import Logger
 from .dimensions import Dimension, Vector
-from .events import EventType, get_registered_events
+from .events import EventType, get_registered_events, event_unregistered
 from .socket import DedicatedClient
 import datetime
 import time
@@ -166,6 +166,8 @@ class Debugger:
         self.events.pack(fill='both', expand=True)
         self.nb.add(self.events, text="Event Tracker")
 
+        self._event_finder = {}
+
         if self.event_update:
 
             self.event = ttk.Treeview(self.events, columns=("epoch", "name", "type", "source", "threaded", "eventid"), show='headings')
@@ -200,6 +202,8 @@ class Debugger:
         else:
             tk.Label(self.events, text="Event Tracker is currently disabled due to resource optimization.\nYou can enable Event Tracker by creating a pynamics.debug.Debugger class with enable_event_listener = True.").pack()
 
+        self.events_kill_thread = tk.Button(self.events, text="Kill Event", command=self._events_kill)
+        self.events_kill_thread.grid(row=3, column=0, sticky="w")
 
 
 
@@ -354,7 +358,13 @@ Tick DeltaTime: {self.parent.deltatime}""", font=("Courier", 14))
         self.last = asdf
         self.tk.after(10, self._tickman_graph_update)
 
-        
+    def _events_kill(self):
+        cur = self.event.focus()
+        if len(cur) > 0:
+            exe = self._event_finder[cur]
+            exe.terminate()
+            event_unregistered(exe)
+
 
     def _workspace_property_dfs(self, start, fr, path):
         #print(start)
@@ -467,6 +477,8 @@ Tick DeltaTime: {self.parent.deltatime}""", font=("Courier", 14))
         #     if func.debug_del is None: return
         #     self.await_push.append(func)
 
+        
+
         if special == 0: # register
 
             event.debug_del = self.event.insert("", 'end', values=(
@@ -477,10 +489,12 @@ Tick DeltaTime: {self.parent.deltatime}""", font=("Courier", 14))
                 True,
                 event.event_id
             ))
+            self._event_finder[event.debug_del] = event
             return
         elif special == 1: #unregister
             if event.debug_del is not None:
                 self.event.delete(event.debug_del)
+                del self._event_finder[event.debug_del]
             return
 
 

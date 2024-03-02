@@ -11,7 +11,7 @@ bob1 = pn.TopViewPhysicsBody(game, 10, 10, 10, 10, 60)
 #bob1.init_movement(30)
 
 @game.add_event_listener(event=pn.EventType.KEYDOWN, condition=pn.KeyEvaulator(pn.K_LEFT))
-def c(ctx):
+def c(ctx, key):
     pn.TopViewPhysicsBody(game, random.randint(1, 100), random.randint(1, 100), 10, 10, 60).init_movement(10)
 
 game.start()
