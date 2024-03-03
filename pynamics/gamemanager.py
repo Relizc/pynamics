@@ -239,6 +239,7 @@ class GameManager(PyNamical):
     def frame(self, recursion=True):
         self.call_event_listeners(EventType.FRAME)
         self.f += 1
+
         self.window.blit()
 
         if recursion:

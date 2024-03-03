@@ -674,6 +674,7 @@ class DedicatedClient(PyNamical):
     def __init__(self, parent: PyNamical, address="127.0.0.1", port=11027):
         PyNamical.__init__(self, parent)
         PyNamical.linkedNetworkingDispatcher = self
+        self.events[EventType.CLIENT_CONNECTED] = []
         self.parent.client = self
         self.address = address
         self.port = port
@@ -704,6 +705,7 @@ class DedicatedClient(PyNamical):
         self.send(packet)
 
         self.connected = True
+        self.call_event_listeners(event=EventType.CLIENT_CONNECTED)
         self.H_pinger_thread = threading.Thread(target=self.H_pinger)
         self.H_pinger_thread.start()
 

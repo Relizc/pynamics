@@ -529,8 +529,9 @@ Tick DeltaTime: {self.parent.deltatime}""", font=("Courier", 14))
         self.insttps.config(text=f"Instantaneous TPS: {self.parent.t}")
         self.parent.t = 0
         
-        self._obj_guide.config(text=f"C: {len(self.parent.children)} / E: {len(self.parent.objects)} / R: {self.parent.window._blits}")
+        self._obj_guide.config(text=f"C: {len(self.parent.children)} / E: {len(self.parent.objects)} / R: {self.parent.window._blits} / Ch: {self.parent.window._checks}")
         self.parent.window._blits = 0
+        self.parent.window._checks = 0
 
         self._event_monitor.config(text=f"Events: {get_registered_events()} / Suspended: ? / EPS: {self._eps} / KPS: {self._ekps}")
         self._ekps = 0

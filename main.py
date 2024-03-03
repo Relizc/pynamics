@@ -8,14 +8,18 @@ import time
 MIN_VERSION = "1.0.0"
 
 ctx = pn.GameManager(dimensions=pn.Dim(960, 540), event_tracker=True, tps=128)
+
+ctx.ADDRESS = "127.0.0.1"
+ctx.PORT = 11027
+
 view = pn.ProjectWindow(ctx, size=pn.Dim(960, 540), title="Suberb Game")
 
 # winsound.PlaySound("effect1.wav", winsound.SND_ASYNC)
 # log = pn.Image(ctx, path="resource1.png", ratio=3, x=388, y=202)
 
-x = pn.Particle(ctx, rectitude=0.91, x=480, y=270, no_display=True)
-x.velocity.r = random.randint(0, 180)
-x.velocity.f = random.randint(0, 20)
+# x = pn.Particle(ctx, rectitude=0.91, x=480, y=270, no_display=True)
+# x.velocity.r = random.randint(0, 180)
+# x.velocity.f = random.randint(0, 20)
 
 # @ctx.add_event_listener(event=pn.EventType.STARTUP)
 # def move(this):
@@ -24,7 +28,7 @@ x.velocity.f = random.randint(0, 20)
 #         log.position.x = x.x
 #         log.position.y = x.y
 #     time.sleep(2)
-
+#
 #     ani = pn.Animation(pn.CubicBezier(.17,.67,.62,.97), duration=100, fields=["x", "y"])
 #     ani.play(log.position, [388, 202])
 
@@ -36,7 +40,7 @@ def start(self):
     # winsound.PlaySound("swsh.wav", winsound.SND_ASYNC)
     # ani = pn.Animation(pn.CubicBezier(.55,-0.9,.57,.93), duration=128, fields=["y"])
     # ani.play(log.position, [1000])
-
+    #
     # time.sleep(3)
     ani = pn.Animation(pn.CubicBezier(0, 0, 0.58, 1), duration=32, fields=["r", "g", "b"])
     ani.play(view.color, [135, 206, 235])
@@ -99,7 +103,7 @@ def start(self):
 
 
             con = pn.Image(ctx, path="btn.png", width=500, height=300, x=1000, y=120)
-            conne = pn.Text(ctx, text="Connecting to superb.itsrelizc.net", font=pn.TextFont("Courier", color="white", size=12), zindex=99, x=1250, y=200)
+            conne = pn.Text(ctx, text=f"Connecting to {ctx.ADDRESS}:{ctx.PORT}", font=pn.TextFont("Courier", color="white", size=12), zindex=99, x=1250, y=200)
             conne.dots = 0
             conne.age = 0
             @ctx.add_event_listener(event=pn.EventType.TICK)
@@ -107,13 +111,42 @@ def start(self):
                 conne.age += 1
                 if conne.age == 64:
                     conne.age = 0
-                    conne.text = "Connecting to superb.itsrelizc.net" + (conne.dots % 4) * "."
+                    conne.text = f"Connecting to {ctx.ADDRESS}:{ctx.PORT}" + (conne.dots % 4) * "."
                     conne.dots += 1
             time.sleep(1)
             winsound.PlaySound(None, winsound.SND_PURGE)
             time.sleep(0.5)
             pn.Animation(pn.CubicBezier(.13, .7, .5, .93), duration=64, fields=["x"]).play(con.position, [230])
             pn.Animation(pn.CubicBezier(.13, .7, .5, .93), duration=64, fields=["x"]).play(conne.position, [480])
+
+            ctx.CLIENT = pn.DedicatedClient(ctx, address=ctx.ADDRESS, port=ctx.PORT)
+            @ctx.CLIENT.add_event_listener(event=pn.EventType.CLIENT_CONNECTED)
+            def done(event):
+                time.sleep(2)
+                ctx.make_scroll = False
+                for i in ctx.kk:
+                    if i.y < 100:
+                        pn.Animation(pn.CubicBezier(.44, -0.51, .63, .79), duration=64, fields=["y"]).play(i.position,
+                                                                                                           [-100])
+                    else:
+                        pn.Animation(pn.CubicBezier(.44, -0.51, .63, .79), duration=64, fields=["y"]).play(i.position,
+                                                                                                           [600])
+                pn.Animation(pn.CubicBezier(.13, .7, .5, .93), duration=64, fields=["x"]).play(con.position, [-500])
+                pn.Animation(pn.CubicBezier(.13, .7, .5, .93), duration=64, fields=["x"]).play(conne.position, [-250])
+                time.sleep(1.5)
+                pn.Animation(pn.CubicBezier(.13, .7, .5, .93), duration=128, fields=["r", "g", "b"]).play(view.color,
+                                                                                                          [0, 0, 0])
+                winsound.PlaySound(None, winsound.SND_PURGE)
+                backbtn.delete()
+                serv.delete()
+                servtxt.delete()
+                serv2.delete()
+                serv2txt.delete()
+                for i in ctx.kk:
+                    i.delete()
+                game(True)
+
+            ctx.CLIENT.join_server()
 
 
             winsound.PlaySound("connecting_fromsonic.wav", winsound.SND_ASYNC | winsound.SND_LOOP)
@@ -200,7 +233,7 @@ def start(self):
 PLAYER = None
 
 def load_level():
-    mid = pn.Text(ctx, x=480, y=270, text="Superb Universe SD-277381", font=pn.TextFont("Courier", size=12, color="white"))
+    mid = pn.Text(ctx, x=480, y=270, text=f"Superb Universe {ctx.CODE}-{ctx.NUM}", font=pn.TextFont("Courier", size=12, color="white"))
     mid2 = pn.Text(ctx, x=480, y=290, text="\"I'VE BEEN THIS PLACE A THOUSAND TIMES\" - Dr.Waddy", font=pn.TextFont("Courier", size=8, color="white"))
     time.sleep(0.5)
     winsound.PlaySound("ingame.wav", winsound.SND_ASYNC | winsound.SND_LOOP)
@@ -225,21 +258,29 @@ def load_level():
     def shoot(self, key):
         dx, dy = ctx.mouse.x - PLAYER.position.x - 25, ctx.mouse.y - PLAYER.position.y - 25
         angle = -math.degrees(math.atan2(dy, dx))
-        for i in range(24):
+        for i in range(1):
             x = pn.TopViewPhysicsBody(ctx, x=PLAYER.position.x + 25, y=PLAYER.position.y + 25, color="white",
                                       use_airress=False)
-            x.velocity = pn.Vector(angle + random.randint(-10, 10), 2 + random.randint(1, 10) * random.random())
+            x.velocity = pn.Vector(angle, 2)
             x.velocity.add_self(PLAYER.velocity)
             x.destroy_outside_boundary = True
 
         winsound.PlaySound("shoot.wav", winsound.SND_ASYNC)
 
 
+@pn.PacketId(0x70)
+class SendUniverseData(pn.Packet):
 
-    
+    def handle(self, parent, connection, ip):
+        code = self.read_string()
+        num = self.read_varint()
+        ctx.CODE = code
+        ctx.NUM = num
 
-
-def game():
+def game(server=False):
+    if not server:
+        ctx.CODE = "SD"
+        ctx.NUM = 114514
     print("game start")
     time.sleep(3)
     winsound.PlaySound("null", winsound.SND_PURGE)

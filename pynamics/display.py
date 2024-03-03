@@ -57,20 +57,28 @@ class ProjectWindow(PyNamical):
         self.surface.pack()
 
         self._blits = 0
+        self._checks = 0
 
         self.force_update = 0
 
     def blit(self):
         # self.surface.delete("all")
 
+        s = time.time()
+
         if self._curcolor != self.color:
             self._curcolor = Color(self.color.r, self.color.g, self.color.b)
             #print(self.color)
             self.surface.config(bg=str(self.color))
 
+
         for i in self.parent.ghosts:
             self.surface.delete(f"ID{i.blit_id}")
+
+
         for i in self.parent.objects:
+
+            self._checks += 1
 
             if (i.position.x + i.size.x < -10 or i.position.y + i.size.y < -10) or (i.position.x > self.size.x + 10 or i.position.y > self.size.y + 10):
                 self.surface.delete(f"ID{i.blit_id}")
@@ -133,11 +141,14 @@ class ProjectWindow(PyNamical):
                     i.last_display_rotation = i.rotation
                     i.blit_id = g
 
+
             if i.force_update > 0:
                 i.force_update -= 1
 
+        # TODO: lag
         for i in self.parent.displayorder:
             self.surface.tag_raise(f"ID{i.blit_id}")
+
 
     def update(self):
         pass

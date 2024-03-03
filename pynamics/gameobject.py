@@ -176,6 +176,7 @@ class GameObject(PyNamical):
         if isinstance(self.parent.objects, list):
             try:
                 self.parent.objects.remove(self)
+                self.parent.displayorder.remove(self)
                 self.parent.window.remove(self)
                 self.unbind()
             except:
