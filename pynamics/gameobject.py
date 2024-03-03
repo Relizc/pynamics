@@ -140,6 +140,7 @@ class GameObject(PyNamical):
         self.this_display_position = Dimension(self.this_position.x, self.position.y)
         self.last_display_position = None
         self.size = Dimension(width, height)
+        self.destroy_outside_boundary = False
         if contents != None:
             self.content = ImageTk.PhotoImage(ImageUtils.open(contents))
         else:
@@ -556,19 +557,19 @@ class TopViewPhysicsBody(PhysicsBody):
             self.velocity.f = 0
 
     def init_movement(self, force: int = 1):
-        @self.parent.add_event_listener(event=EventType.KEYHOLD, condition=KeyEvaulator("Up"), name="PhysicsBodyMovement")
+        @self.parent.add_event_listener(event=EventType.KEYHOLD, condition=KeyEvaulator("w"), name="PhysicsBodyMovement")
         def m(ctx, key):
             self.force.add_self(Vector2d(90, force))
 
-        @self.parent.add_event_listener(event=EventType.KEYHOLD, condition=KeyEvaulator("Down"), name="PhysicsBodyMovement")
+        @self.parent.add_event_listener(event=EventType.KEYHOLD, condition=KeyEvaulator("s"), name="PhysicsBodyMovement")
         def m(ctx, key):
             self.force.add_self(Vector2d(270, force))
 
-        @self.parent.add_event_listener(event=EventType.KEYHOLD, condition=KeyEvaulator("Left"), name="PhysicsBodyMovement")
+        @self.parent.add_event_listener(event=EventType.KEYHOLD, condition=KeyEvaulator("a"), name="PhysicsBodyMovement")
         def m(ctx, key):
             self.force.add_self(Vector2d(180, force))
 
-        @self.parent.add_event_listener(event=EventType.KEYHOLD, condition=KeyEvaulator("Right"), name="PhysicsBodyMovement")
+        @self.parent.add_event_listener(event=EventType.KEYHOLD, condition=KeyEvaulator("d"), name="PhysicsBodyMovement")
         def m(ctx, key):
             self.force.add_self(Vector2d(0, force))
 

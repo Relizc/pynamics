@@ -72,6 +72,12 @@ class ProjectWindow(PyNamical):
             self.surface.delete(f"ID{i.blit_id}")
         for i in self.parent.objects:
 
+            if (i.position.x + i.size.x < -10 or i.position.y + i.size.y < -10) or (i.position.x > self.size.x + 10 or i.position.y > self.size.y + 10):
+                self.surface.delete(f"ID{i.blit_id}")
+                if i.destroy_outside_boundary:
+                    i.delete()
+                continue
+
             if isinstance(i, GameObject):
 
                 # print("check")

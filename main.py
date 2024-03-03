@@ -88,6 +88,36 @@ def start(self):
         serv2 = pn.Image(ctx, path="btn.png", width=400, height=80, x=1000, y=260)
         serv2txt = pn.Text(ctx, text="Multiplayer (Demo)", font=pn.TextFont("Courier", color="white", size=16), zindex=99, x=1200, y=300)
 
+        @serv2.add_event_listener(event=pn.EventType.ONCLICK)
+        def r(self):
+
+            pn.Animation(pn.CubicBezier(.13, .7, .5, .93), duration=64, fields=["x"]).play(backbtn.position, [-600])
+            pn.Animation(pn.CubicBezier(.13, .7, .5, .93), duration=64, fields=["x"]).play(serv.position, [-400])
+            pn.Animation(pn.CubicBezier(.13, .7, .5, .93), duration=64, fields=["x"]).play(servtxt.position, [-200])
+            pn.Animation(pn.CubicBezier(.13, .7, .5, .93), duration=64, fields=["x"]).play(serv2.position, [-400])
+            pn.Animation(pn.CubicBezier(.13, .7, .5, .93), duration=64, fields=["x"]).play(serv2txt.position, [-200])
+
+
+            con = pn.Image(ctx, path="btn.png", width=500, height=300, x=1000, y=120)
+            conne = pn.Text(ctx, text="Connecting to superb.itsrelizc.net", font=pn.TextFont("Courier", color="white", size=12), zindex=99, x=1250, y=200)
+            conne.dots = 0
+            conne.age = 0
+            @ctx.add_event_listener(event=pn.EventType.TICK)
+            def momom(self):
+                conne.age += 1
+                if conne.age == 64:
+                    conne.age = 0
+                    conne.text = "Connecting to superb.itsrelizc.net" + (conne.dots % 4) * "."
+                    conne.dots += 1
+            time.sleep(1)
+            winsound.PlaySound(None, winsound.SND_PURGE)
+            time.sleep(0.5)
+            pn.Animation(pn.CubicBezier(.13, .7, .5, .93), duration=64, fields=["x"]).play(con.position, [230])
+            pn.Animation(pn.CubicBezier(.13, .7, .5, .93), duration=64, fields=["x"]).play(conne.position, [480])
+
+
+            winsound.PlaySound("connecting_fromsonic.wav", winsound.SND_ASYNC | winsound.SND_LOOP)
+
         pn.Animation(pn.CubicBezier(.13, .7, .5, .93), duration=64, fields=["x"]).play(backbtn.position, [10])
         pn.Animation(pn.CubicBezier(.13, .7, .5, .93), duration=64, fields=["x"]).play(serv.position, [280])
         pn.Animation(pn.CubicBezier(.13, .7, .5, .93), duration=64, fields=["x"]).play(servtxt.position, [480])
@@ -191,19 +221,20 @@ def load_level():
     PLAYER = pn.TopViewPhysicsBody(ctx, x=100, y=270, width=50, height=50, mass=5, color="white")
     PLAYER.init_movement()
 
-    @ctx.add_event_listener(event=pn.EventType.KEYDOWN, condition=pn.KeyEvaulator(pn.K_r))
-    def shoot(self,key):
+    @ctx.add_event_listener(event=pn.EventType.KEYDOWN, condition=pn.KeyEvaulator("space"))
+    def shoot(self, key):
         dx, dy = ctx.mouse.x - PLAYER.position.x - 25, ctx.mouse.y - PLAYER.position.y - 25
         angle = -math.degrees(math.atan2(dy, dx))
-        x = pn.TopViewPhysicsBody(ctx, x=PLAYER.position.x + 25, y=PLAYER.position.y + 25, color="white", use_airress=False)
-        x.velocity = pn.Vector(angle, 2)
+        for i in range(24):
+            x = pn.TopViewPhysicsBody(ctx, x=PLAYER.position.x + 25, y=PLAYER.position.y + 25, color="white",
+                                      use_airress=False)
+            x.velocity = pn.Vector(angle + random.randint(-10, 10), 2 + random.randint(1, 10) * random.random())
+            x.velocity.add_self(PLAYER.velocity)
+            x.destroy_outside_boundary = True
 
-        x.age = 0
-        @ctx.add_event_listener(event=pn.EventType.TICK, killafter=256)
-        def i(event):
-            x.age += 1
-            if x.age == 255:
-                x.delete()
+        winsound.PlaySound("shoot.wav", winsound.SND_ASYNC)
+
+
 
     
 
