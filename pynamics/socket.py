@@ -729,13 +729,18 @@ class DedicatedClient(PyNamical):
             time.sleep(0.01)
 
     def true_send(self, packet):
-        self.connect()
         try:
+            self.connect()
+        except:
+            return
+        try:
+            
             a = time.time()
             self.socket.send(packet.buffer)
         except:
             self._loss += 1
             Logger.print(f"Unable to send packet", channel=4)
+            self.socket.close()
         self._tx += 1
         try:
             data = self.socket.recv(2**20)
@@ -746,6 +751,8 @@ class DedicatedClient(PyNamical):
                 self.ping_backed = True
                 packet = P_PacketIdFinder[data[0]](buffer=data, write_packetid=False)
                 packet.handle(self, None, None)
+
+            self.socket.close()
         except ConnectionAbortedError:
             pass
         except OSError:
@@ -755,7 +762,7 @@ class DedicatedClient(PyNamical):
             Logger.print(f"Bad Packet: {str(e)}", channel=4)
             data = b""
 
-        self.socket.close()
+        
 
     def send(self, packet: Packet):
         try:

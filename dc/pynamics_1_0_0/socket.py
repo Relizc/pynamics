@@ -719,7 +719,7 @@ class DedicatedClient(PyNamical):
     def H_pinger(self):
         time.sleep(1)
         while not self.parent.terminated:
-            if self.ping_backed or time.time() - self.last_ping_sent > self.PING_PACKET_WAIT_TIME:
+            if self.ping_backed: #  or time.time() - self.last_ping_sent > self.PING_PACKET_WAIT_TIME
                 self.last_ping_sent = time.time()
                 packet = P_UpstreamStayAlive(self.name)
                 self.send(packet)

@@ -276,6 +276,13 @@ class SendUniverseData(pn.Packet):
         num = self.read_varint()
         ctx.CODE = code
         ctx.NUM = num
+import uuid
+@pn.PacketId(0x71)
+@pn.PacketFields(uuid.UUID, pn.Dim)
+class SyncPositions(pn.Packet):
+
+    def handle(self, parent, connection, ip):
+        print(parent)
 
 def game(server=False):
     if not server:
@@ -286,7 +293,20 @@ def game(server=False):
     winsound.PlaySound("null", winsound.SND_PURGE)
     time.sleep(1)
 
+    
+
     load_level()
+    
+    ctx.age = 0
+    @ctx.add_event_listener(event=pn.EventType.TICK)
+    def updatepos(event):
+        ctx.age += 1
+        if ctx.age == 16:
+            ctx.age = 0
+            p = SyncPositions(ctx.CLIENT.name, PLAYER.position)
+            ctx.CLIENT.send_packet(p)
+    
+
 
 
     

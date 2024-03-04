@@ -558,19 +558,19 @@ class TopViewPhysicsBody(PhysicsBody):
             self.velocity.f = 0
 
     def init_movement(self, force: int = 1):
-        @self.parent.add_event_listener(event=EventType.KEYHOLD, condition=KeyEvaulator("w"), name="PhysicsBodyMovement")
+        @self.parent.add_event_listener(event=EventType.KEYHOLD, condition=KeyEvaulator("Up"), name="PhysicsBodyMovement")
         def m(ctx, key):
             self.force.add_self(Vector2d(90, force))
 
-        @self.parent.add_event_listener(event=EventType.KEYHOLD, condition=KeyEvaulator("s"), name="PhysicsBodyMovement")
+        @self.parent.add_event_listener(event=EventType.KEYHOLD, condition=KeyEvaulator("Down"), name="PhysicsBodyMovement")
         def m(ctx, key):
             self.force.add_self(Vector2d(270, force))
 
-        @self.parent.add_event_listener(event=EventType.KEYHOLD, condition=KeyEvaulator("a"), name="PhysicsBodyMovement")
+        @self.parent.add_event_listener(event=EventType.KEYHOLD, condition=KeyEvaulator("Left"), name="PhysicsBodyMovement")
         def m(ctx, key):
             self.force.add_self(Vector2d(180, force))
 
-        @self.parent.add_event_listener(event=EventType.KEYHOLD, condition=KeyEvaulator("d"), name="PhysicsBodyMovement")
+        @self.parent.add_event_listener(event=EventType.KEYHOLD, condition=KeyEvaulator("Right"), name="PhysicsBodyMovement")
         def m(ctx, key):
             self.force.add_self(Vector2d(0, force))
 
