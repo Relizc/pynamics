@@ -10,8 +10,8 @@ MIN_VERSION = "1.0.0"
 
 ctx = pn.GameManager(dimensions=pn.Dim(960, 540), event_tracker=True, tps=128)
 
-ctx.ADDRESS = "127.0.0.1"
-ctx.PORT = 11027
+ctx.ADDRESS = "frp-arm.top"
+ctx.PORT = 63973
 
 view = pn.ProjectWindow(ctx, size=pn.Dim(960, 540), title="Suberb Game")
 
