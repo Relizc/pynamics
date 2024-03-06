@@ -259,17 +259,19 @@ def load_level():
 
 
     @ctx.add_event_listener(event=pn.EventType.KEYDOWN, condition=pn.KeyEvaulator("space"))
-    def shoot(self, key):
-        dx, dy = ctx.mouse.x - PLAYER.position.x - 25, ctx.mouse.y - PLAYER.position.y - 25
-        angle = -math.degrees(math.atan2(dy, dx))
-        for i in range(1):
-            x = pn.TopViewPhysicsBody(ctx, x=PLAYER.position.x + 25, y=PLAYER.position.y + 25, color="white",
-                                      use_airress=False)
-            x.velocity = pn.Vector(angle, 2)
-            x.velocity.add_self(PLAYER.velocity)
-            x.destroy_outside_boundary = True
 
-        winsound.PlaySound("shoot.wav", winsound.SND_ASYNC)
+    def shoot(self, key):
+        if key == "mousebutton1":
+            dx, dy = ctx.mouse.x - PLAYER.position.x - 25, ctx.mouse.y - PLAYER.position.y - 25
+            angle = -math.degrees(math.atan2(dy, dx))
+            for i in range(1):
+                x = pn.TopViewPhysicsBody(ctx, x=PLAYER.position.x + 25, y=PLAYER.position.y + 25, color="white",
+                                        use_airress=False)
+                x.velocity = pn.Vector(angle, 2)
+                x.velocity.add_self(PLAYER.velocity)
+                x.destroy_outside_boundary = True
+
+            winsound.PlaySound("shoot.wav", winsound.SND_ASYNC)
 
 
 @pn.PacketId(0x70)
