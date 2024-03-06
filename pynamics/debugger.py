@@ -365,6 +365,13 @@ Tick DeltaTime: {self.parent.deltatime}""", font=("Courier", 14))
             exe.terminate()
             event_unregistered(exe)
 
+    def workspace_reload(self, obj):
+
+        # for i in self.explorer.get_children():
+        #     print(i)
+        #     self.explorer.delete(i)
+
+        self._workspace_dfs(obj, 0)
 
     def _workspace_property_dfs(self, start, fr, path):
         #print(start)
@@ -379,7 +386,7 @@ Tick DeltaTime: {self.parent.deltatime}""", font=("Courier", 14))
             self._ws_prop_iid += 1
 
             if isinstance(start, list):
-                bb = f"ListIndex({ind})<{i.__class__.__name__}> = {i}"
+                bb = f"[{ind}]<{i.__class__.__name__}> = {i}"
                 item = i
                 ind += 1
                 r.append(ind)
@@ -455,6 +462,8 @@ Tick DeltaTime: {self.parent.deltatime}""", font=("Courier", 14))
         self._workspace_iid += 1
         c = int(self._workspace_iid)
 
+        next._workspace_iid = c
+
         self.explorer.insert('', tk.END, text=next.__class__.__name__, open=False, iid=self._workspace_iid)
         self.q[self._workspace_iid] = next
         self.explorer.move(self._workspace_iid, fr, 2147483647)
@@ -463,6 +472,9 @@ Tick DeltaTime: {self.parent.deltatime}""", font=("Courier", 14))
 
         for i in next.children:
             self._workspace_dfs(i, c)
+
+    def workspace_remove(self, object):
+        self.explorer.delete(object._workspace_iid)
 
 
 

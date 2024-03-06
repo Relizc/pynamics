@@ -465,6 +465,7 @@ class P_DownstreamResource(Packet):
                 key = self.read_string()
                 if key == "Replicated":
                     continue
+
                 value = self.read_with_type()
                 setattr(loaded, key, value)
 
@@ -722,6 +723,7 @@ class DedicatedClient(PyNamical):
         while not self.parent.terminated:
             if self.ping_backed or time.time() - self.last_ping_sent > self.PING_PACKET_WAIT_TIME:
                 self.last_ping_sent = time.time()
+                print("resent stay aliveas")
                 packet = P_UpstreamStayAlive(self.name)
                 self.send(packet)
                 self.ping_backed = False

@@ -274,6 +274,13 @@ class GameManager(PyNamical):
         self.objects.append(object)
         self.displayorder.append(object)
         self.displayorder.sort(key=lambda i: i.zindex)
+        if self.debug is not None:
+            self.debug.workspace_reload(object)
+
+    def remove_object(self, object: GameObject):
+        self.objects.remove(object)
+        if self.debug is not None:
+            self.debug.workspace_remove(object)
 
     def set_title(self, str):
         self.window._tk.title(str)

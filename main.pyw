@@ -1,6 +1,7 @@
 import pynamics as pn
 import random
 import winsound
+import uuid
 import math
 
 import time
@@ -32,6 +33,7 @@ view = pn.ProjectWindow(ctx, size=pn.Dim(960, 540), title="Suberb Game")
 #     ani = pn.Animation(pn.CubicBezier(.17,.67,.62,.97), duration=100, fields=["x", "y"])
 #     ani.play(log.position, [388, 202])
 
+view.ignore_render.append(pn.TopViewPhysicsBody)
 
 @ctx.add_event_listener(event=pn.EventType.STARTUP)
 def start(self):
@@ -122,7 +124,7 @@ def start(self):
             ctx.CLIENT = pn.DedicatedClient(ctx, address=ctx.ADDRESS, port=ctx.PORT)
             @ctx.CLIENT.add_event_listener(event=pn.EventType.CLIENT_CONNECTED)
             def done(event):
-                time.sleep(2)
+                time.sleep(0.5)
                 ctx.make_scroll = False
                 for i in ctx.kk:
                     if i.y < 100:
@@ -232,7 +234,7 @@ def start(self):
 
 PLAYER = None
 
-def load_level():
+def load_level(server):
     mid = pn.Text(ctx, x=480, y=270, text=f"Superb Universe {ctx.CODE}-{ctx.NUM}", font=pn.TextFont("Courier", size=12, color="white"))
     mid2 = pn.Text(ctx, x=480, y=290, text="\"I'VE BEEN THIS PLACE A THOUSAND TIMES\" - Dr.Waddy", font=pn.TextFont("Courier", size=8, color="white"))
     time.sleep(0.5)
@@ -251,16 +253,31 @@ def load_level():
     pn.Animation(pn.CubicBezier(.17,.67,.46,.9), duration=128, fields=["y"]).play(health.position, [45])
 
     global PLAYER
-    PLAYER = pn.TopViewPhysicsBody(ctx, x=100, y=270, width=50, height=50, mass=5, color="white")
+    view.ignore_render.remove(pn.TopViewPhysicsBody)
+    if not server:
+        PLAYER = pn.TopViewPhysicsBody(ctx, x=100, y=270, width=50, height=50, mass=5, color="white")
+
+
+    else:
+        PLAYER = pn.find_object_by_id(ctx.MY_CONTROLLER)
+
+        ctx.location_age = 0
+
+        @ctx.add_event_listener(event=pn.EventType.TICK)
+        def send_loc(event):
+            ctx.location_age += 1
+            if ctx.location_age >= ctx.tps / 4:
+                ctx.location_age = 0
+                p = RefeedPosition(ctx.CLIENT.uuid, PLAYER.position)
+                ctx.CLIENT.send(p)
+
     PLAYER.init_movement()
 
-    for i in OTHER_PLAYERS:
-        OTHER_PLAYERS[i].hidden = False
 
-
-    @ctx.add_event_listener(event=pn.EventType.KEYDOWN, condition=pn.KeyEvaulator("space"))
+    @ctx.add_event_listener(event=pn.EventType.KEYDOWN)
 
     def shoot(self, key):
+
         if key == "mousebutton1":
             dx, dy = ctx.mouse.x - PLAYER.position.x - 25, ctx.mouse.y - PLAYER.position.y - 25
             angle = -math.degrees(math.atan2(dy, dx))
@@ -280,38 +297,17 @@ class SendUniverseData(pn.Packet):
     def handle(self, parent, connection, ip):
         code = self.read_string()
         num = self.read_varint()
+        ctx.MY_CONTROLLER = self.read_UUID()
         ctx.CODE = code
         ctx.NUM = num
 
+
 @pn.PacketId(0x71)
-class SendMovementData(pn.Packet):
+@pn.PacketFields(uuid.UUID, pn.Dimension)
+class RefeedPosition(pn.Packet):
 
     def handle(self, parent, connection, ip):
-        usr = self.read_UUID()
-        dir = self.read_varint()
-        mode = self.read_bool()
-        print(usr, mode, dir, parent.uuid)
-import uuid
-
-OTHER_PLAYERS = {}
-@pn.PacketId(0x72)
-@pn.PacketFields(uuid.UUID, str)
-class SendUserJoined(pn.Packet):
-
-    def handle(self, parent, connection, ip):
-        global OTHER_PLAYERS
-        usr = self.read_UUID()
-        nam = self.read_string()
-
-
-        p = pn.TopViewPhysicsBody(ctx, x=100, y=270, width=50, height=50, mass=5, color="white")
-        p.hidden = True
-        p.init_movement()
-        p.name = nam
-
-        OTHER_PLAYERS[usr] = p
-        print(p)
-
+        pass
 
 
 def game(server=False):
@@ -325,7 +321,7 @@ def game(server=False):
 
     
 
-    load_level()
+    load_level(server)
 
     
 

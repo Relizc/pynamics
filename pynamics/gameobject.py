@@ -113,7 +113,7 @@ def doIntersect(p1, q1, p2, q2):
     # If none of the cases
     return False
 
-@socket_whitelisted_attributes("position", "velocity")
+@socket_whitelisted_attributes("position", "velocity", "hidden")
 @network_transferrable
 class GameObject(PyNamical):
     def __init__(self, parent: PyNamical, x: float = 0, y: float = 0, width: float = 10, height: float = 10, contents: str = None,
@@ -175,11 +175,12 @@ class GameObject(PyNamical):
     def delete(self):
         if isinstance(self.parent.objects, list):
             try:
-                self.parent.objects.remove(self)
+                self.parent.remove_object(self)
                 self.parent.displayorder.remove(self)
                 self.parent.window.remove(self)
                 self.unbind()
-            except:
+            except Exception as e:
+                print(e)
                 pass
             
             del self
@@ -673,10 +674,10 @@ class Text(GameObject):
 
     def __init__(self, parent, x = 0, y = 0, text = "Hello PyNamics World!", font=TextFont("Helvetica", 15), **kwargs):
 
+
         w, h = 10, 10
         super().__init__(parent, x, y, w, h)
         self.collision = False
-        self.style.load_styles(kwargs.get("styles"))
         self.text = text
         self.font = font
         self.i=0

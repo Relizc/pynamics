@@ -2,7 +2,8 @@ import tkinter as tk
 from .gamemanager import GameManager
 from .dimensions import Dimension, Dimension2d, Color
 from .interface import PyNamical
-from .gameobject import GameObject, Particle, Text
+from .logger import Logger
+from .gameobject import GameObject, Particle, Text, TopViewPhysicsBody
 from PIL import ImageTk
 from tkinter import NW
 import time
@@ -55,6 +56,7 @@ class ProjectWindow(PyNamical):
         self._curcolor = Color(color.r, color.g, color.b)
         self.surface = tk.Canvas(self._tk, width=size.x, height=size.y, bg=str(color), highlightthickness=0)
         self.surface.pack()
+        self.ignore_render = []
 
         self._blits = 0
         self._checks = 0
@@ -62,6 +64,12 @@ class ProjectWindow(PyNamical):
         self.force_update = 0
 
     def blit(self):
+        try:
+            self.real_blit()
+        except Exception as e:
+            Logger.print(f"Error in printing object: {e}", channel=4)
+
+    def real_blit(self):
         # self.surface.delete("all")
 
         s = time.time()
@@ -85,6 +93,14 @@ class ProjectWindow(PyNamical):
                 if i.destroy_outside_boundary:
                     i.delete()
                 continue
+
+            f = False
+            for n in self.ignore_render:
+                if isinstance(i, n):
+                    f = True
+            if f:
+                continue
+
 
             if isinstance(i, GameObject):
 
@@ -128,6 +144,10 @@ class ProjectWindow(PyNamical):
                     # If its a Particle
                     elif isinstance(i, Particle):
                         self.surface.create_oval(i.x - i.r, i.y - i.r, i.x + i.r, i.y + i.r, tags=f"ID{g}")
+
+                    # If its a TopLevelWhateverBody
+                    elif isinstance(i, TopViewPhysicsBody):
+                        self.surface.create_rectangle(i.x, i.y, i.x + i.size.x, i.y + i.size.y, fill="white", outline="white", tags=f"ID{g}")
 
                     # If its a regular gameobject
                     elif len(i.points) > 0:
