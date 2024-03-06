@@ -254,6 +254,10 @@ def load_level():
     PLAYER = pn.TopViewPhysicsBody(ctx, x=100, y=270, width=50, height=50, mass=5, color="white")
     PLAYER.init_movement()
 
+    for i in OTHER_PLAYERS:
+        OTHER_PLAYERS[i].hidden = False
+
+
     @ctx.add_event_listener(event=pn.EventType.KEYDOWN, condition=pn.KeyEvaulator("space"))
     def shoot(self, key):
         dx, dy = ctx.mouse.x - PLAYER.position.x - 25, ctx.mouse.y - PLAYER.position.y - 25
@@ -276,13 +280,37 @@ class SendUniverseData(pn.Packet):
         num = self.read_varint()
         ctx.CODE = code
         ctx.NUM = num
-import uuid
+
 @pn.PacketId(0x71)
-@pn.PacketFields(uuid.UUID, pn.Dim)
-class SyncPositions(pn.Packet):
+class SendMovementData(pn.Packet):
 
     def handle(self, parent, connection, ip):
-        print(parent)
+        usr = self.read_UUID()
+        dir = self.read_varint()
+        mode = self.read_bool()
+        print(usr, mode, dir, parent.uuid)
+import uuid
+
+OTHER_PLAYERS = {}
+@pn.PacketId(0x72)
+@pn.PacketFields(uuid.UUID, str)
+class SendUserJoined(pn.Packet):
+
+    def handle(self, parent, connection, ip):
+        global OTHER_PLAYERS
+        usr = self.read_UUID()
+        nam = self.read_string()
+
+
+        p = pn.TopViewPhysicsBody(ctx, x=100, y=270, width=50, height=50, mass=5, color="white")
+        p.hidden = True
+        p.init_movement()
+        p.name = nam
+
+        OTHER_PLAYERS[usr] = p
+        print(p)
+
+
 
 def game(server=False):
     if not server:
@@ -296,15 +324,7 @@ def game(server=False):
     
 
     load_level()
-    
-    ctx.age = 0
-    @ctx.add_event_listener(event=pn.EventType.TICK)
-    def updatepos(event):
-        ctx.age += 1
-        if ctx.age == 16:
-            ctx.age = 0
-            p = SyncPositions(ctx.CLIENT.name, PLAYER.position)
-            ctx.CLIENT.send_packet(p)
+
     
 
 

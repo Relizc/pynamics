@@ -704,10 +704,9 @@ class DedicatedClient(PyNamical):
         packet = P_UpstreamHandshake(self.name)
         self.send(packet)
 
-        self.connected = True
-        self.call_event_listeners(event=EventType.CLIENT_CONNECTED)
-        self.H_pinger_thread = threading.Thread(target=self.H_pinger)
-        self.H_pinger_thread.start()
+
+
+
 
     def disconnect(self):
         self.address = None
@@ -729,14 +728,24 @@ class DedicatedClient(PyNamical):
             time.sleep(0.01)
 
     def true_send(self, packet):
+
         try:
             self.connect()
-        except:
+        except Exception as e:
+            Logger.print(f"Unable to send packet: {e}", channel=4)
             return
+
+        if isinstance(packet, P_UpstreamHandshake):
+            self.connected = True
+            self.call_event_listeners(event=EventType.CLIENT_CONNECTED)
+            self.H_pinger_thread = threading.Thread(target=self.H_pinger)
+            self.H_pinger_thread.start()
+
         try:
             
             a = time.time()
             self.socket.send(packet.buffer)
+
         except:
             self._loss += 1
             Logger.print(f"Unable to send packet", channel=4)
@@ -766,6 +775,7 @@ class DedicatedClient(PyNamical):
 
     def send(self, packet: Packet):
         try:
+
             if self.socket is not None:
                 self.socket.close()
                 self.ping_backed = True
