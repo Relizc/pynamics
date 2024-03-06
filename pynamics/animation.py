@@ -34,6 +34,16 @@ class CubicBezier(AnimationFunction):
 
     def __call__(self, x):
         return (self.function_x(x), self.function_y(x))
+    
+class Linear(AnimationFunction):
+    pass
+
+EASE        = CubicBezier(0.25, 0.1, 0.25, 1.0)
+EASE_IN     = CubicBezier(0.42, 0, 1.0, 1.0)
+EASE_OUT    = CubicBezier(0   , 0, 0.58, 1.0)
+EASE_IN_OUT = CubicBezier(0.42, 0, 0.58, 1.0)
+    
+
 
 class Animation(PyNamical):
     
@@ -122,6 +132,17 @@ class Animation(PyNamical):
                     setattr(play_at, self.fields[tar], final_value[tar])
 
         
+def play_position_animation(function, object, final=(0, 0)):
+    fields = []
+    f = []
+    if final[0] is not None:
+        fields.append("x")
+        f.append(final[0])
+    if final[1] is not None:
+        fields.append("y")
+        f.append(final[1])
+    Animation(function, duration=64, fields=fields).play(object.position, f)
+
 
         
     
