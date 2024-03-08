@@ -3,6 +3,7 @@ import random
 import winsound
 import uuid
 import math
+import random
 
 import time
 
@@ -10,8 +11,8 @@ MIN_VERSION = "1.0.0"
 
 ctx = pn.GameManager(dimensions=pn.Dim(960, 540), event_tracker=True, tps=128)
 
-ctx.ADDRESS = "frp-arm.top"
-ctx.PORT = 63973
+ctx.ADDRESS = "127.0.0.1"
+ctx.PORT = 11027
 
 view = pn.ProjectWindow(ctx, size=pn.Dim(960, 540), title="Suberb Game")
 
@@ -151,7 +152,7 @@ def start(self):
             ctx.CLIENT.join_server()
 
 
-            winsound.PlaySound("connecting_fromsonic.wav", winsound.SND_ASYNC | winsound.SND_LOOP)
+            winsound.PlaySound(f"connecting{random.randint(1, 2)}.wav", winsound.SND_ASYNC | winsound.SND_LOOP)
 
         pn.Animation(pn.CubicBezier(.13, .7, .5, .93), duration=64, fields=["x"]).play(backbtn.position, [10])
         pn.Animation(pn.CubicBezier(.13, .7, .5, .93), duration=64, fields=["x"]).play(serv.position, [280])
@@ -262,34 +263,53 @@ def load_level(server):
         PLAYER = pn.find_object_by_id(ctx.MY_CONTROLLER)
 
         ctx.location_age = 0
+        ctx.UPDATE_SPEED = 1
 
         @ctx.add_event_listener(event=pn.EventType.TICK)
         def send_loc(event):
             ctx.location_age += 1
-            if ctx.location_age >= ctx.tps / 4:
+            if ctx.location_age >= ctx.tps / ctx.UPDATE_SPEED:
                 ctx.location_age = 0
                 p = RefeedPosition(ctx.CLIENT.uuid, PLAYER.position)
                 ctx.CLIENT.send(p)
+                ctx.UPDATE_SPEED = 1
 
     PLAYER.init_movement()
+    @ctx.add_event_listener(event=pn.EventType.KEYHOLD, name="ServerBoundSpeedUpdate")
+    def upd(self, key):
+        if key == "Up" or key == "Down" or key == "Left" or key == "Right":
+            ctx.UPDATE_SPEED = 8
 
 
     @ctx.add_event_listener(event=pn.EventType.KEYDOWN)
-
     def shoot(self, key):
 
         if key == "mousebutton1":
             dx, dy = ctx.mouse.x - PLAYER.position.x - 25, ctx.mouse.y - PLAYER.position.y - 25
             angle = -math.degrees(math.atan2(dy, dx))
-            for i in range(1):
-                x = pn.TopViewPhysicsBody(ctx, x=PLAYER.position.x + 25, y=PLAYER.position.y + 25, color="white",
-                                        use_airress=False)
-                x.velocity = pn.Vector(angle, 2)
-                x.velocity.add_self(PLAYER.velocity)
-                x.destroy_outside_boundary = True
+
+
+            if server:
+                v = pn.Vector(angle + 10 * random.random(), 2)
+                v.add_self(PLAYER.velocity)
+                p = Shoot(ctx.CLIENT.uuid, pn.Dimension(PLAYER.position.x + 25, PLAYER.position.y + 25), v)
+                ctx.CLIENT.send(p)
+            else:
+                for i in range(1):
+                    x = pn.TopViewPhysicsBody(ctx, x=PLAYER.position.x + 25, y=PLAYER.position.y + 25, color="white",
+                                              use_airress=False)
+                    x.velocity = pn.Vector(angle + 10 * random.random(), 2)
+                    x.velocity.add_self(PLAYER.velocity)
+                    x.destroy_outside_boundary = True
 
             winsound.PlaySound("shoot.wav", winsound.SND_ASYNC)
 
+@pn.PacketId(0x73)
+@pn.PacketFields(uuid.UUID, pn.Dim, pn.Vector)
+class Shoot(pn.Packet):
+
+    def handle(self, parent, connection, ip):
+        pass
 
 @pn.PacketId(0x70)
 class SendUniverseData(pn.Packet):
@@ -309,6 +329,55 @@ class RefeedPosition(pn.Packet):
     def handle(self, parent, connection, ip):
         pass
 
+@pn.PacketId(0x72)
+@pn.PacketFields(uuid.UUID, pn.Dim)
+class OtherGuyJoined(pn.Packet):
+
+    def handle(self, parent, connection, ip):
+        who = self.read_UUID()
+        pos = self.read_dimension()
+
+        a = pn.TopViewPhysicsBody(ctx, x=pos.x, y=pos.y, width=50, height=50, mass=5, color="white")
+        a.edit_uuid(who)
+@pn.PacketId(0x05)
+class Customized_P_DownstreamResourceEdit(pn.P_DownstreamResourceEdit):
+    """UUID[0]: The UUID of a specific object
+    str[1]: Property Name
+    object[2]: Property Value, depends on type
+    0x05 Resource Edit: Tells the client to change an object's property
+    """
+    def handle(self, parent, connection, ip):
+        global PLAYER
+
+        uid = self.read_UUID()
+        property = self.read_string()
+        value = self.read_with_type()
+
+        try:
+
+            obj = pn.PyNamical.LINKER[uid]
+            if obj == PLAYER:
+                return
+            if isinstance(obj, pn.TopViewPhysicsBody) and isinstance(value, pn.Dimension):
+
+                aaa = ctx.MOVE_IDS.get(obj, None)
+                if aaa is not None:
+
+                    ctx.kill_event(aaa)
+
+                ctx.MOVE_IDS[obj] = pn.Animation(pn.EASE_OUT, duration=ctx.tps / 3, fields=["x", "y"]).play(obj.position, [value.x, value.y])
+            else:
+                setattr(obj, property, value)
+        except KeyError:
+
+            import traceback
+            print(traceback.format_exc())
+
+            pn.Logger.print(f"No corresponding object with UUID {uid}, refetching...", channel=4)
+            p = pn.P_UpstreamResourceRequest(parent.uuid, uid)
+            parent.send(p)
+
+ctx.MOVE_IDS = {}
 
 def game(server=False):
     if not server:

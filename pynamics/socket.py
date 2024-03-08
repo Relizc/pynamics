@@ -410,8 +410,13 @@ class P_UpstreamStayAlive(Packet):
         user.last_renewed = time.time()
         n = time.time()
         while True:
+
+
             if len(user.packets) > 0:
                 pack = user.packets.pop(0)
+                if not isinstance(pack, Packet):
+                    continue
+
                 Logger.print(f"&eUpstream   &b-> {ip[0]}:{ip[1]} : {pack} ({H_FormatBytes(pack.size())})",
                              prefix="[DedicatedServer]")
                 # print(f"Sth to esnd, packet size: {pack.buffer}")
@@ -423,6 +428,8 @@ class P_UpstreamStayAlive(Packet):
                              prefix="[DedicatedServer]")
                 connection.send(pack.buffer)
                 break
+
+
             time.sleep(0.01)
 
 @PacketId(0x03)
@@ -454,6 +461,9 @@ class P_DownstreamResource(Packet):
             p = parent.parent
 
         id = self.read_UUID()
+        if PyNamical.LINKER.get(id, None) is not None:
+            Logger.print(f"Not replicating resource becuase {id} already exists!", channel=2)
+            return
 
         if type == 0x00:
             clazz = pickle.loads(self.read_bytes())
@@ -484,8 +494,31 @@ class P_DownstreamResourceEdit(Packet):
         property = self.read_string()
         value = self.read_with_type()
 
-        obj = PyNamical.LINKER[uid]
-        setattr(obj, property, value)
+        try:
+
+            obj = PyNamical.LINKER[uid]
+            setattr(obj, property, value)
+        except KeyError as e:
+
+            Logger.print(f"No corresponding object with UUID {uid}, refetching...", channel=4)
+            p = P_UpstreamResourceRequest(parent.uuid, uid)
+            parent.send(p)
+
+@PacketId(0x08)
+@PacketFields(uuid.UUID, uuid.UUID)
+class P_UpstreamResourceRequest(Packet):
+
+    def handle(self, parent, connection, ip):
+        uid = self.read_UUID()
+        obj = self.read_UUID()
+        object = PyNamical.LINKER[obj]
+
+        k = obj_to_bytes(object).buffer
+        packet = P_DownstreamResource()
+        packet.write_uint8(0)  # General PyNamics Object
+        packet.buffer += k
+
+        parent.send(uid, packet)
 
 @PacketId(0x06)
 @PacketFields(u_int8)
@@ -629,6 +662,7 @@ class DedicatedServer(PyNamical):
 
     def update(self):
         self._timer_check_timeout += 1
+        #  or time.time() - self.last_ping_sent > self.PING_PACKET_WAIT_TIME
         if self._timer_check_timeout == self.parent.tps:
             self.H_check_timeout()
             self._timer_check_timeout = 0
@@ -721,9 +755,8 @@ class DedicatedClient(PyNamical):
     def H_pinger(self):
         time.sleep(1)
         while not self.parent.terminated:
-            if self.ping_backed or time.time() - self.last_ping_sent > self.PING_PACKET_WAIT_TIME:
+            if self.ping_backed:
                 self.last_ping_sent = time.time()
-                print("resent stay aliveas")
                 packet = P_UpstreamStayAlive(self.name)
                 self.send(packet)
                 self.ping_backed = False
@@ -769,7 +802,7 @@ class DedicatedClient(PyNamical):
         except OSError:
             pass
         except Exception as e:
-            print(traceback.format_exc())
+            #print(traceback.format_exc())
             Logger.print(f"Bad Packet: {str(e)}", channel=4)
             data = b""
 

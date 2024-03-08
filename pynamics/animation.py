@@ -4,6 +4,7 @@ from .events import EventHolder
 from .dimensions import Dimension, Color
 from .events import EventType
 import enum
+import random
 
 class AnimationFunction:
 
@@ -56,7 +57,7 @@ class Animation(PyNamical):
         super().__init__(None, no_parent=True)
         self.function = animation_function
         self.function.executor = self
-        self.duration = duration
+        self.duration = int(duration)
         self.type = type
         self.fields = fields
 
@@ -109,7 +110,9 @@ class Animation(PyNamical):
         for i in range(len(self.fields)):
             initial.append(getattr(play_at, self.fields[i]))
 
-        @PyNamical.MAIN_GAMEMANAGER.add_event_listener(event=EventType.TICK, killafter=self.duration, name="AnimationProgressionEvent")
+        id = random.randint(-2147483648, 2147483647)
+
+        @PyNamical.MAIN_GAMEMANAGER.add_event_listener(event=EventType.TICK, killafter=self.duration, name="AnimationProgressionEvent", id=id)
         def t(this):
             n = self.tick_value.get(self.age, 0)
 
@@ -130,6 +133,8 @@ class Animation(PyNamical):
                     function(1)
                 else:
                     setattr(play_at, self.fields[tar], final_value[tar])
+
+        return id
 
         
 def play_position_animation(function, object, final=(0, 0)):

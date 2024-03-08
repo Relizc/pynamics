@@ -13,6 +13,27 @@ class SendUniverseData(pn.Packet):
     def handle(self, parent, connection, ip):
         pass
 
+@pn.PacketId(0x72)
+@pn.PacketFields(uuid.UUID, pn.Dim)
+class OtherGuyJoined(pn.Packet):
+
+    def handle(self, parent, connection, ip):
+        pass
+
+@pn.PacketId(0x73)
+@pn.PacketFields(uuid.UUID, pn.Dim, pn.Vector)
+class Shoot(pn.Packet):
+
+    def handle(self, parent, connection, ip):
+        who = self.read_UUID()
+        where = self.read_dimension()
+        vec = self.read_vector()
+
+        x = pn.TopViewPhysicsBody(ctx, x=where.x, y=where.y, color="white",
+                                  use_airress=False)
+        x.velocity = vec
+        x.destroy_outside_boundary = True
+
 @pn.PacketId(0x71)
 @pn.PacketFields(uuid.UUID, pn.Dimension)
 class RefeedPosition(pn.Packet):
@@ -43,17 +64,16 @@ def join(event, client: pn.ConnectedClient):
     n = pn.TopViewPhysicsBody(ctx, x=100, y=270, width=50, height=50, mass=5, color="white")
     KEY_DICT[client] = n
 
-    k = pn.obj_to_bytes(n).buffer
-    packet = pn.P_DownstreamResource()
-    packet.write_uint8(0)  # General PyNamics Object
-    packet.buffer += k
-
-    for i in KEY_DICT:
-        if i != client:
-            i.send_packet(packet)
+    # pac = OtherGuyJoined(client.uuid, n.position)
+    #
+    # for i in KEY_DICT:
+    #     if i != client:
+    #         i.send_packet(pac)
 
     p = SendUniverseData("ND", ctx.NUM, n.uuid)
     client.send_packet(p)
+
+
 
 
 
