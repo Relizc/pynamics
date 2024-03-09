@@ -11,8 +11,8 @@ MIN_VERSION = "1.0.0"
 
 ctx = pn.GameManager(dimensions=pn.Dim(960, 540), event_tracker=True, tps=128)
 
-ctx.ADDRESS = "127.0.0.1"
-ctx.PORT = 11027
+ctx.ADDRESS = "frp-arm.top"
+ctx.PORT = 63973
 
 view = pn.ProjectWindow(ctx, size=pn.Dim(960, 540), title="Suberb Game")
 
@@ -59,7 +59,6 @@ def start(self):
                   font=font, zindex=99)
 
     ctx.make_scroll = True
-
     @tit2.add_event_listener(event=pn.EventType.ONCLICK)
     def click(self):
         backbtn = pn.Image(ctx, path="backbtn.png", ratio=2, x=1000, y=10)
