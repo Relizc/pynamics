@@ -11,8 +11,8 @@ MIN_VERSION = "1.0.0"
 
 ctx = pn.GameManager(dimensions=pn.Dim(960, 540), event_tracker=True, tps=128)
 
-ctx.ADDRESS = "frp-arm.top"
-ctx.PORT = 63973
+ctx.ADDRESS = "127.0.0.1"
+ctx.PORT = 11027
 
 view = pn.ProjectWindow(ctx, size=pn.Dim(960, 540), title="Suberb Game")
 
@@ -271,7 +271,8 @@ def load_level(server):
                 ctx.location_age = 0
                 p = RefeedPosition(ctx.CLIENT.uuid, PLAYER.position)
                 ctx.CLIENT.send(p)
-                ctx.UPDATE_SPEED = 1
+                if ctx.UPDATE_SPEED > 1:
+                    ctx.UPDATE_SPEED -= 1
 
     PLAYER.init_movement()
     @ctx.add_event_listener(event=pn.EventType.KEYHOLD, name="ServerBoundSpeedUpdate")
