@@ -5,7 +5,7 @@ import tkinter.messagebox as tkmsg
 from .logger import Logger
 from .dimensions import Dimension, Vector
 from .events import EventType, get_registered_events, event_unregistered
-from .socket import DedicatedClient
+from .socket import DedicatedClient, P_UpstreamResourceEdit
 import datetime
 import time
 import traceback
@@ -14,8 +14,12 @@ import random
 import enum
 
 def change(s, a, b, c):
-    print(c)
-    a.__dict__[b[0]] = c
+    if a.Replicated:
+        p = P_UpstreamResourceEdit(s.parent.parent.client.uuid, a.uuid, b[0])
+        p.write_with_type(c)
+        s.parent.parent.client.send(p)
+    else:
+        a.__dict__[b[0]] = c
     s.parent._workspace_select(None)
     s.tk.destroy()
 

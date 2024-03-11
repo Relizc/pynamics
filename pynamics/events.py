@@ -114,7 +114,9 @@ class EventHolder:
             EventType.STARTUP: []
         }
 
-    def add_event_listener(self, event: EventType = EventType.NONE, priority: EventPriority=EventPriority.LOWEST, condition=lambda i: True, tick_delay=0, replicated=False, killafter:int = 0,
+        self.event_linker = {}
+
+    def add_event_listener(self, event: EventType = EventType.NONE, priority: EventPriority=EventPriority.LOWEST, condition=lambda i: True, tick_delay=0, replicated=False, killafter:int = 0, id:int = None,
                            name: str = None):
         """
 
@@ -129,15 +131,23 @@ class EventHolder:
         if name is None:
             name = event_name_linker[event]
 
+        if id is None:
+            id = random.randint(-2147483648, 2147483647)
+
+
         def inner(function):
             func = Executable(function, condition, killafter=killafter, name=name, belong_group=events_first[events_second.index(event)])
+            func.event = event
 
             event_registered(func)
             self.events[event].insert(2147483647 - priority, func)
+            func.id = id
+            self.event_linker[id] = func
 
         return inner
 
-    def call_event_listeners(self, event: EventType = EventType.NONE, condition=None, *args, **kwargs):
+
+    def call_event_listeners(self, event: EventType = EventType.NONE, condition=None, threaded=True, *args, **kwargs):
         """
         Call all event listeners with optional condition that will be passed into a function's condition lambda event
         :param event: The event name, EventType
@@ -151,8 +161,19 @@ class EventHolder:
                     DebugAttacher(event, self, func, kill=True)
                     self.events[event].remove(func)
                     event_unregistered(func)
+                    del self.event_linker[func.id]
                 else:
                     DebugAttacher(event, self, func)
                     #func(self, *args, **kwargs)
                     n = threading.Thread(target=lambda: func(*args, **kwargs))
                     n.start()
+
+    def kill_event(self, event_id: int):
+        try:
+            func = self.event_linker[event_id]
+        except KeyError:
+            return
+        DebugAttacher(func.event, self, func, kill=True)
+        self.events[func.event].remove(func)
+        event_unregistered(func)
+        del self.event_linker[event_id]

@@ -27,7 +27,8 @@ nooo= pynamics.PhysicsBody(ctx, 300, 100, 100, 100, 2,
                                         ((50, 0), (0, 0))
                                         ))
 
-
+nooo.bugid = 1
+bob.bugid = 2
 #hi = pynamics.Text(ctx, 100, 100, "Loser")
 
 #
@@ -35,7 +36,7 @@ nooo= pynamics.PhysicsBody(ctx, 300, 100, 100, 100, 2,
 bob2 = pynamics.PhysicsBody(ctx, 500, 750, 1000, 1000, 2, use_gravity=False,use_mass=False
                            )
 bob.rectitude = 1
-nooo.rectitude = 0.5
+nooo.rectitude = 1
 
 def condition():
     global thisTime
@@ -60,6 +61,7 @@ def listen(self, key):
 @ctx.add_event_listener(event=pynamics.EventType.KEYHOLD, condition=pynamics.KeyEvaulator(pynamics.K_LEFT))
 def listen(self, key):
     # bob.apply_force(pynamics.Vector2d(180, 1),ctx._epoch_tps)
+
     bob.add_force(pynamics.Vector2d(180, 1))
 
 

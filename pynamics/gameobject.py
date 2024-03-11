@@ -141,6 +141,7 @@ class GameObject(PyNamical):
         self.last_display_position = None
         self.size = Dimension(width, height)
         self.destroy_outside_boundary = False
+        self.bugid = 0
         if contents != None:
             self.content = ImageTk.PhotoImage(ImageUtils.open(contents))
         else:
@@ -463,8 +464,10 @@ class PhysicsBody(GameObject):
         collision = False
         # if self.parent.terminated: break
         coeff = 0
+
         for i in objects:
             if isinstance(i, PhysicsBody) and i.uuid != self.uuid:
+
                 for j in i.points:
                     for k in self.points:
                         p1 = (j[0][0] + i.position.x, (j[0][1] + i.position.y) * -1)
@@ -476,6 +479,7 @@ class PhysicsBody(GameObject):
                         q1 = Point(q1[0], q1[1])
                         q2 = Point(q2[0], q2[1])
                         if doIntersect(p1, p2, q1, q2):
+
                             collision = True
                             coeff = i.rectitude
                             break
@@ -513,24 +517,35 @@ class PhysicsBody(GameObject):
                 #                                                                                          q22[1]) <= \
                 #                         intersection[1] <= max(q11[1], q22[1]):
                 #                     collDist = max(collDist, abs(-self.position.y - intersection[1]))
+
                 self.position = self.past_positions.arr[-1]
                 vixself = self.velocity.cart()[0]
                 viyself = self.velocity.cart()[1]
-
                 vixi = i.velocity.cart()[0]
                 viyi = i.velocity.cart()[1]
+                xmomentuminitial = vixself*self.mass + vixi * i.mass
+                ymomentuminitial = viyself * self.mass + viyi * i.mass
+
                 # print(vixself, viyself, vixi, viyi, i.mass, self.mass)
 
                 vfxself = -(((self.mass - i.mass) / (self.mass + i.mass)) * vixself + (
                         (2 * i.mass) / (self.mass + i.mass)) * vixi) * min(self.rectitude, i.rectitude)
                 vfyself = (((self.mass - i.mass) / (self.mass + i.mass)) * viyself + (
                         (2 * i.mass) / (self.mass + i.mass)) * viyi) * min(self.rectitude, i.rectitude)
+                vfxi = (xmomentuminitial - self.mass * vfxself)/i.mass
+                vfyi = (ymomentuminitial - self.mass*vfyself)/i.mass
 
                 rho = np.sqrt(vfxself ** 2 + vfyself ** 2)
                 phi = np.arctan2(vfyself, vfxself) * 180 / np.pi
 
                 self.velocity.r = phi
                 self.velocity.f = rho
+
+                rho2 = np.sqrt(vfxi ** 2 + vfyi ** 2)
+                phi2 = np.arctan2(vfyi, vfxi) * 180 / np.pi
+
+                i.velocity.r = phi2
+                i.velocity.f = rho2
 
                 # time.sleep(self.parent._epoch_tps)
 

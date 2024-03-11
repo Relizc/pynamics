@@ -88,7 +88,7 @@ class ProjectWindow(PyNamical):
 
             self._checks += 1
 
-            if (i.position.x + i.size.x < -10 or i.position.y + i.size.y < -10) or (i.position.x > self.size.x + 10 or i.position.y > self.size.y + 10):
+            if (i.position.x + i.size.x < -10 or i.position.y + i.size.y < -10) or (i.position.x > self.parent.dimensions.x + 10 or i.position.y > self.parent.dimensions.y + 10):
                 self.surface.delete(f"ID{i.blit_id}")
                 if i.destroy_outside_boundary:
                     i.delete()
