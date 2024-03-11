@@ -10,8 +10,8 @@ MIN_VERSION = "1.0.0"
 
 ctx = pn.GameManager(dimensions=pn.Dim(960, 540), event_tracker=True, tps=128)
 
-ctx.ADDRESS = "frp-arm.top"
-ctx.PORT = 63973
+ctx.ADDRESS = "10.27.78.144"
+ctx.PORT = 11027
 
 view = pn.ProjectWindow(ctx, size=pn.Dim(960, 540), title="Suberb Game")
 
@@ -274,21 +274,46 @@ def load_level(server):
     PLAYER.init_movement()
 
 
-    @ctx.add_event_listener(event=pn.EventType.KEYDOWN)
+    if server:
+        @ctx.add_event_listener(event=pn.EventType.KEYDOWN)
 
-    def shoot(self, key):
+        def shoot(self, key):
 
-        if key == "mousebutton1":
-            dx, dy = ctx.mouse.x - PLAYER.position.x - 25, ctx.mouse.y - PLAYER.position.y - 25
-            angle = -math.degrees(math.atan2(dy, dx))
-            for i in range(1):
-                x = pn.TopViewPhysicsBody(ctx, x=PLAYER.position.x + 25, y=PLAYER.position.y + 25, color="white",
-                                        use_airress=False)
-                x.velocity = pn.Vector(angle, 2)
-                x.velocity.add_self(PLAYER.velocity)
-                x.destroy_outside_boundary = True
+            if key == "mousebutton1":
+                dx, dy = ctx.mouse.x - PLAYER.position.x - 25, ctx.mouse.y - PLAYER.position.y - 25
+                angle = -math.degrees(math.atan2(dy, dx))
+                for i in range(1):
+                    x = pn.TopViewPhysicsBody(ctx, x=PLAYER.position.x + 25, y=PLAYER.position.y + 25, color="white",
+                                            use_airress=False)
+                    x.velocity = pn.Vector(angle, 2)
+                    x.velocity.add_self(PLAYER.velocity)
+                    x.destroy_outside_boundary = True
 
-            winsound.PlaySound("shoot.wav", winsound.SND_ASYNC)
+                winsound.PlaySound("shoot.wav", winsound.SND_ASYNC)
+    else:
+        @ctx.add_event_listener(event=pn.EventType.KEYDOWN)
+        def shootserver(self, key):
+            if key == "mousebutton1":
+                dx, dy = ctx.mouse.x - PLAYER.position.x - 25, ctx.mouse.y - PLAYER.position.y - 25
+                angle = -math.degrees(math.atan2(dy, dx))
+                for i in range(1):
+                    x = pn.TopViewPhysicsBody(ctx, x=PLAYER.position.x + 25, y=PLAYER.position.y + 25, color="white",
+                                            use_airress=False)
+                    x.velocity = pn.Vector(angle, 2)
+                    x.velocity.add_self(PLAYER.velocity)
+                    x.destroy_outside_boundary = True
+
+                    p = Shoot(ctx.CLIENT.uuid, pn.Dimension(PLAYER.position.x + 25, PLAYER.position.y + 25), x.velocity)
+                    ctx.CLIENT.send(p)
+
+@pn.PacketId(0x72)
+@pn.PacketFields(uuid.UUID, pn.Dimension, pn.Vector)
+class Shoot(pn.Packet):
+
+    def handle(self, parent, connection, ip):
+        user = parent.users[self.read_UUID()]
+        cursor = self.read_dimension()
+        pos = self.read_vector()
 
 
 @pn.PacketId(0x70)
