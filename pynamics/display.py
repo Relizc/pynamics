@@ -166,8 +166,8 @@ class ProjectWindow(PyNamical):
                 i.force_update -= 1
 
         # TODO: lag
-        # for i in self.parent.displayorder:
-        #     self.surface.tag_raise(f"ID{i.blit_id}")
+        for i in self.parent.displayorder:
+            self.surface.tag_raise(f"ID{i.blit_id}")
 
 
     def update(self):

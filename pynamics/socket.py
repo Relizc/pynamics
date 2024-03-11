@@ -12,6 +12,7 @@ import traceback
 from numpy import float32, float64
 from .dimensions import Dimension, Vector
 from .events import *
+import tkinter.messagebox as tkmsg
 
 # Helper Object (Byte)
 class u_int8(int): pass
@@ -373,7 +374,7 @@ class P_DownstreamSayNothing(Packet):
     """
     pass
 
-@PacketFields(uuid.UUID)
+@PacketFields(uuid.UUID, str)
 @PacketId(0x01)
 class P_UpstreamHandshake(Packet):
     """UUID[0]: User ID - The User ID for login.
@@ -381,8 +382,13 @@ class P_UpstreamHandshake(Packet):
     """
     def handle(self, parent, connection, ip):
         x = self.read_UUID()
+        pas = self.read_string()
 
-        parent.users[x] = ConnectedClient(parent, x)
+        ad = False
+        if pas == parent.password:
+            ad = True
+
+        parent.users[x] = ConnectedClient(parent, x, ad)
 
         Logger.print(f"User {parent.users[x]} has logged on!", prefix="[DedicatedServer]")
 
@@ -504,7 +510,38 @@ class P_DownstreamResourceEdit(Packet):
             p = P_UpstreamResourceRequest(parent.uuid, uid)
             parent.send(p)
 
-@PacketId(0x08)
+@PacketId(0x3f)
+@PacketFields(int, u_int8, str)
+class P_DownstreamStatusBroadcast(Packet):
+
+    def handle(self, parent, connection, ip):
+        typ = self.read_varint()
+        status = self.read_uint8()
+        msg = self.read_string()
+
+        if typ == 0x00: #UpstreamResourceEditResponse (Used in debuggers)
+            if status == 0x00:
+                parent.broadcast_error("Property Editor", msg)
+            else:
+                pass
+
+
+@PacketId(0x06)
+@PacketFields(uuid.UUID, uuid.UUID, str)
+class P_UpstreamResourceEdit(Packet):
+
+    def handle(self, parent, connection, ip):
+        who = parent.users[self.read_UUID()]
+        what = PyNamical.LINKER[self.read_UUID()]
+        k = self.read_string()
+        v = self.read_with_type()
+        if not who.admin:
+            connection.send(P_DownstreamStatusBroadcast(0, u_int8(0), f"Property {k} of object {what} is protected. Only server administrators can change its value.").buffer)
+        else:
+            setattr(what, k, v)
+            connection.send(P_DownstreamStatusBroadcast(0, u_int8(1), "Success resource edit").buffer)
+
+@PacketId(0x09)
 @PacketFields(uuid.UUID, uuid.UUID)
 class P_UpstreamResourceRequest(Packet):
 
@@ -520,7 +557,7 @@ class P_UpstreamResourceRequest(Packet):
 
         parent.send(uid, packet)
 
-@PacketId(0x06)
+@PacketId(0x07)
 @PacketFields(u_int8)
 class P_DownstreamRegisterEvents(Packet):
 
@@ -543,7 +580,7 @@ class P_DownstreamRegisterEvents(Packet):
             parent.send(packet)
 
 
-@PacketId(0x07)
+@PacketId(0x08)
 @PacketFields(uuid.UUID, u_int8)
 class P_UpstreamEventCalled(Packet):
 
@@ -578,10 +615,11 @@ def H_FormatBytes(size):
 
 class ConnectedClient(PyNamical):
 
-    def __init__(self, parent, uuid):
+    def __init__(self, parent, uuid, admin):
         super().__init__(parent)
         self.uuid = uuid
         self.last_renewed = time.time()
+        self.admin = admin
         self.packets = []
 
     def add_object(self, object): # Replacing function of GameManager
@@ -614,7 +652,7 @@ class DedicatedServer(PyNamical):
     UPSTREAM_PACKET_WAIT_TIME = 15
     DOWNSTREAM_PING_TIMEOUT = 30
 
-    def __init__(self, parent, address="127.0.0.1", port=11027):
+    def __init__(self, parent, address="127.0.0.1", port=11027, admin_password=None):
         PyNamical.__init__(self, parent)
 
         PyNamical.linkedNetworkingDispatcher = self
@@ -622,6 +660,7 @@ class DedicatedServer(PyNamical):
 
         self.address = address
         self.port = port
+        self.password = admin_password
         self.users = {}
         # We do not initlize by using ProjectWindow because we dont need tk and stuff
         self.parent.window = self
@@ -706,7 +745,7 @@ class DedicatedServer(PyNamical):
 
 class DedicatedClient(PyNamical):
 
-    def __init__(self, parent: PyNamical, address="127.0.0.1", port=11027):
+    def __init__(self, parent: PyNamical, address="127.0.0.1", port=11027, admin_password=None):
         PyNamical.__init__(self, parent)
         PyNamical.linkedNetworkingDispatcher = self
         self.events[EventType.CLIENT_CONNECTED] = []
@@ -714,6 +753,8 @@ class DedicatedClient(PyNamical):
         self.address = address
         self.port = port
         self.name = None
+
+        self.password = admin_password
 
         self.ping_backed = True
         self.last_ping_sent = time.time()
@@ -736,12 +777,17 @@ class DedicatedClient(PyNamical):
     def join_server(self):
         self.name = uuid.uuid4()
         self.edit_uuid(self.name)
-        packet = P_UpstreamHandshake(self.name)
+        if self.password is None:
+            p = str(uuid.uuid4())
+        else:
+            p = self.password
+        packet = P_UpstreamHandshake(self.name, p)
         self.send(packet)
 
 
 
-
+    def broadcast_error(self, title, msg):
+        tkmsg.showerror(title, msg)
 
     def disconnect(self):
         self.address = None

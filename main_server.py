@@ -4,6 +4,7 @@ import uuid
 
 ctx = pn.GameManager(dimensions=pn.Dim(960, 540), event_tracker=True, tps=128)
 server = pn.DedicatedServer(ctx, address="127.0.0.1")
+server.password = "Noob114514"
 ctx.NUM = random.randint(0, 2**32)
 
 @pn.PacketId(0x70)
