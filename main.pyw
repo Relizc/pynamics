@@ -122,6 +122,7 @@ def start(self):
             pn.Animation(pn.CubicBezier(.13, .7, .5, .93), duration=64, fields=["x"]).play(conne.position, [480])
 
             ctx.CLIENT = pn.DedicatedClient(ctx, address=ctx.ADDRESS, port=ctx.PORT)
+            ctx.CLIENT.password = "Noob114513" # Noob114514
             @ctx.CLIENT.add_event_listener(event=pn.EventType.CLIENT_CONNECTED)
             def done(event):
                 time.sleep(0.5)

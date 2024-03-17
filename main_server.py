@@ -31,9 +31,9 @@ class Shoot(pn.Packet):
         vec = self.read_vector()
 
         x = pn.TopViewPhysicsBody(ctx, x=where.x, y=where.y, color="white",
-                                  use_airress=False)
+                                  use_airress=False,destroy_outside_boundary=True)
         x.velocity = vec
-        x.destroy_outside_boundary = True
+
 
 @pn.PacketId(0x71)
 @pn.PacketFields(uuid.UUID, pn.Dimension)
@@ -63,6 +63,11 @@ def join(event, client: pn.ConnectedClient):
 
 
     n = pn.TopViewPhysicsBody(ctx, x=100, y=270, width=50, height=50, mass=5, color="white")
+
+    @n.add_event_listener(event=pn.EventType.COLLIDE)
+    def col(event, object):
+        print(object)
+
     KEY_DICT[client] = n
 
     # pac = OtherGuyJoined(client.uuid, n.position)

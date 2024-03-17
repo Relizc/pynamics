@@ -74,6 +74,7 @@ def listen(self, key):
 @ctx.add_event_listener(event=pynamics.EventType.KEYDOWN, condition=pynamics.KeyEvaulator(pynamics.K_r))
 def listen(self, key):
     bob.position.set(10, 10)
+    bob.velocity.clear()
 
 
 

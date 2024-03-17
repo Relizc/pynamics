@@ -123,7 +123,8 @@ class GameObject(PyNamical):
                  anchor: str = "nw",
                  no_display=False,
                  zindex=1,
-                 color: str = "black"):
+                 color: str = "black",
+                 destroy_outside_boundary: bool = False):
         """
         :param x: The position of the GameObject, on X-Axis
         :param y: The position of the GameObject, on Y-Axis
@@ -140,7 +141,7 @@ class GameObject(PyNamical):
         self.this_display_position = Dimension(self.this_position.x, self.position.y)
         self.last_display_position = None
         self.size = Dimension(width, height)
-        self.destroy_outside_boundary = False
+        self.destroy_outside_boundary = destroy_outside_boundary
         self.bugid = 0
         if contents != None:
             self.content = ImageTk.PhotoImage(ImageUtils.open(contents))
@@ -172,6 +173,7 @@ class GameObject(PyNamical):
         self.parent.add_object(self)
 
         self.anchor = anchor
+        
 
     def delete(self):
         if isinstance(self.parent.objects, list):
@@ -293,6 +295,8 @@ class PhysicsBody(GameObject):
                  collision_type=1, use_gravity=True, use_airres=False, **kwargs):
         super().__init__(parent, x, y, width, height, contents, from_points, **kwargs)
 
+        self.events[EventType.COLLIDE] = []
+
         # @self.parent.add_tick_update
         # def applyAirResistance():
         #     airResistance = (1 / 2) * self.row * (self.v_inst.f**2) * self.coeff
@@ -328,6 +332,8 @@ class PhysicsBody(GameObject):
         if self.use_gravity: self.force = Vector2d(90, self.gravity * self.mass)
         if self.use_mass:
             self.attach_movement_thread()
+
+        
 
     def init_movement(self, force: int = 1):
         @self.parent.add_event_listener(event=EventType.KEYHOLD, condition=KeyEvaulator("Up"))
@@ -381,6 +387,7 @@ class PhysicsBody(GameObject):
                         collision = True
                         break
                 if collision:
+                    
                     break
         return collision
 
@@ -486,6 +493,7 @@ class PhysicsBody(GameObject):
                     if collision:
                         break
             if collision:
+                #self.call_event_listeners(event=EventType.COLLIDE, object=i)
                 x, y = self.velocity.cart()
                 x += self.position.x
                 y -= self.position.y

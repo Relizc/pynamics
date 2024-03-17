@@ -33,6 +33,8 @@ class EventType():
 
     ONCLICK = 0x22
 
+    COLLIDE = 0x23
+
 
     CLIENT_CONNECTED = 0x100
 
@@ -44,7 +46,8 @@ event_name_linker = {
     EventType.TICK: "GamemanagerTick",
     EventType.STARTUP: "GamemanagerStartup",
     EventType.ONCLICK: "UserInterfaceClick",
-    EventType.CLIENT_CONNECTED: "NetworkClientConnected"
+    EventType.CLIENT_CONNECTED: "NetworkClientConnected",
+    EventType.COLLIDE: "PhysicsBodyCollideEvent"
 }
 events_first = list(EventType.__dict__.keys())
 events_second = list(EventType.__dict__.values())
@@ -111,7 +114,7 @@ class EventHolder:
             EventType.TICK: [],
             EventType.HOVER: [],
             EventType.NO_HOVER: [],
-            EventType.STARTUP: []
+            EventType.STARTUP: [],
         }
 
         self.event_linker = {}
@@ -129,7 +132,7 @@ class EventHolder:
         """
 
         if name is None:
-            name = event_name_linker[event]
+            name = event_name_linker.get(event, "GenericEvent")
 
         if id is None:
             id = random.randint(-2147483648, 2147483647)
