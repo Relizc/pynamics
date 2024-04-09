@@ -415,8 +415,10 @@ class P_UpstreamStayAlive(Packet):
         user = parent.users[x]
         user.last_renewed = time.time()
         n = time.time()
+
         while True:
 
+            print(self.packets)
 
             if len(user.packets) > 0:
                 pack = user.packets.pop(0)
@@ -428,12 +430,12 @@ class P_UpstreamStayAlive(Packet):
                 # print(f"Sth to esnd, packet size: {pack.buffer}")
                 connection.send(pack.buffer)
                 break
-            if time.time() - n > parent.UPSTREAM_PACKET_WAIT_TIME:
-                pack = P_DownstreamSayNothing()
-                Logger.print(f"&eUpstream   &b-> {ip[0]}:{ip[1]} : {pack} ({H_FormatBytes(pack.size())})",
-                             prefix="[DedicatedServer]")
-                connection.send(pack.buffer)
-                break
+            # if time.time() - n > parent.UPSTREAM_PACKET_WAIT_TIME:
+            #     pack = P_DownstreamSayNothing()
+            #     Logger.print(f"&eUpstream   &b-> {ip[0]}:{ip[1]} : {pack} ({H_FormatBytes(pack.size())})",
+            #                  prefix="[DedicatedServer]")
+            #     connection.send(pack.buffer)
+            #     break
 
 
             time.sleep(0.01)
@@ -546,6 +548,7 @@ class P_UpstreamResourceEdit(Packet):
 class P_UpstreamResourceRequest(Packet):
 
     def handle(self, parent, connection, ip):
+
         uid = self.read_UUID()
         obj = self.read_UUID()
         object = PyNamical.LINKER[obj]
@@ -680,6 +683,7 @@ class DedicatedServer(PyNamical):
             if not isinstance(packet, P_UpstreamStayAlive):
                 Logger.print(f"&aDownstream &b<- {ip[0]}:{ip[1]} : {packet} ({H_FormatBytes(packet.size())})",
                              prefix="[DedicatedServer]")
+            
             packet.handle(self, connection, ip)
             connection.close()
         except:
@@ -771,6 +775,8 @@ class DedicatedClient(PyNamical):
 
         self.latency = -1
 
+        self.packets = []
+
 
 
 
@@ -784,6 +790,9 @@ class DedicatedClient(PyNamical):
         packet = P_UpstreamHandshake(self.name, p)
         self.send(packet)
 
+        self.pinger = threading.Thread(target=self.packet_broadcaster)
+        self.pinger.start()
+
 
 
     def broadcast_error(self, title, msg):
@@ -793,19 +802,41 @@ class DedicatedClient(PyNamical):
         self.address = None
         self.port = None
 
+
+    def packet_broadcaster(self):
+
+        while not self.parent.terminated:
+            
+            try:
+
+
+                if len(self.packets) > 0:
+
+                    p = self.packets.pop(0)
+                    self.true_send(p)
+            except Exception as e:
+                Logger.print(f"Problem with packet broadcaster: {e}", channel=4)
+
+            time.sleep(0.01)
+
+
     def connect(self):
         self.socket = None
         self.socket = socket.socket()
         self.socket.connect((self.address, self.port))
 
+
     def H_pinger(self):
         time.sleep(1)
         while not self.parent.terminated:
+
             if self.ping_backed:
+                
                 self.last_ping_sent = time.time()
                 packet = P_UpstreamStayAlive(self.name)
                 self.send(packet)
                 self.ping_backed = False
+
             time.sleep(0.01)
 
     def true_send(self, packet):
@@ -835,6 +866,8 @@ class DedicatedClient(PyNamical):
         try:
             data = self.socket.recv(2**20)
 
+            print(data)
+
             if len(data) > 0:
                 self.latency = time.time() - a
                 self._rx += 1
@@ -852,16 +885,17 @@ class DedicatedClient(PyNamical):
             Logger.print(f"Bad Packet: {str(e)}", channel=4)
             data = b""
 
+
         
 
     def send(self, packet: Packet):
         try:
 
-            if self.socket is not None:
-                self.socket.close()
-                self.ping_backed = True
-            self.p = threading.Thread(target=self.true_send, args=(packet,))
-            self.p.start()
+            
+            # self.p = threading.Thread(target=self.true_send, args=(packet,))
+            # self.p.start()
+            
+            self.packets.append(packet)
             
             
         except Exception as e:
