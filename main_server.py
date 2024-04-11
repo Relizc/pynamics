@@ -3,7 +3,7 @@ import random
 import uuid
 
 ctx = pn.GameManager(dimensions=pn.Dim(960, 540), event_tracker=True, tps=128)
-server = pn.DedicatedServer(ctx, address="10.27.78.144")
+server = pn.DedicatedServerV2(ctx, address="10.27.78.144")
 server.password = "Noob114514"
 ctx.NUM = random.randint(0, 2**32)
 

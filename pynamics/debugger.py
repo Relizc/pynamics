@@ -13,6 +13,7 @@ import inspect
 import random
 import enum
 
+
 def change(s, a, b, c):
     if a.Replicated:
         p = P_UpstreamResourceEdit(s.parent.parent.client.uuid, a.uuid, b[0])
@@ -42,13 +43,7 @@ class Console:
 
 
 
-        try:
-            exec(f"self.log({query})")
-        except:
-            try:
-                exec(f"{query}")
-            except:
-                self.log(traceback.format_exc())
+        
 
 
 class DebugPropertyEditor:
@@ -502,7 +497,7 @@ Tick DeltaTime: {self.parent.deltatime}""", font=("Courier", 14))
                 event.type,
                 event.belong_group,
                 f"{func.function.__module__}:{inspect.findsource(func.function)[1]}",
-                True,
+                event.threaded,
                 event.event_id
             ))
             self._event_finder[event.debug_del] = event

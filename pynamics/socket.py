@@ -649,6 +649,25 @@ class ConnectedClient(PyNamical):
 
         return inner
 
+# Mask Class for object identification
+    
+class DedicatedServerV2(PyNamical):
+
+    def __init__(self, parent, address="127.0.0.1", port=11027, no_parent=False, uuid=None):
+        super().__init__(parent, no_parent, uuid)
+        self.parent.window = self
+        self.address = address
+        self.port = port
+
+        self.events[EventType.CLIENT_CONNECTED] = []
+
+    def listen():
+        pass
+
+
+
+
+
 
 class DedicatedServer(PyNamical):
 

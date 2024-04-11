@@ -1,6 +1,6 @@
 import tkinter
 
-from .socket import DedicatedServer
+from .socket import DedicatedServer, DedicatedServerV2
 
 from .gameobject import *
 from .interface import PyNamical
@@ -137,7 +137,7 @@ class GameManager(PyNamical):
 
         self.call_event_listeners(EventType.STARTUP)
 
-        if isinstance(self.window, DedicatedServer):
+        if isinstance(self.window, (DedicatedServer, DedicatedServerV2)):
             Logger.print("Using DedicatedServer as display port!", channel=2)
             self.window.listen()
         else:
