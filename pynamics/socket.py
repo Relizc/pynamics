@@ -664,6 +664,9 @@ class DedicatedServerV2(PyNamical):
     def listen():
         pass
 
+    def update():
+        pass
+
 
 
 

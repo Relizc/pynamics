@@ -337,19 +337,19 @@ class PhysicsBody(GameObject):
 
     def init_movement(self, force: int = 1):
         @self.parent.add_event_listener(event=EventType.KEYHOLD, condition=KeyEvaulator("Up"))
-        def m(ctx):
+        def m(ctx, key):
             self.force.add_self(Vector2d(90, force))
 
         @self.parent.add_event_listener(event=EventType.KEYHOLD, condition=KeyEvaulator("Down"))
-        def m(ctx):
+        def m(ctx, key):
             self.force.add_self(Vector2d(270, force))
 
         @self.parent.add_event_listener(event=EventType.KEYHOLD, condition=KeyEvaulator("Left"))
-        def m(ctx):
+        def m(ctx, key):
             self.force.add_self(Vector2d(180, force))
 
         @self.parent.add_event_listener(event=EventType.KEYHOLD, condition=KeyEvaulator("Right"))
-        def m(ctx):
+        def m(ctx, key):
             self.force.add_self(Vector2d(0, force))
 
     def attach_movement_thread(self):

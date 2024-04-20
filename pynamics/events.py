@@ -3,6 +3,10 @@ import enum
 import threading
 import random
 
+import traceback
+
+from .logger import Logger
+
 def commit(e, s, a, kill=False, special=None):
     None
 DebugAttacher = commit
@@ -67,7 +71,10 @@ class Executable:
 
     def __call__(self, *args, **kwargs):
         self.runs += 1
-        self.function(self, *args, **kwargs)
+        try:
+            self.function(self, *args, **kwargs)
+        except Exception as e:
+            Logger.print(f"Event {self.type} (ID={self.event_id}) threw an exception: {traceback.format_exc()}", channel=4)
         if self.runs == self.killafter:
             self.function = None
 
