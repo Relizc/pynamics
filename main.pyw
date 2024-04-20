@@ -11,7 +11,7 @@ MIN_VERSION = "1.0.0"
 
 ctx = pn.GameManager(dimensions=pn.Dim(960, 540), event_tracker=True, tps=128)
 
-ctx.ADDRESS = "127.0.0.1"
+ctx.ADDRESS = "10.27.78.144"
 ctx.PORT = 11027
 
 view = pn.ProjectWindow(ctx, size=pn.Dim(960, 540), title="Suberb Game")
@@ -122,6 +122,7 @@ def start(self):
             pn.Animation(pn.CubicBezier(.13, .7, .5, .93), duration=64, fields=["x"]).play(conne.position, [480])
 
             ctx.CLIENT = pn.DedicatedClient(ctx, address=ctx.ADDRESS, port=ctx.PORT)
+            ctx.CLIENT.password = "Noob114513" # Noob114514
             @ctx.CLIENT.add_event_listener(event=pn.EventType.CLIENT_CONNECTED)
             def done(event):
                 time.sleep(0.5)

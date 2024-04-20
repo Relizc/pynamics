@@ -112,7 +112,7 @@ class Animation(PyNamical):
 
         id = random.randint(-2147483648, 2147483647)
 
-        @PyNamical.MAIN_GAMEMANAGER.add_event_listener(event=EventType.TICK, killafter=self.duration, name="AnimationProgressionEvent", id=id)
+        @PyNamical.MAIN_GAMEMANAGER.add_event_listener(event=EventType.TICK, threaded=False, killafter=self.duration, name="AnimationProgressionEvent", id=id)
         def t(this):
             n = self.tick_value.get(self.age, 0)
 

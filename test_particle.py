@@ -17,7 +17,7 @@ circle62 = pn.Particle(ctx, 100, 10, 10, use_gravity=True, rectitude=0.8, clear_
 #     self.r += 1
 
 @ctx.add_event_listener(event=pn.EventType.KEYDOWN, condition=pn.KeyEvaulator(pn.K_r))
-def listen(self):
+def listen(self, key):
     circle61.position.set(10, 10)
     circle61.clear()
 

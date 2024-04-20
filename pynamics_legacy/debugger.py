@@ -4,7 +4,7 @@ from tkinter import ttk
 import tkinter.messagebox as tkmsg
 from .logger import Logger
 from .dimensions import Dimension, Vector
-from .events import EventType, get_registered_events, event_unregistered
+from .events import EventType, get_registered_events, event_unregistered, registered_events
 from .socket import DedicatedClient, P_UpstreamResourceEdit
 import datetime
 import time
@@ -12,6 +12,7 @@ import traceback
 import inspect
 import random
 import enum
+
 
 def change(s, a, b, c):
     if a.Replicated:
@@ -42,13 +43,7 @@ class Console:
 
 
 
-        try:
-            exec(f"self.log({query})")
-        except:
-            try:
-                exec(f"{query}")
-            except:
-                self.log(traceback.format_exc())
+        
 
 
 class DebugPropertyEditor:
@@ -206,6 +201,17 @@ class Debugger:
         else:
             tk.Label(self.events, text="Event Tracker is currently disabled due to resource optimization.\nYou can enable Event Tracker by creating a pynamics_legacy.debug.Debugger class with enable_event_listener = True.").pack()
 
+        for event in registered_events: # registered_events from events.py
+            event.debug_del = self.event.insert("", 'end', values=(
+                datetime.datetime.now().strftime("%H:%m:%S.%f"),
+                event.type,
+                event.belong_group,
+                f"{event.function.__module__}:{inspect.findsource(event.function)[1]}",
+                event.threaded,
+                event.event_id
+            ))
+            self._event_finder[event.debug_del] = event
+        
         self.events_kill_thread = tk.Button(self.events, text="Kill Event", command=self._events_kill)
         self.events_kill_thread.grid(row=3, column=0, sticky="w")
 
@@ -418,6 +424,8 @@ Tick DeltaTime: {self.parent.deltatime}""", font=("Courier", 14))
     def _workspace_property_change(self, e):
         stuff = self.m[int(self.info.focus())]
 
+        print(int(self.info.focus()))
+
         if not isinstance(stuff, (int, float, str, Dimension, Vector)):
             tkmsg.showinfo(f"Unable to edit property", f"The debugger cannot edit the property because the type {stuff.__class__.__name__} is not supported.")
             return
@@ -502,7 +510,7 @@ Tick DeltaTime: {self.parent.deltatime}""", font=("Courier", 14))
                 event.type,
                 event.belong_group,
                 f"{func.function.__module__}:{inspect.findsource(func.function)[1]}",
-                True,
+                event.threaded,
                 event.event_id
             ))
             self._event_finder[event.debug_del] = event

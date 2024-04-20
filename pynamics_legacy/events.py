@@ -3,6 +3,10 @@ import enum
 import threading
 import random
 
+import traceback
+
+from .logger import Logger
+
 def commit(e, s, a, kill=False, special=None):
     None
 DebugAttacher = commit
@@ -33,6 +37,8 @@ class EventType():
 
     ONCLICK = 0x22
 
+    COLLIDE = 0x23
+
 
     CLIENT_CONNECTED = 0x100
 
@@ -44,14 +50,15 @@ event_name_linker = {
     EventType.TICK: "GamemanagerTick",
     EventType.STARTUP: "GamemanagerStartup",
     EventType.ONCLICK: "UserInterfaceClick",
-    EventType.CLIENT_CONNECTED: "NetworkClientConnected"
+    EventType.CLIENT_CONNECTED: "NetworkClientConnected",
+    EventType.COLLIDE: "PhysicsBodyCollideEvent"
 }
 events_first = list(EventType.__dict__.keys())
 events_second = list(EventType.__dict__.values())
 
 class Executable:
 
-    def __init__(self, function, condition, killafter = 0, name="GenericEvent", belong_group = "Event"):
+    def __init__(self, function, condition, killafter = 0, threaded=True, name="GenericEvent", belong_group = "Event"):
         self.function = function
         self.runs = 0
         self.killafter = killafter
@@ -60,10 +67,14 @@ class Executable:
         self.belong_group = belong_group
         self.event_id = random.randint(-2147483648, 2147483647)
         self.debug_del = None
+        self.threaded = threaded
 
     def __call__(self, *args, **kwargs):
         self.runs += 1
-        self.function(self, *args, **kwargs)
+        try:
+            self.function(self, *args, **kwargs)
+        except Exception as e:
+            Logger.print(f"Event {self.type} (ID={self.event_id}) threw an exception: {traceback.format_exc()}", channel=4)
         if self.runs == self.killafter:
             self.function = None
 
@@ -111,13 +122,13 @@ class EventHolder:
             EventType.TICK: [],
             EventType.HOVER: [],
             EventType.NO_HOVER: [],
-            EventType.STARTUP: []
+            EventType.STARTUP: [],
         }
 
         self.event_linker = {}
 
     def add_event_listener(self, event: EventType = EventType.NONE, priority: EventPriority=EventPriority.LOWEST, condition=lambda i: True, tick_delay=0, replicated=False, killafter:int = 0, id:int = None,
-                           name: str = None):
+                           name: str = None, threaded=True):
         """
 
         :param replicated: `Boolean` **ONLY USE THIS WHEN THERE IS AN AVALIABLE SERVER** A replicated event that will run on the client side.
@@ -129,14 +140,15 @@ class EventHolder:
         """
 
         if name is None:
-            name = event_name_linker[event]
+            name = event_name_linker.get(event, "GenericEvent")
 
         if id is None:
             id = random.randint(-2147483648, 2147483647)
 
 
         def inner(function):
-            func = Executable(function, condition, killafter=killafter, name=name, belong_group=events_first[events_second.index(event)])
+            func = Executable(function, condition, killafter=killafter, name=name, 
+                              threaded=threaded, belong_group=events_first[events_second.index(event)])
             func.event = event
 
             event_registered(func)
@@ -147,7 +159,7 @@ class EventHolder:
         return inner
 
 
-    def call_event_listeners(self, event: EventType = EventType.NONE, condition=None, threaded=True, *args, **kwargs):
+    def call_event_listeners(self, event: EventType = EventType.NONE, condition=None, *args, **kwargs):
         """
         Call all event listeners with optional condition that will be passed into a function's condition lambda event
         :param event: The event name, EventType
@@ -165,8 +177,13 @@ class EventHolder:
                 else:
                     DebugAttacher(event, self, func)
                     #func(self, *args, **kwargs)
-                    n = threading.Thread(target=lambda: func(*args, **kwargs))
-                    n.start()
+                    if func.threaded:
+                        n = threading.Thread(target=lambda: func(*args, **kwargs))
+                        n.start()
+                        #print("thread")
+                    else:
+                        func(*args, **kwargs)
+                        #print("no thread")
 
     def kill_event(self, event_id: int):
         try:
