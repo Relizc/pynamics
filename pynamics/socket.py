@@ -394,7 +394,7 @@ class P_UpstreamHandshake(Packet):
 
         # Sending Resources to User
         for i in parent.parent.children:
-            if isinstance(i, DedicatedServer):
+            if isinstance(i, (DedicatedServer, DedicatedServerV2)):
                 continue
             k = obj_to_bytes(i).buffer
             packet = P_DownstreamResource()
@@ -417,8 +417,6 @@ class P_UpstreamStayAlive(Packet):
         n = time.time()
 
         while True:
-
-            print(self.packets)
 
             if len(user.packets) > 0:
                 pack = user.packets.pop(0)
@@ -487,7 +485,7 @@ class P_DownstreamResource(Packet):
                 value = self.read_with_type()
                 setattr(loaded, key, value)
 
-            Logger.print(f"Replicated {loaded} from server!", channel=2)
+            Logger.print(f"Replicated {loaded} from server! ({loaded.uuid})", channel=2)
 
 @PacketId(0x05)
 @PacketFields(uuid.UUID, str)
@@ -658,13 +656,38 @@ class DedicatedServerV2(PyNamical):
         self.parent.window = self
         self.address = address
         self.port = port
+        self.users = {}
 
         self.events[EventType.CLIENT_CONNECTED] = []
 
-    def listen():
-        pass
+    def listen(self):
+        self.server = socket.socket()
+        self.server.bind((self.address, self.port))
+        self.server.listen()
+        Logger.print(f"Listening on {self.address}:{self.port}", prefix="[DedicatedServer]")
 
-    def update():
+        while True:
+            connection, ip = self.server.accept()
+            print("accepting")
+            thread = threading.Thread(target=self.client_handle, args=(connection, ip))
+            thread.start()
+
+    def client_handle(self, conn, ip):
+        print("handle")
+        data = conn.recv(1024)
+        packet = P_PacketIdFinder[data[0]](buffer=data, write_packetid=False)
+        packet.read_pointer = 1
+        if not isinstance(packet, P_UpstreamStayAlive):
+            Logger.print(f"&aDownstream &b<- {ip[0]}:{ip[1]} : {packet} ({H_FormatBytes(packet.size())})",
+                            prefix="[DedicatedServer]")
+        
+        packet.handle(self, conn, ip)
+        conn.close()
+
+    def send(self, user, packet):
+        self.users[user].send_packet(packet)
+
+    def update(self):
         pass
 
 
@@ -868,6 +891,8 @@ class DedicatedClient(PyNamical):
         except Exception as e:
             Logger.print(f"Unable to send packet: {e}", channel=4)
             return
+        
+        print(packet)
 
         if isinstance(packet, P_UpstreamHandshake):
             self.connected = True

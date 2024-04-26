@@ -76,6 +76,8 @@ def join(event, client: pn.ConnectedClient):
     #     if i != client:
     #         i.send_packet(pac)
 
+    print(n.uuid)
+
     p = SendUniverseData("ND", ctx.NUM, n.uuid)
     client.send_packet(p)
 
