@@ -199,7 +199,7 @@ class Debugger:
 
             self.log = 0
         else:
-            tk.Label(self.events, text="Event Tracker is currently disabled due to resource optimization.\nYou can enable Event Tracker by creating a pynamics.debug.Debugger class with enable_event_listener = True.").pack()
+            tk.Label(self.events, text="Event Tracker is currently disabled due to resource optimization.\nYou can enable Event Tracker by creating a pynamics_legacy.debug.Debugger class with enable_event_listener = True.").pack()
 
         for event in registered_events: # registered_events from events.py
             event.debug_del = self.event.insert("", 'end', values=(

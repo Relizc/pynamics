@@ -1,4 +1,4 @@
-import pynamics as pn
+import pynamics_legacy as pn
 import random
 
 game = pn.GameManager(dimensions=pn.Dimension(100, 100), fps=300, event_tracker=True)

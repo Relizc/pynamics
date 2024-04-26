@@ -1,4 +1,4 @@
-import pynamics as pn
+import pynamics_legacy as pn
 import random
 
 ctx = pn.GameManager(pn.Dim(500, 500), tps=128, fps=0, event_tracker=True)

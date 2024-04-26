@@ -1,4 +1,4 @@
-import pynamics as pn
+import pynamics_legacy as pn
 import time
 
 import pickle

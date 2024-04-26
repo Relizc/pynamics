@@ -1,6 +1,6 @@
 import tkinter
 
-from pynamics.socket import DedicatedServer
+from pynamics_legacy.socket import DedicatedServer
 
 from .gameobject import *
 from .interface import PyNamical
@@ -128,7 +128,7 @@ class GameManager(PyNamical):
             self.window
         except AttributeError:
             err = RuntimeError(
-                "No ViewPort Object found for this specific GameManager instance. Create a viewport by using pynamics.ProjectWindow.")
+                "No ViewPort Object found for this specific GameManager instance. Create a viewport by using pynamics_legacy.ProjectWindow.")
             raise err
 
         self.starttime = time.time()
