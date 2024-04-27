@@ -424,7 +424,9 @@ Tick DeltaTime: {self.parent.deltatime}""", font=("Courier", 14))
     def _workspace_property_change(self, e):
         stuff = self.m[int(self.info.focus())]
 
-        print(int(self.info.focus()))
+        if int(self.info.focus()) == 0:
+            tkmsg.showinfo(f"Unable to edit property", f"The debugger cannot edit the property because the property is protected.")
+            return
 
         if not isinstance(stuff, (int, float, str, Dimension, Vector)):
             tkmsg.showinfo(f"Unable to edit property", f"The debugger cannot edit the property because the type {stuff.__class__.__name__} is not supported.")
