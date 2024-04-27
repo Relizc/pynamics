@@ -4,17 +4,17 @@
 using namespace std;
 
 int main() {
-	int N, A, B;
+	long long N, A, B;
 	cin >> N >> A >> B;
 	
 	string s;
 	cin >> s;
 	
-	int l = 0; // ((
-	int r = 0; // ))
-	int x = 0; // )(   )()(
+	long long l = 0; // ((
+	long long r = 0; // ))
+	long long x = 0; // )(   )()(
 	
-	int cost = 0;
+	long long cost = 0;
 	
 	for (int i = 0; i < 2 * N; i += 2) {
 		if (s[i] == '(' && s[i + 1] == '(') {

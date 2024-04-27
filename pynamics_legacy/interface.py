@@ -45,6 +45,7 @@ class PyNamical(EventHolder):
 
     def __init__(self, parent, no_parent=False, uuid=None):
         super().__init__()
+        self.children = []
         self.Replicated = False
         self.style = StyleLoader()
         self.parent = parent
@@ -57,7 +58,7 @@ class PyNamical(EventHolder):
 
         if not no_parent:
             self.parent.children.append(self)
-        self.children = []
+
 
     def unbind(self):
         self.parent.children.remove(self)
