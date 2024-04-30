@@ -292,7 +292,7 @@ class Image(GameObject):
 class PhysicsBody(GameObject):
     def __init__(self, parent: PyNamical, x: float = 0, y: float = 0, width: float = 10, height: float = 10, mass: int = 1,
                  contents: str = None, from_points: tuple = None, row=1.225, rectitude=1, use_mass=True, use_collide=True,
-                 collision_type=1, use_gravity=True, use_airres=False, **kwargs):
+                 collision_type=1, use_gravity=True, use_airres=False, gravity=-0.1, **kwargs):
         super().__init__(parent, x, y, width, height, contents, from_points, **kwargs)
 
         self.events[EventType.COLLIDE] = []
@@ -323,7 +323,7 @@ class PhysicsBody(GameObject):
         self.collision_type = int(collision_type)
         self.use_collide = use_collide
         self.force = Vector2d(0, 0)
-        self.gravity = -0.1
+        self.gravity = gravity
         self.past_positions = LimitedArray(self.parent.tps)
 
         # self.timeB = time.time()
