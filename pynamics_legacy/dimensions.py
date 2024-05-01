@@ -100,7 +100,7 @@ class Dimension2d:
 
 class Color:
 
-    def __init__(self, r = 255, g = 255, b = 255):
+    def __init__(self, r = 255, g = 255, b = 255, a = 0):
         if isinstance(r, str):
             if r.lower() == "white":
                 self.r, self.g, self.b = 255, 255, 255
@@ -109,6 +109,7 @@ class Color:
         self.r = r
         self.g = g
         self.b = b
+        self.a = a
 
     def __str__(self):
         return "#%02x%02x%02x" % (int(self.r), int(self.g), int(self.b))
