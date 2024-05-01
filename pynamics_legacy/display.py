@@ -10,8 +10,17 @@ import time
 import math
 import traceback
 
-from OpenGL.GL import *
-from pyopengltk import OpenGLFrame
+USE_OPENGL = False
+
+try:
+    from OpenGL.GL import *
+    from pyopengltk import OpenGLFrame
+    USE_OPENGL = True
+except ModuleNotFoundError:
+    Logger.print("PyOpenGL is not found. ProjectWindow is using legacy tkinter canvas.", channel=3)
+except ImportError as e:
+    Logger.print(f"PyOpenGL: {e}", channel=4)
+    Logger.print(f"PyOpenGL occured an error. ProjectWindow is using legacy tkinter canvas", channel=3)
 
 import random
 
@@ -82,6 +91,8 @@ class _RenderableImage(Renderable):
     property = Renderable.TEXT
 
 
+if not USE_OPENGL:
+    OpenGLFrame = object
 
 class _base_OpenGL_Frame(OpenGLFrame):
 
@@ -225,7 +236,7 @@ class _base_OpenGL_Frame(OpenGLFrame):
         pass
 
 
-class ProjectWindow(PyNamical):
+class OpenGLProjectWindow(PyNamical):
 
     def __init__(self, parent: GameManager, size: Dimension = Dimension(1000, 1000), title: str = "ViewPort Frame",
                  color: Color = Color(255, 255, 255)):
@@ -494,3 +505,9 @@ class LegacyProjectWindow(PyNamical):
     def start(self):
         self._tk.protocol("WM_DELETE_WINDOW", self._close_parent_close)
         self._tk.mainloop()
+
+
+if USE_OPENGL:
+    ProjectWindow = OpenGLProjectWindow
+else:
+    ProjectWindow = LegacyProjectWindow
