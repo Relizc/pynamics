@@ -13,6 +13,8 @@ from .sound import *
 from . import utils
 import pickle
 
+Logger.init()
+
 import os
 # Aliases
 Dim = Dimension

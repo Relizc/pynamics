@@ -3,7 +3,7 @@ import random
 import uuid
 
 ctx = pn.GameManager(dimensions=pn.Dim(960, 540), event_tracker=True, tps=128)
-server = pn.DedicatedServerV2(ctx, address="10.27.78.144")
+server = pn.DedicatedServerV2(ctx, address="192.168.242.1")
 server.password = "Noob114514"
 ctx.NUM = random.randint(0, 2**32)
 
@@ -63,6 +63,7 @@ def join(event, client: pn.ConnectedClient):
 
 
     n = pn.TopViewPhysicsBody(ctx, x=100, y=270, width=50, height=50, mass=5, color="white")
+    client.sync(n)
 
     @n.add_event_listener(event=pn.EventType.COLLIDE)
     def col(event, object):

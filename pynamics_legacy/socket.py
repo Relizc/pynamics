@@ -667,6 +667,7 @@ class DedicatedServerV2(PyNamical):
         Logger.print(f"Listening on {self.address}:{self.port}", prefix="[DedicatedServer]")
 
         while True:
+            print("waiting")
             connection, ip = self.server.accept()
             print("accepting")
             thread = threading.Thread(target=self.client_handle, args=(connection, ip))
@@ -680,6 +681,8 @@ class DedicatedServerV2(PyNamical):
         if not isinstance(packet, P_UpstreamStayAlive):
             Logger.print(f"&aDownstream &b<- {ip[0]}:{ip[1]} : {packet} ({H_FormatBytes(packet.size())})",
                             prefix="[DedicatedServer]")
+        else:
+            Logger.print(f"{ip[0]}:{ip[1]} -> Stay Alive", prefix="[DedicatedServer]")
         
         packet.handle(self, conn, ip)
         conn.close()
@@ -858,7 +861,9 @@ class DedicatedClient(PyNamical):
                 if len(self.packets) > 0:
 
                     p = self.packets.pop(0)
-                    self.true_send(p)
+
+                    x = threading.Thread(target=lambda: self.true_send(p))
+                    x.start()
             except Exception as e:
                 Logger.print(f"Problem with packet broadcaster: {e}", channel=4)
 
@@ -900,6 +905,7 @@ class DedicatedClient(PyNamical):
             self.H_pinger_thread = threading.Thread(target=self.H_pinger)
             self.H_pinger_thread.start()
 
+
         try:
             
             a = time.time()
@@ -909,11 +915,13 @@ class DedicatedClient(PyNamical):
             self._loss += 1
             Logger.print(f"Unable to send packet", channel=4)
             self.socket.close()
+
+
         self._tx += 1
         try:
             data = self.socket.recv(2**20)
 
-            print(data)
+            #print(data)
 
             if len(data) > 0:
                 self.latency = time.time() - a
@@ -941,8 +949,11 @@ class DedicatedClient(PyNamical):
             
             # self.p = threading.Thread(target=self.true_send, args=(packet,))
             # self.p.start()
+
+
             
             self.packets.append(packet)
+
             
             
         except Exception as e:

@@ -567,7 +567,7 @@ Tick DeltaTime: {self.parent.deltatime}""", font=("Courier", 14))
     def _tick_packeting_op(self):
         if isinstance(self.parent.client, DedicatedClient):
             if self.parent.client.connected:
-                self._network.config(text=f"rx: {self.parent.client._rx}, tx: {self.parent.client._tx}, loss: {self.parent.client._loss} ({round((self.parent.client._loss / max(1, self.parent.client._tx)) * 100, 2)}%) / {int(self.parent.client.latency * 1000)}ms")
+                self._network.config(text=f"rx: {self.parent.client._rx}, tx: {self.parent.client._tx}, loss: {self.parent.client._loss} ({round((self.parent.client._loss / max(1, self.parent.client._tx)) * 100, 2)}%) / {int(self.parent.client.latency * 1000)}ms ({len(self.parent.client.packets)} in queue)")
                 self.parent.client._rx = 0
                 self.parent.client._tx = 0
                 self.parent.client._loss = 0
