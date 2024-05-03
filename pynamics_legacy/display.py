@@ -3,6 +3,7 @@ from .gamemanager import GameManager
 from .dimensions import Dimension, Dimension2d, Color
 from .interface import PyNamical
 from .logger import Logger
+from .styling import StyleLoader
 from .gameobject import *
 from PIL import ImageTk
 from tkinter import NW
@@ -102,6 +103,8 @@ class _base_OpenGL_Frame(OpenGLFrame):
         self.parent = parent
         self.renderable = []
 
+        self.texture_handler = {}
+
     # Overriding OpenGLFrame
     def initgl(self):
         glViewport(0, 0, self.width, self.height)
@@ -121,100 +124,148 @@ class _base_OpenGL_Frame(OpenGLFrame):
         glEnable(GL_BLEND)
         #glEnable(GL_LINE_SMOOTH)
 
+
     # Overriding OpenGLFrame
     def redraw(self):
         glClear(GL_COLOR_BUFFER_BIT)
-        #glLoadIdentity()
 
-        for i in self.parent.parent.objects:
+        for i in self.parent.parent.displayorder:
 
-            self.parent._checks += 1
+            try:
+                glColor4f(1.0, 1.0, 1.0, 1.0)
+                overridecolor = StyleLoader.get_style(i, "color")
+                if overridecolor is not None:
+                    glColor4f(*overridecolor)
 
-            if (i.position.x + i.size.x < -10 or i.position.y + i.size.y < -10) or (i.position.x > self.parent.parent.dimensions.x + 10 or i.position.y > self.parent.parent.dimensions.y + 10):
-                if i.destroy_outside_boundary:
-                    i.delete()
-                continue
-
-            f = False
-            for n in self.parent.ignore_render:
-                if isinstance(i, n):
-                    f = True
-            if f:
-                continue
-
-            if isinstance(i, Image):
-                for n in range(i.image.texture.width):
-                    for m in range(i.image.texture.height):
-                        # print(n, m)
-                        glBegin(GL_POINTS)
-                        f = i.image.color_content(n, m)
-                        glColor4f(_1x(f[0]), _1x(f[1]), _1x(f[2]), _1x(f[3]))
-                        glVertex2f(i.x + n, i.y + m)
-                        glEnd()
-
-            elif isinstance(i, Particle):
-                sides = i.circle_steps
-                radius = i.radius
-                glBegin(GL_POLYGON)
-                glColor3f(1.0, 1.0, 1.0)
-                for _ in range(sides):
-                    cosine = radius * math.cos(_ * 2 * math.pi / sides) + i.x
-                    sine = radius * math.sin(_ * 2 * math.pi / sides) + i.y
-                    glVertex2f(cosine, sine)
-                glEnd()
-
-
-            elif isinstance(i, Text):
-                pass
-
-            elif isinstance(i, GameObject):
-                glBegin(GL_POLYGON)
-                glColor3f(1.0, 1.0, 1.0)
-                for j in i.points:
-                    a = j[0]
-                    glVertex2f(a[0] + i.x, a[1] + i.y)
-                glEnd()
-
-            if i.start_debug_highlight_tracking:
-                glBegin(GL_POLYGON)
-                glColor4f(0.0, 1.0, 0.0, 0.5)
-                glVertex2f(i.x, i.y)
-                glVertex2f(i.x + i.size.x, i.y)
-                glVertex2f(i.x + i.size.x, i.y + i.size.y)
-                glVertex2f(i.x, i.y + i.size.y)
-                glEnd()
-
-                glLineWidth(2)
-                glBegin(GL_LINE_STRIP)
-                glColor4f(1.0, 0.0, 1.0, 1.0)
-                glVertex2f(0, i.y)
-                glVertex2f(self.parent.parent.width, i.y)
-                glEnd()
-
-                glBegin(GL_LINE_STRIP)
-                glColor4f(1.0, 0.0, 1.0, 1.0)
-                glVertex2f(i.x, 0)
-                glVertex2f(i.x, self.parent.parent.height)
-                glEnd()
-
-                if isinstance(i, PhysicsBody):
-                    glLineWidth(3)
-                    glBegin(GL_LINE_STRIP)
-                    glColor3f(0.0, 0.0, 1.0)
-                    glVertex2f(i.x, i.y)
-                    dx, dy = i.velocity.cart()
-                    glVertex2f(i.x + dx * 5, i.y + dy * -5)
-                    glEnd()
-
-                    glBegin(GL_LINE_STRIP)
-                    glColor3f(1, 0, 0)
-                    glVertex2f(i.x, i.y)
-                    dx, dy = i.force.cart()
-                    glVertex2f(i.x + dx * 5, i.y + dy * -5)
-                    glEnd()
+                self.draw(i)
+            except Exception as e:
+                Logger.print(f"Render Error while rendering {i}: {e}", channel=4)
+                print(traceback.format_exc())
 
 
         glFlush()
+
+    def draw(self, i):
+        self.parent._checks += 1
+
+        if (i.position.x + i.size.x < -10 or i.position.y + i.size.y < -10) or (
+                i.position.x > self.parent.parent.dimensions.x + 10 or i.position.y > self.parent.parent.dimensions.y + 10):
+            if i.destroy_outside_boundary:
+                i.delete()
+            return
+
+        f = False
+        for n in self.parent.ignore_render:
+            if isinstance(i, n):
+                f = True
+        if f:
+            return
+
+        if isinstance(i, Image):
+            # for n in range(i.image.texture.width):
+            #     for m in range(i.image.texture.height):
+            #         # print(n, m)
+            #         glBegin(GL_POINTS)
+            #         f = i.image.color_content(n, m)
+            #         glColor4f(_1x(f[0]), _1x(f[1]), _1x(f[2]), _1x(f[3]))
+            #         glVertex2f(i.x + n, i.y + m)
+            #         glEnd()
+
+            if self.texture_handler.get(i.image.path, None) is None:
+                id = glGenTextures(1)
+                i.image.gl_bind_id = id
+                self.texture_handler[i.image.path] = id
+
+                Logger.print(f"Loading texture: {i.image.path} ({len(i.image.data)} bytes) [ID={id}]", channel=5)
+
+                glBindTexture(GL_TEXTURE_2D, id)
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
+                glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, i.image.width, i.image.height, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                             None)
+                glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, i.image.width, i.image.height, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                             i.image.data)
+                glBindTexture(GL_TEXTURE_2D, 0)
+
+            glBindTexture(GL_TEXTURE_2D, self.texture_handler[i.image.path])
+            glBegin(GL_QUADS)
+            glTexCoord2f(0, 0)
+            glVertex2f(i.x, i.y)
+            glTexCoord2f(1, 0)
+            glVertex2f(i.x + i.size.x, i.y)
+            glTexCoord2f(1, 1)
+            glVertex2f(i.x + i.size.x, i.y + i.size.y)
+            glTexCoord2f(0, 1)
+            glVertex2f(i.x, i.y + i.size.y)
+            glEnd()
+            glBindTexture(GL_TEXTURE_2D, 0)
+
+            # print(self.texture_handler)
+
+            # glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, i.image.width, i.image.height, 0,
+            # GL_RGBA, GL_UNSIGNED_BYTE, i.image.data)
+
+        elif isinstance(i, Particle):
+            sides = i.circle_steps
+            radius = i.radius
+            glBegin(GL_POLYGON)
+            for _ in range(sides):
+                cosine = radius * math.cos(_ * 2 * math.pi / sides) + i.x
+                sine = radius * math.sin(_ * 2 * math.pi / sides) + i.y
+                glVertex2f(cosine, sine)
+            glEnd()
+
+
+        elif isinstance(i, Text):
+            pass
+
+        elif isinstance(i, GameObject):
+            glBegin(GL_POLYGON)
+            glColor3f(1.0, 1.0, 1.0)
+            for j in i.points:
+                a = j[0]
+                glVertex2f(a[0] + i.x, a[1] + i.y)
+            glEnd()
+
+        if i.start_debug_highlight_tracking:
+            glBegin(GL_POLYGON)
+            glColor4f(0.0, 1.0, 0.0, 0.5)
+            glVertex2f(i.x, i.y)
+            glVertex2f(i.x + i.size.x, i.y)
+            glVertex2f(i.x + i.size.x, i.y + i.size.y)
+            glVertex2f(i.x, i.y + i.size.y)
+            glEnd()
+
+            glLineWidth(2)
+            glBegin(GL_LINE_STRIP)
+            glColor4f(1.0, 0.0, 1.0, 1.0)
+            glVertex2f(0, i.y)
+            glVertex2f(self.parent.parent.width, i.y)
+            glEnd()
+
+            glBegin(GL_LINE_STRIP)
+            glColor4f(1.0, 0.0, 1.0, 1.0)
+            glVertex2f(i.x, 0)
+            glVertex2f(i.x, self.parent.parent.height)
+            glEnd()
+
+            if isinstance(i, PhysicsBody):
+                glLineWidth(3)
+                glBegin(GL_LINE_STRIP)
+                glColor3f(0.0, 0.0, 1.0)
+                glVertex2f(i.x, i.y)
+                dx, dy = i.velocity.cart()
+                glVertex2f(i.x + dx * 5, i.y + dy * -5)
+                glEnd()
+
+                glBegin(GL_LINE_STRIP)
+                glColor3f(1, 0, 0)
+                glVertex2f(i.x, i.y)
+                dx, dy = i.force.cart()
+                glVertex2f(i.x + dx * 5, i.y + dy * -5)
+                glEnd()
+
+
 
 
 
@@ -353,7 +404,8 @@ class OpenGLProjectWindow(PyNamical):
         #     self.surface.tag_raise(f"ID{i.blit_id}")
 
 
-
+    def remove(self):
+        print("revmoved " + str(self))
 
 
 
@@ -453,8 +505,8 @@ class LegacyProjectWindow(PyNamical):
 
                     # If its a thing with ass image. why would u do it like this but not making another image class
                     if isinstance(i, Image):
-                        if rotated:
-                            i.content = ImageTk.PhotoImage(i.image.rotate(i.rotation))
+                        # if rotated:
+                        #     i.content = ImageTk.PhotoImage(i.image.rotate(i.rotation))
                         self.surface.create_image(cam.x, cam.y, i.image)
 
                     # If its text
@@ -505,9 +557,3 @@ class LegacyProjectWindow(PyNamical):
     def start(self):
         self._tk.protocol("WM_DELETE_WINDOW", self._close_parent_close)
         self._tk.mainloop()
-
-
-if USE_OPENGL:
-    ProjectWindow = OpenGLProjectWindow
-else:
-    ProjectWindow = LegacyProjectWindow

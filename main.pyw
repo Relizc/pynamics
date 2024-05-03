@@ -1,4 +1,4 @@
-import pynamics_legacy as pn
+
 import random
 import winsound
 import uuid
@@ -6,6 +6,11 @@ import math
 import random
 
 import time
+
+import os
+os.environ["PN_WINDOW_MODE"] = "opengl"
+
+import pynamics_legacy as pn
 
 MIN_VERSION = "1.0.0"
 

@@ -6,12 +6,15 @@ import copy
 from .events import EventPriority, EventType, KeyEvaulator
 from .interface import PyNamical, network_transferrable
 from .dimensions import Dimension, Vector2d, Color
+from .styling import color_alias
 import math
 import cmath
 import tkinter as tk
 import ctypes
 
 from PIL import Image as ImageUtils
+from OpenGL.GL import *
+import numpy as np
 
 
 import random
@@ -124,7 +127,7 @@ class GameObject(PyNamical):
                  anchor: str = "nw",
                  no_display=False,
                  zindex=1,
-                 color: str = "black",
+                 color: str = "white",
                  destroy_outside_boundary: bool = False):
         """
         :param x: The position of the GameObject, on X-Axis
@@ -153,7 +156,7 @@ class GameObject(PyNamical):
         self.rotation = rotation
         self.last_display_rotation = None
         self.this_display_position = rotation
-        self.color = color
+        self.color = color_alias(color)
         self.points = [
             ((0, 0), (0, self.size.y)),
             ((0, self.size.y), (self.size.x, self.size.y)),
@@ -248,14 +251,16 @@ class ImageTexture:
     def __init__(self, path):
         self.path = path
         self.texture = ImageUtils.open(path)
+
         self.texture = self.texture.convert("RGBA")
+        self.data = np.array(list(self.texture.getdata()), np.uint8)
 
         self.size = self.texture.size
         self.width = self.texture.width
         self.height = self.texture.height
 
     def resize(self, size, resample=None):
-        self.texture = self.texture.resize(size, resample)
+        pass
 
     def color_content(self, x, y):
         x = min(x, self.texture.width - 1)
