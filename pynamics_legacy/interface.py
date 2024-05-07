@@ -1,5 +1,6 @@
 from .styling import StyleLoader
 from .events import EventType, EventHolder
+from .logger import Logger
 import uuid as ulib
 
 def network_transferrable(clazz):
@@ -17,6 +18,7 @@ def build_class_tree():
     indegree_zero = []
     
     def dfs(fro):
+        Logger.print(f"Class Tree Builder DFS passing node {fro}", channel=5)
         fro.__real_init__ = fro.__init__
         points[fro] = fro.__base__
         if len(fro.__subclasses__()) == 0:

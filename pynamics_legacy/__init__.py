@@ -1,4 +1,4 @@
-from .display import ProjectWindow, ViewPort
+from .display import OpenGLProjectWindow, LegacyProjectWindow, USE_OPENGL
 from .gameobject import GameObject, TopViewPhysicsBody, Image, Text, TextFont, Particle
 from .gamemanager import GameManager,PhysicsBody
 from .dimensions import Dimension, Dimension2d, Vector2d, Vector, Color
@@ -12,6 +12,10 @@ from .animation import *
 from .sound import *
 from . import utils
 import pickle
+
+Logger.init()
+
+import os
 # Aliases
 Dim = Dimension
 Dim2d = Dimension2d
@@ -30,6 +34,16 @@ K_r = "r"
 K_backquote = 'quoteleft'
 
 VERSION = "1.0.0"
+
+# Typing Hint implementation
+class ProjectWindow:
+    pass
+
+if os.environ.get("PN_WINDOW_MODE", "opengl") == "legacy":
+    ProjectWindow = LegacyProjectWindow
+    Logger.print("Forced Using Legacy Tkinter Window", channel=3)
+else:
+    ProjectWindow = OpenGLProjectWindow
 
 Logger.print("&bInitialization completed.")
 Logger.print(f"&ePy&aNamics &bVersion {VERSION}")

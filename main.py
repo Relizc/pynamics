@@ -1,4 +1,4 @@
-import pynamics_legacy as pn
+
 import random
 import winsound
 import uuid
@@ -7,11 +7,16 @@ import random
 
 import time
 
+import os
+os.environ["PN_WINDOW_MODE"] = "opengl"
+
+import pynamics_legacy as pn
+
 MIN_VERSION = "1.0.0"
 
 ctx = pn.GameManager(dimensions=pn.Dim(960, 540), event_tracker=True, tps=128)
 
-ctx.ADDRESS = "10.27.78.144"
+ctx.ADDRESS = "192.168.242.1"
 ctx.PORT = 11027
 
 view = pn.ProjectWindow(ctx, size=pn.Dim(960, 540), title="Suberb Game")

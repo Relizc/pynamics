@@ -1,41 +1,36 @@
-import tkinter as tk
-from OpenGL.GL import *
-
+import time
+import tkinter
+from OpenGL import GL
 from pyopengltk import OpenGLFrame
 
+from OpenGL.GL import *
 
-class frame(OpenGLFrame):
+class AppOgl(OpenGLFrame):
 
     def initgl(self):
-        glViewport(0, 0, self.width, self.height)
-        glClearColor(0.0, 1.0, 0.0, 0.0)
-
-        # setup projection matrix
-        glMatrixMode(GL_PROJECTION)
-        glLoadIdentity()
-        glOrtho(0, self.width, self.height, 0, -1, 1)
-
-        # setup identity model view matrix
-        glMatrixMode(GL_MODELVIEW)
-        glLoadIdentity()
+        """Initalize gl states when the frame is created"""
+        GL.glViewport(0, 0, self.width, self.height)
+        GL.glClearColor(0.0, 1.0, 0.0, 0.0)
+        self.start = time.time()
+        self.nframes = 0
 
     def redraw(self):
-        glClear(GL_COLOR_BUFFER_BIT)
+        """Render a single frame"""
+        GL.glClear(GL.GL_COLOR_BUFFER_BIT)
+        tm = time.time() - self.start
+        self.nframes += 1
+        print("fps",self.nframes / tm, end="\r" )
 
-        glLoadIdentity()
-
-        glBegin(GL_LINES)
-        glColor3f(1.0, 0.0, 3.0)
-        glVertex2f(200, 100)
-        glVertex2f(100, 100)
-        glEnd()
-        #gl_Flush()
-
-        print(1)
+    def image(self):
+        glGenTextures(1)
 
 
 if __name__ == '__main__':
-    root = tk.Tk()
-    app = frame(root, width=500, height=500)
-    app.pack(fill=tk.BOTH, expand=tk.YES)
+    root = tkinter.Tk()
+    app = AppOgl(root, width=320, height=200)
+    app.pack(fill=tkinter.BOTH, expand=tkinter.YES)
+    app.animate = 1
+    app.after(100, app.printContext)
+    app.after(100, app.image)
     app.mainloop()
+

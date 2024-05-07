@@ -6,12 +6,15 @@ import copy
 from .events import EventPriority, EventType, KeyEvaulator
 from .interface import PyNamical, network_transferrable
 from .dimensions import Dimension, Vector2d, Color
+from .styling import color_alias
 import math
 import cmath
 import tkinter as tk
 import ctypes
+
 from PIL import Image as ImageUtils
-from PIL import ImageTk
+from OpenGL.GL import *
+import numpy as np
 
 
 import random
@@ -116,6 +119,7 @@ def doIntersect(p1, q1, p2, q2):
 @socket_whitelisted_attributes("position", "velocity", "hidden")
 @network_transferrable
 class GameObject(PyNamical):
+
     def __init__(self, parent: PyNamical, x: float = 0, y: float = 0, width: float = 10, height: float = 10, contents: str = None,
                  rotation = 0,
                  from_points: tuple = None,
@@ -123,7 +127,7 @@ class GameObject(PyNamical):
                  anchor: str = "nw",
                  no_display=False,
                  zindex=1,
-                 color: str = "black",
+                 color: str = "white",
                  destroy_outside_boundary: bool = False):
         """
         :param x: The position of the GameObject, on X-Axis
@@ -143,10 +147,7 @@ class GameObject(PyNamical):
         self.size = Dimension(width, height)
         self.destroy_outside_boundary = destroy_outside_boundary
         self.bugid = 0
-        if contents != None:
-            self.content = ImageTk.PhotoImage(ImageUtils.open(contents))
-        else:
-            self.content = None
+        self.content = None
         self.hidden = no_display
         self.absolute = Dimension(x, y)
         self.blit_id = None
@@ -155,7 +156,7 @@ class GameObject(PyNamical):
         self.rotation = rotation
         self.last_display_rotation = None
         self.this_display_position = rotation
-        self.color = color
+        self.color = color_alias(color)
         self.points = [
             ((0, 0), (0, self.size.y)),
             ((0, self.size.y), (self.size.x, self.size.y)),
@@ -180,7 +181,7 @@ class GameObject(PyNamical):
             try:
                 self.parent.remove_object(self)
                 self.parent.displayorder.remove(self)
-                self.parent.window.remove(self)
+                #self.parent.window.remove(self)
                 self.unbind()
             except Exception as e:
                 print(e)
@@ -239,19 +240,32 @@ class GameObject(PyNamical):
                                      tags=f"DEBUG@{self._debughighlight}")
 
     def debug_highlight(self):
-        self._debughighlight = random.randint(-2**64, 2**64)
-        self.parent.create_rectangle(self.position.x, self.position.y, self.position.x + self.size.x, self.position.y + self.size.y,
-                                     outline="green",
-                                     width=2,
-                                     tags=f"DEBUG@{self._debughighlight}")
         self.start_debug_highlight_tracking = True
 
     def debug_unhighlight(self):
         self.start_debug_highlight_tracking = False
-        self.parent.delete_draws(f"DEBUG@{self._debughighlight}")
 
 
+class ImageTexture:
 
+    def __init__(self, path):
+        self.path = path
+        self.texture = ImageUtils.open(path)
+
+        self.texture = self.texture.convert("RGBA")
+        self.data = np.array(list(self.texture.getdata()), np.uint8)
+
+        self.size = self.texture.size
+        self.width = self.texture.width
+        self.height = self.texture.height
+
+    def resize(self, size, resample=None):
+        pass
+
+    def color_content(self, x, y):
+        x = min(x, self.texture.width - 1)
+        y = min(y, self.texture.height - 1)
+        return self.texture.getpixel((x, y))
 
 class Image(GameObject):
 
@@ -259,33 +273,26 @@ class Image(GameObject):
                  path: str = None,
                  ratio: int = 1,
                  **kwargs):
-        
-        self.image_path = path
-        self.image = ImageUtils.open(self.image_path).convert("RGBA")
-        self.color = Color()
-        self.alpha = 255
+
+        self.image = ImageTexture(path)
 
         super().__init__(parent, x, y, self.image.size[0], self.image.size[1], contents=None, **kwargs)
 
         w = self.image.width
         h = self.image.height
 
-
-
         if width != -1:
             w = width
         if height != -1:
             h = height
 
-        self.image = self.image.resize((int(w * ratio), int(h * ratio)), resample=ImageUtils.BOX)
+        self.image.resize((int(w * ratio), int(h * ratio)), resample=ImageUtils.BOX)
 
         self.size.x = int(w * ratio)
         self.size.y = int(h * ratio)
 
-        self.content = ImageTk.PhotoImage(self.image.rotate(self.rotation))
-
     def __repr__(self):
-        return f"Image(file={self.image_path})"
+        return f"Image(file={self.image.path})"
 
 
 
@@ -600,11 +607,13 @@ class TopViewPhysicsBody(PhysicsBody):
 
 class Particle(PhysicsBody):
 
-    def __init__(self, parent, x = 0, y = 0, r = 10, **kwargs):
+    def __init__(self, parent, x = 0, y = 0, r = 10, circle_steps=64, **kwargs):
         
         self.radius = r
         self.r = self.radius # Alias
         super().__init__(parent, x, y, r*2, r*2, **kwargs)
+
+        self.circle_steps = circle_steps
         
 
     def reflect_vector(self):

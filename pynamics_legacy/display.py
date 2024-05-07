@@ -3,10 +3,12 @@ from .gamemanager import GameManager
 from .dimensions import Dimension, Dimension2d, Color
 from .interface import PyNamical
 from .logger import Logger
-from .gameobject import GameObject, Particle, Text, TopViewPhysicsBody
+from .styling import StyleLoader
+from .gameobject import *
 from PIL import ImageTk
 from tkinter import NW
 import time
+import math
 import traceback
 
 USE_OPENGL = False
@@ -22,6 +24,11 @@ except ImportError as e:
     Logger.print(f"PyOpenGL occured an error. ProjectWindow is using legacy tkinter canvas", channel=3)
 
 import random
+
+
+def _1x(x):
+    if x == 0: return 0.0
+    return (x + 1) / 256
 
 
 class ViewPort(PyNamical):
@@ -51,6 +58,9 @@ def rgb_to_hex(i):
 class Renderable:
 
     LINE = 0
+    IMAGE = 1
+    TEXT = 2
+
     property = 0
 
     def __init__(self):
@@ -67,6 +77,21 @@ class _RenderableLine(Renderable):
         self.x = x
         self.y = y
 
+class _RenderableImage(Renderable):
+
+    property = Renderable.IMAGE
+
+    def __init__(self, x, y, t):
+        super().__init__()
+        self.x = x
+        self.y = y
+        self.texture = t
+
+class _RenderableImage(Renderable):
+
+    property = Renderable.TEXT
+
+
 if not USE_OPENGL:
     OpenGLFrame = object
 
@@ -77,6 +102,8 @@ class _base_OpenGL_Frame(OpenGLFrame):
         OpenGLFrame.__init__(self, root, width=size.x, height=size.y)
         self.parent = parent
         self.renderable = []
+
+        self.texture_handler = {}
 
     # Overriding OpenGLFrame
     def initgl(self):
@@ -92,31 +119,172 @@ class _base_OpenGL_Frame(OpenGLFrame):
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
 
+        glEnable(GL_TEXTURE_2D)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+        glEnable(GL_BLEND)
+        #glEnable(GL_LINE_SMOOTH)
+
+
     # Overriding OpenGLFrame
     def redraw(self):
         glClear(GL_COLOR_BUFFER_BIT)
-        #glLoadIdentity()
 
-        for i in self.renderable:
-            if i.property == Renderable.LINE:
-                glBegin(GL_LINES)
-                glColor3f(1.0, 1.0, 1.0)
-                glVertex2f(i.a, i.b)
-                glVertex2f(i.x, i.y)
-                glEnd()
+        for i in self.parent.parent.displayorder:
+
+            try:
+                glColor4f(1.0, 1.0, 1.0, 1.0)
+                overridecolor = StyleLoader.get_style(i, "color")
+                if overridecolor is not None:
+                    glColor4f(*overridecolor)
+
+                self.draw(i)
+            except Exception as e:
+                Logger.print(f"Render Error while rendering {i}: {e}", channel=4)
+                print(traceback.format_exc())
+
 
         glFlush()
 
+    def draw(self, i):
+        self.parent._checks += 1
+
+        if (i.position.x + i.size.x < -10 or i.position.y + i.size.y < -10) or (
+                i.position.x > self.parent.parent.dimensions.x + 10 or i.position.y > self.parent.parent.dimensions.y + 10):
+            if i.destroy_outside_boundary:
+                i.delete()
+            return
+
+        f = False
+        for n in self.parent.ignore_render:
+            if isinstance(i, n):
+                f = True
+        if f:
+            return
+
+        if isinstance(i, Image):
+            # for n in range(i.image.texture.width):
+            #     for m in range(i.image.texture.height):
+            #         # print(n, m)
+            #         glBegin(GL_POINTS)
+            #         f = i.image.color_content(n, m)
+            #         glColor4f(_1x(f[0]), _1x(f[1]), _1x(f[2]), _1x(f[3]))
+            #         glVertex2f(i.x + n, i.y + m)
+            #         glEnd()
+
+            if self.texture_handler.get(i.image.path, None) is None:
+                id = glGenTextures(1)
+                i.image.gl_bind_id = id
+                self.texture_handler[i.image.path] = id
+
+                Logger.print(f"Loading texture: {i.image.path} ({len(i.image.data)} bytes) [ID={id}]", channel=5)
+
+                glBindTexture(GL_TEXTURE_2D, id)
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
+                glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, i.image.width, i.image.height, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                             None)
+                glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, i.image.width, i.image.height, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                             i.image.data)
+                glBindTexture(GL_TEXTURE_2D, 0)
+
+            glBindTexture(GL_TEXTURE_2D, self.texture_handler[i.image.path])
+            glBegin(GL_QUADS)
+            glTexCoord2f(0, 0)
+            glVertex2f(i.x, i.y)
+            glTexCoord2f(1, 0)
+            glVertex2f(i.x + i.size.x, i.y)
+            glTexCoord2f(1, 1)
+            glVertex2f(i.x + i.size.x, i.y + i.size.y)
+            glTexCoord2f(0, 1)
+            glVertex2f(i.x, i.y + i.size.y)
+            glEnd()
+            glBindTexture(GL_TEXTURE_2D, 0)
+
+            # print(self.texture_handler)
+
+            # glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, i.image.width, i.image.height, 0,
+            # GL_RGBA, GL_UNSIGNED_BYTE, i.image.data)
+
+        elif isinstance(i, Particle):
+            sides = i.circle_steps
+            radius = i.radius
+            glBegin(GL_POLYGON)
+            for _ in range(sides):
+                cosine = radius * math.cos(_ * 2 * math.pi / sides) + i.x
+                sine = radius * math.sin(_ * 2 * math.pi / sides) + i.y
+                glVertex2f(cosine, sine)
+            glEnd()
 
 
-    def delete(self, obj):
-        pass
+        elif isinstance(i, Text):
+            pass
 
-    def tag_raise(self, tag):
-        pass
+        elif isinstance(i, GameObject):
+            glBegin(GL_POLYGON)
+            glColor3f(1.0, 1.0, 1.0)
+            for j in i.points:
+                a = j[0]
+                glVertex2f(a[0] + i.x, a[1] + i.y)
+            glEnd()
+
+        if i.start_debug_highlight_tracking:
+            glBegin(GL_POLYGON)
+            glColor4f(0.0, 1.0, 0.0, 0.5)
+            glVertex2f(i.x, i.y)
+            glVertex2f(i.x + i.size.x, i.y)
+            glVertex2f(i.x + i.size.x, i.y + i.size.y)
+            glVertex2f(i.x, i.y + i.size.y)
+            glEnd()
+
+            glLineWidth(2)
+            glBegin(GL_LINE_STRIP)
+            glColor4f(1.0, 0.0, 1.0, 1.0)
+            glVertex2f(0, i.y)
+            glVertex2f(self.parent.parent.width, i.y)
+            glEnd()
+
+            glBegin(GL_LINE_STRIP)
+            glColor4f(1.0, 0.0, 1.0, 1.0)
+            glVertex2f(i.x, 0)
+            glVertex2f(i.x, self.parent.parent.height)
+            glEnd()
+
+            if isinstance(i, PhysicsBody):
+                glLineWidth(3)
+                glBegin(GL_LINE_STRIP)
+                glColor3f(0.0, 0.0, 1.0)
+                glVertex2f(i.x, i.y)
+                dx, dy = i.velocity.cart()
+                glVertex2f(i.x + dx * 5, i.y + dy * -5)
+                glEnd()
+
+                glBegin(GL_LINE_STRIP)
+                glColor3f(1, 0, 0)
+                glVertex2f(i.x, i.y)
+                dx, dy = i.force.cart()
+                glVertex2f(i.x + dx * 5, i.y + dy * -5)
+                glEnd()
+
+
+
+
+
+
+    def set_color(self, color: Color):
+        glClearColor(_1x(color.r), _1x(color.g), _1x(color.b), color.a)
 
     def create_line(self, a, b, x, y, *args, **kwargs):
         self.renderable.append(_RenderableLine(a, b, x, y))
+
+    def create_image(self, x, y, texture):
+        #print(x, y, texture)
+        self.renderable.append(_RenderableImage(x, y, texture))
+
+
+
+
+    def create_text(self, x, y, **kwargs):
+        pass
 
 
 class OpenGLProjectWindow(PyNamical):
@@ -165,8 +333,11 @@ class OpenGLProjectWindow(PyNamical):
         try:
             self.real_blit()
         except Exception as e:
-            Logger.print(f"Error in printing object: {e}", channel=4)
-            print(traceback.format_exc())
+            if isinstance(e, GLError):
+                c = str(e).replace('\n', '')
+                Logger.print(f"OpenGL Error : {c}", channel=4)
+            else:
+                Logger.print(f"Error in printing object: {e}", channel=4)
 
     def real_blit(self):
 
@@ -174,83 +345,70 @@ class OpenGLProjectWindow(PyNamical):
         # self.surface.delete("all")
         self.surface.renderable = []
 
-
-
         if self._curcolor != self.color:
             self._curcolor = Color(self.color.r, self.color.g, self.color.b)
-            #print(self.color)
-            self.surface.config(bg=str(self.color))
+            self.surface.set_color(self._curcolor)
 
 
         for i in self.parent.ghosts:
             self.surface.delete(f"ID{i.blit_id}")
 
 
-        for i in self.parent.objects:
-
-            self._checks += 1
-
-            if (i.position.x + i.size.x < -10 or i.position.y + i.size.y < -10) or (i.position.x > self.parent.dimensions.x + 10 or i.position.y > self.parent.dimensions.y + 10):
-                self.surface.delete(f"ID{i.blit_id}")
-                if i.destroy_outside_boundary:
-                    i.delete()
-                continue
-
-            f = False
-            for n in self.ignore_render:
-                if isinstance(i, n):
-                    f = True
-            if f:
-                continue
+        # Object checks are migrated to opengl's draw function
 
 
-            if isinstance(i, GameObject):
-
-                a = time.time()
 
 
-                if i.clear_blit:
-                    self.surface.delete(f"ID{i.blit_id}")
-
-                if i.start_debug_highlight_tracking:
-                    i._debug_blit_once()
-
-                g = random.randint(-2 ** 64, 2 ** 64)
-
-                cam = self.viewport.shift(i.position)
-
-                # If its a thing with ass image. why would u do it like this but not making another image class
-                if i.content is not None:
-                    if rotated:
-                        i.content = ImageTk.PhotoImage(i.image.rotate(i.rotation))
-                    self.surface.create_image((cam.x, cam.y), image=i.content, anchor=i.anchor, tags=f"ID{g}")
-
-                # If its text
-                elif isinstance(i, Text):
-                    self.surface.create_text(i.x, i.y, text=i.text, fill=i.font.color, font=str(i.font), tags=f"ID{g}")
-
-                # If its a Particle
-                elif isinstance(i, Particle):
-                    self.surface.create_oval(i.x - i.r, i.y - i.r, i.x + i.r, i.y + i.r, tags=f"ID{g}")
-
-                # If its a TopLevelWhateverBody
-                elif isinstance(i, TopViewPhysicsBody):
-                    self.surface.create_rectangle(i.x, i.y, i.x + i.size.x, i.y + i.size.y, fill="white", outline="white", tags=f"ID{g}")
-
-                # If its a regular gameobject
-                elif len(i.points) > 0:
-                    for j in i.points:
-                        pos1 = j[0]
-                        pos2 = j[1]
-                        self.surface.create_line(pos1[0] + i.x, pos1[1] + i.y, pos2[0] + i.x, pos2[1] + i.y, fill=i.color)
-
-                i.last_display_position = Dimension(i.position.x, i.position.y)
-                i.last_display_rotation = i.rotation
+            # if isinstance(i, GameObject):
+            #
+            #     a = time.time()
+            #
+            #     if i.start_debug_highlight_tracking:
+            #         i._debug_blit_once()
+            #
+            #     g = random.randint(-2 ** 64, 2 ** 64)
+            #
+            #     cam = self.viewport.shift(i.position)
+            #
+            #     rotated = i.rotation != i.last_display_rotation
+            #
+            #     # If its a thing with ass image. why would u do it like this but not making another image class
+            #     if isinstance(i, Image):
+            #         self.surface.create_image(cam.x, cam.y, i.image) # Image -> ImageTexture -> PIL's Image
+            #
+            #     # If its text
+            #     elif isinstance(i, Text):
+            #         self.surface.create_text(i.x, i.y, text=i.text, fill=i.font.color, font=str(i.font), tags=f"ID{g}")
+            #
+            #     # If its a Particle
+            #     elif isinstance(i, Particle):
+            #         self.surface.create_oval(i.x - i.r, i.y - i.r, i.x + i.r, i.y + i.r, tags=f"ID{g}")
+            #
+            #     # If its a TopLevelWhateverBody
+            #     elif isinstance(i, TopViewPhysicsBody):
+            #         self.surface.create_rectangle(i.x, i.y, i.x + i.size.x, i.y + i.size.y, fill="white", outline="white", tags=f"ID{g}")
+            #
+            #     # If its a regular gameobject
+            #     elif len(i.points) > 0:
+            #         for j in i.points:
+            #             pos1 = j[0]
+            #             pos2 = j[1]
+            #             self.surface.create_line(pos1[0] + i.x, pos1[1] + i.y, pos2[0] + i.x, pos2[1] + i.y, fill=i.color, )
+            #
+            #     i.last_display_position = Dimension(i.position.x, i.position.y)
+            #     i.last_display_rotation = i.rotation
 
         #
         # # TODO: lag
         # for i in self.parent.displayorder:
         #     self.surface.tag_raise(f"ID{i.blit_id}")
+
+
+    def remove(self):
+        print("revmoved " + str(self))
+
+
+
 
 
 
@@ -296,12 +454,6 @@ class LegacyProjectWindow(PyNamical):
 
         if self._curcolor != self.color:
             self._curcolor = Color(self.color.r, self.color.g, self.color.b)
-            #print(self.color)
-            self.surface.config(bg=str(self.color))
-
-
-        for i in self.parent.ghosts:
-            self.surface.delete(f"ID{i.blit_id}")
 
 
         for i in self.parent.objects:
@@ -352,10 +504,10 @@ class LegacyProjectWindow(PyNamical):
                     cam = self.viewport.shift(i.position)
 
                     # If its a thing with ass image. why would u do it like this but not making another image class
-                    if i.content is not None:
-                        if rotated:
-                            i.content = ImageTk.PhotoImage(i.image.rotate(i.rotation))
-                        self.surface.create_image((cam.x, cam.y), image=i.content, anchor=i.anchor, tags=f"ID{g}")
+                    if isinstance(i, Image):
+                        # if rotated:
+                        #     i.content = ImageTk.PhotoImage(i.image.rotate(i.rotation))
+                        self.surface.create_image(cam.x, cam.y, i.image)
 
                     # If its text
                     elif isinstance(i, Text):
@@ -405,9 +557,3 @@ class LegacyProjectWindow(PyNamical):
     def start(self):
         self._tk.protocol("WM_DELETE_WINDOW", self._close_parent_close)
         self._tk.mainloop()
-
-
-if USE_OPENGL:
-    ProjectWindow = OpenGLProjectWindow
-else:
-    ProjectWindow = LegacyProjectWindow
