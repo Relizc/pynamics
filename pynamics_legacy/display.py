@@ -10,6 +10,7 @@ from tkinter import NW
 import time
 import math
 import traceback
+import os
 
 USE_OPENGL = False
 
@@ -22,6 +23,9 @@ except ModuleNotFoundError:
 except ImportError as e:
     Logger.print(f"PyOpenGL: {e}", channel=4)
     Logger.print(f"PyOpenGL occured an error. ProjectWindow is using legacy tkinter canvas", channel=3)
+
+if not USE_OPENGL:
+    os.environ.setdefault("PN_WINDOW_MODE", "legacy")
 
 import random
 
@@ -93,7 +97,13 @@ class _RenderableImage(Renderable):
 
 
 if not USE_OPENGL:
-    OpenGLFrame = object
+
+    class Dummy:
+
+        def __init__(self, arg0, width, height):
+            pass
+
+    OpenGLFrame = Dummy
 
 class _base_OpenGL_Frame(OpenGLFrame):
 

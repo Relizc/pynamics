@@ -13,7 +13,6 @@ import tkinter as tk
 import ctypes
 
 from PIL import Image as ImageUtils
-from OpenGL.GL import *
 import numpy as np
 
 
