@@ -330,6 +330,8 @@ class OpenGLProjectWindow(PyNamical):
         #self._tk.protocol("WM_DELETE_WINDOW", self._close_parent_close)
         #self._tk.mainloop()
 
+    
+
     def update(self):
         pass
 
