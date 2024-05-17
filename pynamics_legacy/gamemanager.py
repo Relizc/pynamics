@@ -5,7 +5,7 @@ from .socket import DedicatedServer, DedicatedServerV2
 from .gameobject import *
 from .interface import PyNamical
 from .events import EventType, Executable, KeyEvaulator, change_debug_attacher
-from .debugger import Debugger
+from .debugger import Debugger, Sandbox
 from .logger import Logger
 import ctypes
 import threading
@@ -99,7 +99,7 @@ class GameManager(PyNamical):
 
             if self.debug == None:
                 Logger.print("Debugger not found! Creating window instance", channel=5)
-                self.debug = Debugger(self, enable_event_listener=self.event_track)
+                self.debug = Sandbox(self, enable_event_listener=self.event_track)
 
                 change_debug_attacher(self.debug._call_callevent)
 
