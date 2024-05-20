@@ -8,7 +8,7 @@ import random
 import time
 
 import os
-os.environ["PN_WINDOW_MODE"] = "opengl"
+os.environ["PN_WINDOW_MODE"] = "legacy"
 
 import pynamics_legacy as pn
 

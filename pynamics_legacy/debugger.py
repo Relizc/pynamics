@@ -623,4 +623,26 @@ Tick DeltaTime: {self.parent.deltatime}""", font=("Courier", 14))
         self.run_thread = threading.Thread(target=self._run)
         self.run_thread.start()
 
-            
+class DebuggerNotebook:
+
+    def __init__(self) -> None:
+        None
+
+class DebuggerDirectory:
+
+    def __init__(self) -> None:
+        pass
+
+    
+class Sandbox():
+
+    def __init__(self, parent, enable_event_listener: bool=False, allow_edits: bool=False) -> None:
+
+        self.root = tk.Tk()
+
+        self.menu_browser = ttk.Treeview()
+
+        self.root.mainloop()
+
+    def _call_callevent(arg1, arg2, arg3):
+        pass
