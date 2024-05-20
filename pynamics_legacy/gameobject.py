@@ -7,6 +7,7 @@ from .events import EventPriority, EventType, KeyEvaulator
 from .interface import PyNamical, network_transferrable
 from .dimensions import Dimension, Vector2d, Color
 from .styling import color_alias
+from .logger import Logger
 import math
 import cmath
 import tkinter as tk
@@ -176,14 +177,14 @@ class GameObject(PyNamical):
         
 
     def delete(self):
-        if isinstance(self.parent.objects, list):
+        if isinstance(self.parent.objects, set):
             try:
                 self.parent.remove_object(self)
                 self.parent.displayorder.remove(self)
                 #self.parent.window.remove(self)
                 self.unbind()
-            except Exception as e:
-                print(e)
+            except KeyError as e:
+                Logger.warn(f"Attempting to remove {self} which does not have any active parents or hooked GameManager. Delete operation ignored")
                 pass
             
             del self
@@ -244,22 +245,47 @@ class GameObject(PyNamical):
     def debug_unhighlight(self):
         self.start_debug_highlight_tracking = False
 
+IMAGETEXTURE_TEXTURE_CACHE = {}
+IMAGETEXTURE_PIL_CACHE = {}
 
 class ImageTexture:
 
-    def __init__(self, path):
+    def __init__(self, path, crop_resize=True, crop=None):
         self.path = path
-        self.texture = ImageUtils.open(path)
 
-        self.texture = self.texture.convert("RGBA")
-        self.data = np.array(list(self.texture.getdata()), np.uint8)
+        self.crop_resize = crop_resize
+
+
+
+        if not self.path in IMAGETEXTURE_TEXTURE_CACHE:
+
+            self.texture = ImageUtils.open(path)
+
+            self.texture = self.texture.convert("RGBA")
+            self.data = np.array(list(self.texture.getdata()), np.uint8)
+
+            IMAGETEXTURE_TEXTURE_CACHE[self.path] = self.data
+            IMAGETEXTURE_PIL_CACHE[self.path] = self.texture
+        else:
+            self.texture = IMAGETEXTURE_PIL_CACHE[self.path]
+            self.data = IMAGETEXTURE_TEXTURE_CACHE[self.path]
 
         self.size = self.texture.size
         self.width = self.texture.width
         self.height = self.texture.height
+        if crop is None:
+            self.effective = (0, 0, self.width, self.height)
+        else:
+            self.effective = crop
 
     def resize(self, size, resample=None):
         pass
+
+    def crop(self, a, b, x, y, crop_resize=None):
+        if crop_resize is None:
+            crop_resize = self.crop_resize
+        self.effective = (a, b, x, y)
+        self.crop_resize = crop_resize
 
     def color_content(self, x, y):
         x = min(x, self.texture.width - 1)
@@ -271,9 +297,14 @@ class Image(GameObject):
     def __init__(self, parent: GameObject, x: float = 0, y: float = 0, width: float = -1, height: float = -1,
                  path: str = None,
                  ratio: int = 1,
+                 texture: ImageTexture = None,
+                 crop_resize = True,
                  **kwargs):
 
-        self.image = ImageTexture(path)
+        if texture is None:
+            self.image = ImageTexture(path, crop_resize=crop_resize)
+        else:
+            self.image = texture
 
         super().__init__(parent, x, y, self.image.size[0], self.image.size[1], contents=None, **kwargs)
 

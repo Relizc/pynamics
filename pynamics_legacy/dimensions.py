@@ -98,7 +98,7 @@ class Dimension2d:
         return self.y.offset_x
 
 
-class Color:
+class Color(object):
 
     def __init__(self, r = 255, g = 255, b = 255, a = 0):
         if isinstance(r, str):
@@ -119,6 +119,13 @@ class Color:
 
     def __eq__(self, other):
         return self.r == other.r and self.g == other.g and self.b == other.b
+
+    def tuple(self):
+        r, g, b, a = self.r + 1, self.g + 1, self.b + 1, self.a + 1
+        return (r/256, g/256, b/256, a/256)
+
+    def from_float(r, g, b, a):
+        return Color(r * 256 - 1, g * 256 - 1, b * 256 - 1, a * 256 - 1)
 
 
 class Vector():

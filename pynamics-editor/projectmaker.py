@@ -11,6 +11,6 @@ def make_directory(dir:str):
     compileall.compile_dir(dir + "/pynamics_1_0_0")
 
 def make_basicfile(dir: str):
-    f = open(dir + "/main.py", "w")
+    f = open(dir + "/main.pyw", "w")
     f.write(presets.MAIN)
     f.close()

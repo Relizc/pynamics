@@ -43,6 +43,7 @@ EASE        = CubicBezier(0.25, 0.1, 0.25, 1.0)
 EASE_IN     = CubicBezier(0.42, 0, 1.0, 1.0)
 EASE_OUT    = CubicBezier(0   , 0, 0.58, 1.0)
 EASE_IN_OUT = CubicBezier(0.42, 0, 0.58, 1.0)
+LINEAR      = CubicBezier(0, 0, 1, 1)
     
 
 
@@ -110,9 +111,9 @@ class Animation(PyNamical):
         for i in range(len(self.fields)):
             initial.append(getattr(play_at, self.fields[i]))
 
-        id = random.randint(-2147483648, 2147483647)
+        self.id = random.randint(-2147483648, 2147483647)
 
-        @PyNamical.MAIN_GAMEMANAGER.add_event_listener(event=EventType.TICK, threaded=False, killafter=self.duration, name="AnimationProgressionEvent", id=id)
+        @PyNamical.MAIN_GAMEMANAGER.add_event_listener(event=EventType.TICK, threaded=False, killafter=self.duration, name="AnimationProgressionEvent", id=self.id)
         def t(this):
             n = self.tick_value.get(self.age, 0)
 
@@ -134,7 +135,10 @@ class Animation(PyNamical):
                 else:
                     setattr(play_at, self.fields[tar], final_value[tar])
 
-        return id
+        return self.id
+
+    def stop(self):
+        PyNamical.MAIN_GAMEMANAGER.kill_event(self.id)
 
         
 def play_position_animation(function, object, final=(0, 0)):

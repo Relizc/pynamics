@@ -536,7 +536,7 @@ class P_UpstreamResourceEdit(Packet):
         k = self.read_string()
         v = self.read_with_type()
         if not who.admin:
-            connection.send(P_DownstreamStatusBroadcast(0, u_int8(0), f"Property {k} of object {what} is protected. Only server administrators can change its value.").buffer)
+            connection.send(P_DownstreamStatusBroadcast(0, u_int8(0), f"Attribute \"{k}\" of object {what} is protected. Only server administrators can change its value.").buffer)
         else:
             setattr(what, k, v)
             connection.send(P_DownstreamStatusBroadcast(0, u_int8(1), "Success resource edit").buffer)
@@ -908,7 +908,7 @@ class DedicatedClient(PyNamical):
 
         try:
             
-            a = time.time()
+
             self.socket.send(packet.buffer)
 
         except:
@@ -919,9 +919,10 @@ class DedicatedClient(PyNamical):
 
         self._tx += 1
         try:
+            a = time.time()
             data = self.socket.recv(2**20)
 
-            #print(data)
+            print(data)
 
             if len(data) > 0:
                 self.latency = time.time() - a

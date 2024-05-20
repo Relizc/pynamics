@@ -81,6 +81,9 @@ class Executable:
     def terminate(self):
         self.function = None
 
+    def stop(self):
+        self.terminate()
+
 class KeyEvaulator:
 
     def __init__(self, key):
@@ -189,7 +192,9 @@ class EventHolder:
         try:
             func = self.event_linker[event_id]
         except KeyError:
-            return
+            raise KeyError(
+                "Event ID Not Found"
+            )
         DebugAttacher(func.event, self, func, kill=True)
         self.events[func.event].remove(func)
         event_unregistered(func)

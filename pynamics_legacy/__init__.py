@@ -1,4 +1,4 @@
-from .display import OpenGLProjectWindow, LegacyProjectWindow, USE_OPENGL
+from .display import OpenGLProjectWindow, LegacyProjectWindow, USE_OPENGL, ImageTexture
 from .gameobject import GameObject, TopViewPhysicsBody, Image, Text, TextFont, Particle
 from .gamemanager import GameManager,PhysicsBody
 from .dimensions import Dimension, Dimension2d, Vector2d, Vector, Color

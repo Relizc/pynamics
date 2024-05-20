@@ -19,37 +19,38 @@ ctx = pn.GameManager(dimensions=pn.Dim(960, 540), event_tracker=True, tps=128)
 ctx.ADDRESS = "192.168.242.1"
 ctx.PORT = 11027
 
-view = pn.ProjectWindow(ctx, size=pn.Dim(960, 540), title="Suberb Game")
+view = pn.ProjectWindow(ctx, size=pn.Dim(960, 540), title="Suberb Game", color="black")
 
-# winsound.PlaySound("effect1.wav", winsound.SND_ASYNC)
-# log = pn.Image(ctx, path="resource1.png", ratio=3, x=388, y=202)
+winsound.PlaySound("effect1.wav", winsound.SND_ASYNC)
+log = pn.Image(ctx, path="resource1.png", ratio=3, x=388, y=202)
 
-# x = pn.Particle(ctx, rectitude=0.91, x=480, y=270, no_display=True)
-# x.velocity.r = random.randint(0, 180)
-# x.velocity.f = random.randint(0, 20)
+x = pn.Particle(ctx, rectitude=0.91, x=480, y=270, no_display=True)
+x.velocity.r = random.randint(0, 180)
+x.velocity.f = random.randint(0, 20)
 
-# @ctx.add_event_listener(event=pn.EventType.STARTUP)
-# def move(this):
-#     @ctx.add_event_listener(event=pn.EventType.TICK, killafter=100*2)
-#     def c(a):
-#         log.position.x = x.x
-#         log.position.y = x.y
-#     time.sleep(2)
-#
-#     ani = pn.Animation(pn.CubicBezier(.17,.67,.62,.97), duration=100, fields=["x", "y"])
-#     ani.play(log.position, [388, 202])
+@ctx.add_event_listener(event=pn.EventType.STARTUP)
+def move(this):
+    @ctx.add_event_listener(event=pn.EventType.TICK, killafter=100*2)
+    def c(a):
+        log.position.x = x.x
+        log.position.y = x.y
+    time.sleep(2)
+
+    ani = pn.Animation(pn.CubicBezier(.17,.67,.62,.97), duration=100, fields=["x", "y"])
+    ani.play(log.position, [388, 202])
+    x.delete()
 
 view.ignore_render.append(pn.TopViewPhysicsBody)
 
 @ctx.add_event_listener(event=pn.EventType.STARTUP)
 def start(self):
-    # time.sleep(4.5)
+    time.sleep(4.5)
 
-    # winsound.PlaySound("swsh.wav", winsound.SND_ASYNC)
-    # ani = pn.Animation(pn.CubicBezier(.55,-0.9,.57,.93), duration=128, fields=["y"])
-    # ani.play(log.position, [1000])
-    #
-    # time.sleep(3)
+    winsound.PlaySound("swsh.wav", winsound.SND_ASYNC)
+    ani = pn.Animation(pn.CubicBezier(.55,-0.9,.57,.93), duration=128, fields=["y"])
+    ani.play(log.position, [1000])
+
+    time.sleep(3)
     ani = pn.Animation(pn.CubicBezier(0, 0, 0.58, 1), duration=32, fields=["r", "g", "b"])
     ani.play(view.color, [135, 206, 235])
 
@@ -196,7 +197,7 @@ def start(self):
     pn.Animation(pn.CubicBezier(.0, 0, 0.58, 1), duration=32, fields=["y"]).play(tex.position, [500])
 
     time.sleep(0.5)
-    winsound.PlaySound("opening.wav", winsound.SND_ASYNC | winsound.SND_LOOP)
+    winsound.PlaySound("opening.wav", winsound.SND_ASYNC)
 
     ctx.aa = 0
     ctx.b = 0

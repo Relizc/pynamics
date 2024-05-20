@@ -31,6 +31,9 @@ _COLORMAP = {
 }
 
 def color_alias(color: str):
+
+    if isinstance(color, tuple): return color
+
     args = color.lower().split(" ")
     if _COLORMAP.get(args[0], None) is None:
         raise ValueError(
