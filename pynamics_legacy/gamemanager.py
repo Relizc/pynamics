@@ -273,7 +273,7 @@ class GameManager(PyNamical):
     def add_object(self, object: GameObject):
         self.objects.append(object)
         self.displayorder.append(object)
-        self.displayorder.sort(key=lambda i: i.zindex)
+        self.displayorder.sort(key=lambda i: i.zindex) # fix
         if self.debug is not None:
             self.debug.workspace_reload(object)
 
