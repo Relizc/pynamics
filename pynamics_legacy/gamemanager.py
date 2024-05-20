@@ -44,7 +44,7 @@ class GameManager(PyNamical):
         self.width = dimensions.x
         self.height = dimensions.y
         self.object_count = 0
-        self.objects = []
+        self.objects = set()
         self.updates = []
         self.listeners = []
         self.tpu = 1
@@ -272,7 +272,9 @@ class GameManager(PyNamical):
         self.tpl = tick
 
     def add_object(self, object: GameObject):
-        self.objects.append(object)
+
+        self.objects.add(object)
+        #print(self.objects)
         self.displayorder.append(object)
         self.displayorder.sort(key=lambda i: i.zindex)
         if self.debug is not None:

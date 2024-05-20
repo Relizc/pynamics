@@ -20,23 +20,25 @@ def intro_sprite(texture, d):
 
 
 def mainloop(ctx, viewport):
+    time.sleep(0.2)
 
     texture = pn.ImageTexture(path="texture.png", crop_resize=False)
 
 
+
     test = pn.Image(ctx, texture=texture)
 
-    texture.crop(1, 11, 257, 267)
-    time.sleep(0.2)
-    texture.crop(258, 11, 258 + 256, 11 + 256)
-    time.sleep(0.2)
-    texture.crop(515, 11, 515 + 256, 11 + 256)
-    time.sleep(4)
-    texture.crop(258, 11, 258 + 256, 11 + 256)
-    time.sleep(0.2)
-    texture.crop(1, 11, 257, 267)
-    time.sleep(0.2)
-    test.delete()
+    # texture.crop(1, 11, 257, 267)
+    # time.sleep(0.2)
+    # texture.crop(258, 11, 258 + 256, 11 + 256)
+    # time.sleep(0.2)
+    # texture.crop(515, 11, 515 + 256, 11 + 256)
+    # time.sleep(4)
+    # texture.crop(258, 11, 258 + 256, 11 + 256)
+    # time.sleep(0.2)
+    # texture.crop(1, 11, 257, 267)
+    # time.sleep(0.2)
+    # test.delete()
 
 
 
@@ -58,33 +60,33 @@ def mainloop(ctx, viewport):
 
     TABS = [tab1 , tab0]
 
-    texture.crop(1, 282, 1 + 256, 282 + 256)
-    time.sleep(0.1)
-
-    windowtexture.crop(1318, 1595, 1318 + 12, 1595 + 24)
-    tabtexture.crop(1358, 1595, 1358 + 7, 1595 + 32)
-    texture.crop(258, 282, 258 + 256, 282 + 256)
-
-    time.sleep(0.1)
-
-    winsound.PlaySound("title.wav", winsound.SND_ASYNC)
-
-    tabtexture.crop(1367, 1595, 1367 + 7, 1595 + 32)
-    texture.crop(515, 282, 515 + 256, 282 + 256)
-    windowtexture.crop(1335, 1595, 1335 + 12, 1595 + 24)
-
-    time.sleep(0.2)
-
-
-    intro_sprite(texture, 553)
-
-    intro_sprite(texture, 810)
-
-    intro_sprite(texture, 1067)
-
-    intro_sprite(texture, 1324)
-
-    intro_sprite(texture, 1581)
+    # texture.crop(1, 282, 1 + 256, 282 + 256)
+    # time.sleep(0.1)
+    #
+    # windowtexture.crop(1318, 1595, 1318 + 12, 1595 + 24)
+    # tabtexture.crop(1358, 1595, 1358 + 7, 1595 + 32)
+    # texture.crop(258, 282, 258 + 256, 282 + 256)
+    #
+    # time.sleep(0.1)
+    #
+    # winsound.PlaySound("title.wav", winsound.SND_ASYNC)
+    #
+    # tabtexture.crop(1367, 1595, 1367 + 7, 1595 + 32)
+    # texture.crop(515, 282, 515 + 256, 282 + 256)
+    # windowtexture.crop(1335, 1595, 1335 + 12, 1595 + 24)
+    #
+    # time.sleep(0.2)
+    #
+    #
+    # intro_sprite(texture, 553)
+    #
+    # intro_sprite(texture, 810)
+    #
+    # intro_sprite(texture, 1067)
+    #
+    # intro_sprite(texture, 1324)
+    #
+    # intro_sprite(texture, 1581)
 
     texture.crop(1551, 11, 1551 + 256, 11 + 736)
     test.position.y = 256 - 736
@@ -122,7 +124,7 @@ def mainloop(ctx, viewport):
         if ctx.downshift == 72 * 16 + 32:
             e.terminate()
 
-    time.sleep(8.6)
+    time.sleep(8.8)
     ani.stop()
 
 
@@ -138,7 +140,7 @@ def mainloop(ctx, viewport):
             test.position.y = 0
             e.terminate()
 
-            time.sleep(2)
+            time.sleep(3)
             menu(ctx, viewport, test, texture)
 
 

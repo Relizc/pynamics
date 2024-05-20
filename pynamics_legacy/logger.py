@@ -54,3 +54,15 @@ class Logger:
         if kwargs.get("prefix", None) != None:
             text = f"{kwargs.get('prefix')} {text}"
         print(Logger.colorize(text))
+
+    def warn(text, **kwargs):
+        Logger.print(text, channel=3, **kwargs)
+
+    def info(text, **kwargs):
+        Logger.print(text, channel=2, **kwargs)
+
+    def error(text, **kwargs):
+        Logger.print(text, channel=4, **kwargs)
+
+    def debug(text, **kwargs):
+        Logger.print(text, channel=5, **kwargs)

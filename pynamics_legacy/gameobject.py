@@ -7,6 +7,7 @@ from .events import EventPriority, EventType, KeyEvaulator
 from .interface import PyNamical, network_transferrable
 from .dimensions import Dimension, Vector2d, Color
 from .styling import color_alias
+from .logger import Logger
 import math
 import cmath
 import tkinter as tk
@@ -176,14 +177,14 @@ class GameObject(PyNamical):
         
 
     def delete(self):
-        if isinstance(self.parent.objects, list):
+        if isinstance(self.parent.objects, set):
             try:
                 self.parent.remove_object(self)
                 self.parent.displayorder.remove(self)
                 #self.parent.window.remove(self)
                 self.unbind()
-            except Exception as e:
-                print(e)
+            except KeyError as e:
+                Logger.warn(f"Attempting to remove {self} which does not have any active parents or hooked GameManager. Delete operation ignored")
                 pass
             
             del self
