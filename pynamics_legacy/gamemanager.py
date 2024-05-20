@@ -32,6 +32,7 @@ class Event:
         pass
 
 
+
 class GameManager(PyNamical):
     def __init__(self,
                  dimensions: Dimension,

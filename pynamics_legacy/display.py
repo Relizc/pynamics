@@ -97,18 +97,19 @@ if not USE_OPENGL:
 
 class _base_OpenGL_Frame(OpenGLFrame):
 
-    def __init__(self, parent, root, size: Dimension = Dimension(1000, 1000)):
+    def __init__(self, parent, root, size: Dimension = Dimension(1000, 1000), scale=1):
 
         OpenGLFrame.__init__(self, root, width=size.x, height=size.y)
         self.parent = parent
         self.renderable = []
+        self.scale = scale
 
         self.texture_handler = {}
 
     # Overriding OpenGLFrame
     def initgl(self):
         glViewport(0, 0, self.width, self.height)
-        glClearColor(0.0, 0.0, 0.0, 0.0)
+        glClearColor(*self.parent.color.tuple())
 
         # setup projection matrix
         glMatrixMode(GL_PROJECTION)
@@ -129,7 +130,12 @@ class _base_OpenGL_Frame(OpenGLFrame):
     def redraw(self):
         glClear(GL_COLOR_BUFFER_BIT)
 
+        self.parent.parent.f += 1
+
         for i in self.parent.parent.displayorder:
+
+            if i.hidden:
+                continue
 
             try:
                 glColor4f(1.0, 1.0, 1.0, 1.0)
@@ -161,6 +167,9 @@ class _base_OpenGL_Frame(OpenGLFrame):
         if f:
             return
 
+        posx = i.position.x * self.scale
+        posy = i.position.y * self.scale
+
         if isinstance(i, Image):
             # for n in range(i.image.texture.width):
             #     for m in range(i.image.texture.height):
@@ -189,14 +198,25 @@ class _base_OpenGL_Frame(OpenGLFrame):
 
             glBindTexture(GL_TEXTURE_2D, self.texture_handler[i.image.path])
             glBegin(GL_QUADS)
-            glTexCoord2f(0, 0)
-            glVertex2f(i.x, i.y)
-            glTexCoord2f(1, 0)
-            glVertex2f(i.x + i.size.x, i.y)
-            glTexCoord2f(1, 1)
-            glVertex2f(i.x + i.size.x, i.y + i.size.y)
-            glTexCoord2f(0, 1)
-            glVertex2f(i.x, i.y + i.size.y)
+
+            if i.image.crop_resize:
+                deltax = i.size.x
+                deltay = i.size.y
+            else:
+                deltax = i.image.effective[2] - i.image.effective[0]
+                deltay = i.image.effective[3] - i.image.effective[1]
+
+            deltax *= self.scale
+            deltay *= self.scale
+
+            glTexCoord2f(1 * (i.image.effective[0] / i.size.x), 1 * (i.image.effective[1] / i.size.y))
+            glVertex2f(posx         , posy)
+            glTexCoord2f(1 * (i.image.effective[2] / i.size.x), 1 * (i.image.effective[1] / i.size.y))
+            glVertex2f(posx + deltax, posy)
+            glTexCoord2f(1 * (i.image.effective[2] / i.size.x), 1 * (i.image.effective[3] / i.size.y))
+            glVertex2f(posx + deltax, posy + deltay)
+            glTexCoord2f(1 * (i.image.effective[0] / i.size.x), 1 * (i.image.effective[3] / i.size.y))
+            glVertex2f(posx         , posy + deltay)
             glEnd()
             glBindTexture(GL_TEXTURE_2D, 0)
 
@@ -290,7 +310,7 @@ class _base_OpenGL_Frame(OpenGLFrame):
 class OpenGLProjectWindow(PyNamical):
 
     def __init__(self, parent: GameManager, size: Dimension = Dimension(1000, 1000), title: str = "ViewPort Frame",
-                 color: Color = Color(255, 255, 255)):
+                 color: Color = Color(255, 255, 255), scale=1):
         super().__init__(parent)
         self.parent.window = self
 
@@ -303,9 +323,9 @@ class OpenGLProjectWindow(PyNamical):
         self._tk.geometry(f"{size.x}x{size.y}")
         self._tk.resizable(False, False)
         self._tk.title(title)
-        self.color = color
-        self._curcolor = Color(color.r, color.g, color.b)
-        self.surface = _base_OpenGL_Frame(self, self._tk, size)
+        self.color = Color.from_float(*color_alias(color))
+        self._curcolor = Color(self.color.r, self.color.g, self.color.b)
+        self.surface = _base_OpenGL_Frame(self, self._tk, size, scale=scale)
         self.surface.pack(fill=tk.BOTH, expand=tk.YES)
         self.surface.animate = 1
         self.ignore_render = []
@@ -316,9 +336,10 @@ class OpenGLProjectWindow(PyNamical):
         self.force_update = 0
 
     def start(self):
+        self._tk.protocol("WM_DELETE_WINDOW", self._close_parent_close)
+        self._tk.mainloop()
         self.surface.mainloop()
-        #self._tk.protocol("WM_DELETE_WINDOW", self._close_parent_close)
-        #self._tk.mainloop()
+
 
     def update(self):
         pass
@@ -328,6 +349,7 @@ class OpenGLProjectWindow(PyNamical):
         if self.parent.debug != None:
             self.parent.debug.tk.destroy()
         self._tk.destroy()
+        #self.surface.destroy()
 
     def blit(self):
         try:
