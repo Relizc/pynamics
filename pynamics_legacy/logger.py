@@ -55,14 +55,18 @@ class Logger:
             text = f"{kwargs.get('prefix')} {text}"
         print(Logger.colorize(text))
 
-    def warn(text, **kwargs):
+    @staticmethod
+    def warn(text: str, **kwargs):
         Logger.print(text, channel=3, **kwargs)
 
-    def info(text, **kwargs):
+    @staticmethod
+    def info(text: str, **kwargs):
         Logger.print(text, channel=2, **kwargs)
 
-    def error(text, **kwargs):
+    @staticmethod
+    def error(text: str, **kwargs):
         Logger.print(text, channel=4, **kwargs)
 
-    def debug(text, **kwargs):
+    @staticmethod
+    def debug(text: str, **kwargs):
         Logger.print(text, channel=5, **kwargs)

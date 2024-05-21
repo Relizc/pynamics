@@ -1,6 +1,6 @@
 
 import random
-import winsound
+import disabled_winsound
 import uuid
 import math
 import random

@@ -1,3 +1,4 @@
+import os
 import threading
 import time
 
@@ -7,6 +8,7 @@ from .events import EventPriority, EventType, KeyEvaulator
 from .interface import PyNamical, network_transferrable
 from .dimensions import Dimension, Vector2d, Color
 from .styling import color_alias
+from .metadata import PyNamicsTexture
 from .logger import Logger
 import math
 import cmath
@@ -184,7 +186,7 @@ class GameObject(PyNamical):
                 #self.parent.window.remove(self)
                 self.unbind()
             except KeyError as e:
-                Logger.warn(f"Attempting to remove {self} which does not have any active parents or hooked GameManager. Delete operation ignored")
+                #Logger.warn(f"Attempting to remove {self} which does not have any active parents or hooked GameManager. Delete operation ignored")
                 pass
             
             del self
@@ -221,6 +223,14 @@ class GameObject(PyNamical):
     def y(self):
         return self.position.y
 
+    @x.setter
+    def x(self, new_x):
+        self.position.x = new_x
+
+    @y.setter
+    def y(self, new_x):
+        self.position.y = new_x
+
     def hide(self):
         self.hidden = True
         self.parent.frame()
@@ -247,6 +257,90 @@ class GameObject(PyNamical):
 
 IMAGETEXTURE_TEXTURE_CACHE = {}
 IMAGETEXTURE_PIL_CACHE = {}
+
+class FrameArray:
+
+    def __init__(self, frames=[]):
+        self.frames = frames
+
+    def __getitem__(self, item):
+        return self.frames[item]
+
+    def add(self, points):
+        self.frames.append(points)
+
+def STR_HASH_UINT32(inp: str):
+    hash = 0
+    for ch in inp:
+        hash = (hash * 0xf5fcaad4 ^ ord(ch) * 0x663e3d4e) & 0xFFFFFFFF
+    return hash
+
+class FramedTexture:
+
+    def __init__(self, metadata=None, frame: str = None, path: str=None, crop_resize=False):
+
+        self.framedata = {}
+        self.crop_resize = crop_resize
+
+
+        self.frame_array_index = 0
+
+        if path is None:
+            path = os.path.splitext(os.path.basename(metadata))[0]
+
+        self.path = path
+
+        if not metadata is None:
+            self.load_meta(metadata)
+
+        self.current = STR_HASH_UINT32(frame)
+
+
+        self.image = ImageTexture(path, crop=self.get_active_texture()[self.frame_array_index], crop_resize=crop_resize)
+
+        self.width = self.image.size[0]
+        self.height = self.image.size[1]
+        self.size = Dimension(self.width, self.height)
+
+
+
+
+
+    @property
+    def data(self):
+        return self.image.data
+
+    @property
+    def effective(self):
+        return self.get_active_texture()
+
+
+    def __getitem__(self, item):
+        if isinstance(item, str):
+            item = STR_HASH_UINT32(item)
+        return self.framedata[item]
+
+    def get_texture(self, hash):
+        return self.__getitem__(hash)
+
+    def crop(self, texture_name_or_hash):
+        if isinstance(texture_name_or_hash, str):
+            texture_name_or_hash = STR_HASH_UINT32(texture_name_or_hash)
+        self.current = texture_name_or_hash
+
+    def get_active_texture(self) -> FrameArray:
+        return self.framedata[self.current][self.frame_array_index]
+
+    def load_meta(self, path):
+        loader = PyNamicsTexture(open(path, "rb"))
+
+        while loader.hasnext():
+            fingerprint, coords = loader.frame()
+            if not fingerprint in self.framedata:
+                self.framedata[fingerprint] = FrameArray()
+            self.framedata[fingerprint].add(coords)
+
+
 
 class ImageTexture:
 
@@ -298,13 +392,15 @@ class Image(GameObject):
                  path: str = None,
                  ratio: int = 1,
                  texture: ImageTexture = None,
-                 crop_resize = True,
+                 crop_resize: bool = False,
                  **kwargs):
 
         if texture is None:
             self.image = ImageTexture(path, crop_resize=crop_resize)
         else:
             self.image = texture
+
+
 
         super().__init__(parent, x, y, self.image.size[0], self.image.size[1], contents=None, **kwargs)
 
@@ -321,9 +417,65 @@ class Image(GameObject):
         self.size.x = int(w * ratio)
         self.size.y = int(h * ratio)
 
+    @property
+    def photosize(self):
+        return self.size
+
+
+
     def __repr__(self):
         return f"Image(file={self.image.path})"
 
+class StaticSprite(Image):
+
+    def __repr__(self):
+        return f"StaticSprite({self.position}, {self.size})"
+
+class AnimatedSprite(GameObject):
+
+    def __init__(self, parent: GameObject, x: float = 0, y: float = 0, width: float = -1, height: float = -1,
+                 texture: FramedTexture=None,
+                 path: str=None,
+                 crop_resize: bool = False,
+                 interval: float = -1,
+                 **kwargs):
+
+        self.interval = interval
+        self.runtime = 0
+
+        if texture is None:
+            self.image = FramedTexture(path, crop_resize=crop_resize)
+        else:
+            self.image = texture
+
+        self.photosize = Dimension(self.image.image.size[0], self.image.image.size[1])
+        print(self.photosize)
+
+        super().__init__(parent, x, y, width, height, contents=None, **kwargs)
+
+        @PyNamical.MAIN_GAMEMANAGER.add_event_listener(event=EventType.TICK, name="ThreadedAnimateSpriteEvent")
+        def do_later(e):
+
+            self.runtime += 1
+
+            if self.runtime == self.interval:
+
+                if self.image.frame_array_index == len(self.image.framedata):
+                    self.image.frame_array_index = 0
+                else:
+                    self.image.frame_array_index += 1
+                self.runtime = 0
+
+    @property
+    def frame(self):
+        return self.image.frame_array_index
+
+    @frame.setter
+    def frame(self, new):
+        self.image.frame_array_index = new
+
+    def set_frame(self, frame):
+        self.image.frame_array_index = frame
 
 
 class PhysicsBody(GameObject):
@@ -361,7 +513,7 @@ class PhysicsBody(GameObject):
         self.use_collide = use_collide
         self.force = Vector2d(0, 0)
         self.gravity = gravity
-        self.past_positions = LimitedArray(self.parent.tps)
+        self.past_positions = LimitedArray(PyNamical.MAIN_GAMEMANAGER.tps)
 
         # self.timeB = time.time()
         # self.timeA = time.time()
@@ -373,19 +525,19 @@ class PhysicsBody(GameObject):
         
 
     def init_movement(self, force: int = 1):
-        @self.parent.add_event_listener(event=EventType.KEYHOLD, condition=KeyEvaulator("Up"))
+        @PyNamical.MAIN_GAMEMANAGER.add_event_listener(event=EventType.KEYHOLD, condition=KeyEvaulator("Up"))
         def m(ctx, key):
             self.force.add_self(Vector2d(90, force))
 
-        @self.parent.add_event_listener(event=EventType.KEYHOLD, condition=KeyEvaulator("Down"))
+        @PyNamical.MAIN_GAMEMANAGER.add_event_listener(event=EventType.KEYHOLD, condition=KeyEvaulator("Down"))
         def m(ctx, key):
             self.force.add_self(Vector2d(270, force))
 
-        @self.parent.add_event_listener(event=EventType.KEYHOLD, condition=KeyEvaulator("Left"))
+        @PyNamical.MAIN_GAMEMANAGER.add_event_listener(event=EventType.KEYHOLD, condition=KeyEvaulator("Left"))
         def m(ctx, key):
             self.force.add_self(Vector2d(180, force))
 
-        @self.parent.add_event_listener(event=EventType.KEYHOLD, condition=KeyEvaulator("Right"))
+        @PyNamical.MAIN_GAMEMANAGER.add_event_listener(event=EventType.KEYHOLD, condition=KeyEvaulator("Right"))
         def m(ctx, key):
             self.force.add_self(Vector2d(0, force))
 

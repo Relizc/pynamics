@@ -157,6 +157,7 @@ class _base_OpenGL_Frame(OpenGLFrame):
             except Exception as e:
                 Logger.print(f"Render Error while rendering {i}: {e}", channel=4)
                 print(traceback.format_exc())
+                pass
 
 
         glFlush()
@@ -180,7 +181,7 @@ class _base_OpenGL_Frame(OpenGLFrame):
         posx = i.position.x * self.scale
         posy = i.position.y * self.scale
 
-        if isinstance(i, Image):
+        if isinstance(i, (Image, AnimatedSprite)):
             # for n in range(i.image.texture.width):
             #     for m in range(i.image.texture.height):
             #         # print(n, m)
@@ -189,6 +190,8 @@ class _base_OpenGL_Frame(OpenGLFrame):
             #         glColor4f(_1x(f[0]), _1x(f[1]), _1x(f[2]), _1x(f[3]))
             #         glVertex2f(i.x + n, i.y + m)
             #         glEnd()
+
+            #print(i.image.width)
 
             if self.texture_handler.get(i.image.path, None) is None:
                 id = glGenTextures(1)
@@ -219,13 +222,15 @@ class _base_OpenGL_Frame(OpenGLFrame):
             deltax *= self.scale
             deltay *= self.scale
 
-            glTexCoord2f(1 * (i.image.effective[0] / i.size.x), 1 * (i.image.effective[1] / i.size.y))
+            #print(i.photosize, deltax, deltay)
+
+            glTexCoord2f((i.image.effective[0] / i.photosize.x), (i.image.effective[1] / i.photosize.y))
             glVertex2f(posx         , posy)
-            glTexCoord2f(1 * (i.image.effective[2] / i.size.x), 1 * (i.image.effective[1] / i.size.y))
+            glTexCoord2f((i.image.effective[2] / i.photosize.x), (i.image.effective[1] / i.photosize.y))
             glVertex2f(posx + deltax, posy)
-            glTexCoord2f(1 * (i.image.effective[2] / i.size.x), 1 * (i.image.effective[3] / i.size.y))
+            glTexCoord2f((i.image.effective[2] / i.photosize.x), (i.image.effective[3] / i.photosize.y))
             glVertex2f(posx + deltax, posy + deltay)
-            glTexCoord2f(1 * (i.image.effective[0] / i.size.x), 1 * (i.image.effective[3] / i.size.y))
+            glTexCoord2f((i.image.effective[0] / i.photosize.x), (i.image.effective[3] / i.photosize.y))
             glVertex2f(posx         , posy + deltay)
             glEnd()
             glBindTexture(GL_TEXTURE_2D, 0)
