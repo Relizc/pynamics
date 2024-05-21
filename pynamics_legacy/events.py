@@ -16,6 +16,7 @@ def change_debug_attacher(func):
 
 class EventType():
 
+    THREAD = 0x24
     NONE = 0x00
 
     KEYDOWN = 0x01
@@ -51,7 +52,8 @@ event_name_linker = {
     EventType.STARTUP: "GamemanagerStartup",
     EventType.ONCLICK: "UserInterfaceClick",
     EventType.CLIENT_CONNECTED: "NetworkClientConnected",
-    EventType.COLLIDE: "PhysicsBodyCollideEvent"
+    EventType.COLLIDE: "PhysicsBodyCollideEvent",
+    EventType.THREAD: "ThreadRunLaterEvent"
 }
 events_first = list(EventType.__dict__.keys())
 events_second = list(EventType.__dict__.values())
@@ -126,6 +128,7 @@ class EventHolder:
             EventType.HOVER: [],
             EventType.NO_HOVER: [],
             EventType.STARTUP: [],
+            EventType.THREAD: []
         }
 
         self.event_linker = {}
@@ -148,16 +151,22 @@ class EventHolder:
         if id is None:
             id = random.randint(-2147483648, 2147483647)
 
+        if event == EventType.THREAD:
+            killafter = 1
+
 
         def inner(function):
             func = Executable(function, condition, killafter=killafter, name=name, 
                               threaded=threaded, belong_group=events_first[events_second.index(event)])
             func.event = event
 
+
+
             event_registered(func)
             self.events[event].insert(2147483647 - priority, func)
             func.id = id
             self.event_linker[id] = func
+
 
         return inner
 

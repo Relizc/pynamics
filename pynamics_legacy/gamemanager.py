@@ -100,7 +100,7 @@ class GameManager(PyNamical):
 
             if self.debug == None:
                 Logger.print("Debugger not found! Creating window instance", channel=5)
-                self.debug = Sandbox(self, enable_event_listener=self.event_track)
+                self.debug = Debugger(self, enable_event_listener=self.event_track)
 
                 change_debug_attacher(self.debug._call_callevent)
 
@@ -200,6 +200,7 @@ class GameManager(PyNamical):
             self.check_mouse_events()
 
             self.call_event_listeners(EventType.TICK)
+            self.call_event_listeners(EventType.THREAD)
 
             for i in self.pressed:
                 if self.pressed[i]:
