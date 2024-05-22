@@ -469,8 +469,8 @@ class LegacyProjectWindow(PyNamical):
         self._tk.geometry(f"{size.x}x{size.y}")
         self._tk.resizable(False, False)
         self._tk.title(title)
-        self.color = color
-        self._curcolor = Color(color.r, color.g, color.b)
+        self.color = color_alias(color)
+        self._curcolor = Color(*self.color)
         self.surface = tk.Canvas(self._tk, width=size.x, height=size.y, bg=str(color), highlightthickness=0)
         self.surface.pack()
         self.ignore_render = []
