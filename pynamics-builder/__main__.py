@@ -5,7 +5,7 @@ root = tk.Tk()
 
 w, h = root.winfo_screenwidth(), root.winfo_screenheight()
 
-root.geometry(f"{w}x{h}")
+root.geometry(f"800x450")
 
 root.after(500, lambda: mainloop(root))
 root.mainloop()
