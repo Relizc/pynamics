@@ -214,40 +214,87 @@ class PathSelectButton(tk.Button):
     def value(self):
         return self.path
 
+# https://stackoverflow.com/questions/27820178/how-to-add-placeholder-to-an-entry-in-tkinter
+class EntryWithPlaceholder(tk.Entry):
+    def __init__(self, master=None, placeholder="PLACEHOLDER", color='grey'):
+        super().__init__(master)
+
+        self.placeholder = placeholder
+        self.placeholder_color = color
+        self.default_fg_color = self['fg']
+
+        self.bind("<FocusIn>", self.foc_in)
+        self.bind("<FocusOut>", self.foc_out)
+
+        self.put_placeholder()
+
+    def put_placeholder(self):
+        self.insert(0, self.placeholder)
+        self['fg'] = self.placeholder_color
+
+    def foc_in(self, *args):
+        if self['fg'] == self.placeholder_color:
+            self.delete('0', 'end')
+            self['fg'] = self.default_fg_color
+
+    def foc_out(self, *args):
+        if not self.get():
+            self.put_placeholder()
+
 class IterableMakerList(tk.Frame):
 
-    def __init__(self, root, default=None, *args, **kwargs):
+    def __init__(self, root, default=None, type=None, *args, **kwargs):
         super().__init__(root, *args, **kwargs)
         self.root = root
+        self.type = type
+
+        self["width"] = 8
 
         self.rowconfigure((0, 1, 2), weight=1)
 
-        self.view = tk.Listbox(self)
+        self.view = tk.Listbox(self, height=4)
         self.view.grid(row=0, column=0, columnspan=3, sticky="news")
 
-        self.add = tk.Button(self, text='+')
-        self.add.grid(row=1, column=0)
+        self.inp = EntryWithPlaceholder(self, placeholder="Enter Value...")
+        self.inp.grid(row=1, column=0, columnspan=3, sticky="news")
 
-        self.sub = tk.Button(self, text='-')
-        self.sub.grid(row=1, column=1)
+        self.add = tk.Button(self, text='Add', width=8)
+        self.add.grid(row=2, column=0)
 
-        self.clr = tk.Button(self, text='Clear')
-        self.clr.grid(row=1, column=2)
+        self.sub = tk.Button(self, text='Delete',  width=8)
+        self.sub.grid(row=2, column=1)
+
+        self.clr = tk.Button(self, text='Clear',  width=8)
+        self.clr.grid(row=2, column=2)
 
         self.contents = default
 
         if self.contents is None:
-            self.contents = []
-        else:
             self.contents = []
 
     def choose(self):
         self.path = filedialog.askopenfilename(title="Select File")
         self["text"] = self.path
 
+    def add(self):
+        val = self.inp.get()
+        if self.type is not None:
+            val = self.type(val)
+
+        self.view.insert("end", val)
+
+        self.contents.add(val)
+
+    def remove(self):
+        val = self.view.focus()
+        print(val)
+
+    def clear(self):
+
+
     @property
     def value(self):
-        return self.path
+        return self.contents
 
 
 class CreationPrompt:
@@ -306,7 +353,7 @@ class CreationPrompt:
 
 
             label = tk.Label(self.prompt, text=f"{k.args[i + 1]}")
-            label.grid(row=i+1, column=0, sticky="e", padx=8, pady=4)
+            label.grid(row=i+1, column=0, sticky="ne", padx=8, pady=4)
 
             self.tags.append(label)
 

@@ -166,7 +166,7 @@ class FrameGroup(Property):
 
 class Frame(Property):
 
-    def __init__(self, parent, fro, to):
+    def __init__(self, parent, point_0, point_1):
         super().__init__(parent)
 
 temp.ALL_OBJECTS = {
