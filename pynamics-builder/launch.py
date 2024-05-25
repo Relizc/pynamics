@@ -3,6 +3,7 @@ import tkinter as tk
 from tkinter import ttk
 import tkinter.filedialog as filedialog
 from fbo import *
+from screen import *
 
 FBO = None
 TOP = None
@@ -11,6 +12,7 @@ PROPERTY = None
 FRAME = None
 
 import fbo as temp
+import screen as temp2
 
 
 def ask_open_file():
@@ -62,52 +64,12 @@ def ask_open_option(root):
     global FBO, WORKSPACE, TREEVIEW_TK
 
     WORKSPACE = Workspace()
+    temp2.WORKSPACE = WORKSPACE
 
-    topmenu = tk.Menu(root)
-    root.config(menu=topmenu)
 
-    file = tk.Menu(topmenu, tearoff="off")
-    file.add_command(label="Open")
-    file.add_command(label="Save", command=lambda: FBO.save())
-    topmenu.add_cascade(label="File", menu=file)
-
-    file = tk.Menu(topmenu, tearoff="off")
-    file.add_command(label="...")
-    topmenu.add_cascade(label="Edit", menu=file)
-
-    file = tk.Menu(topmenu, tearoff="off")
-
-    t = tk.Menu(file, tearoff="off")
-    t.add_command(label="Recent properties will show here", state="disabled")
-    file.add_cascade(label="Recent", menu=t)
-    file.add_separator()
-
-    t = tk.Menu(file, tearoff="off")
-    t.add_command(label="FrameGroup")
-    t.add_command(label="Frame")
-    t.add_separator()
-    t.add_command(label="TextureGroup")
-    t.add_command(label="Texture")
-    t.add_separator()
-    t.add_command(label="TileMap")
-    t.add_command(label="Tile")
-    file.add_cascade(label="Texture", menu=t)
-    file.add_separator()
-
-    t = tk.Menu(file, tearoff="off")
-    t.add_command(label="GameLevel")
-    t.add_separator()
-    t.add_command(label="TileArrangement")
-    t.add_command(label="HitboxArrangement")
-    file.add_cascade(label="World", menu=t)
-
-    topmenu.add_cascade(label="New Property", menu=file)
-
-    imports = tk.Menu(topmenu, tearoff="off")
-    imports.add_command(label="Image", command=lambda: import_image())
-    topmenu.add_cascade(label="Import", menu=imports)
 
     selectmenu = tk.Toplevel(root)
+    selectmenu.grab_set()
     selectmenu.geometry("300x200")
     selectmenu.title("New or Open Projects")
 
@@ -116,6 +78,8 @@ def ask_open_option(root):
 
     op = tk.Button(selectmenu, text="Open Project", command=lambda: process(selectmenu, 1))
     op.pack()
+
+
 
 
 def update_attribute(tree):
@@ -154,6 +118,50 @@ def mainloop(root):
     global TOP, PROPERTY, FRAME
     TOP = root
 
+    topmenu = tk.Menu(root)
+    root.config(menu=topmenu)
+
+    file = tk.Menu(topmenu, tearoff="off")
+    file.add_command(label="Open")
+    file.add_command(label="Save", command=lambda: FBO.save())
+    topmenu.add_cascade(label="File", menu=file)
+
+    file = tk.Menu(topmenu, tearoff="off")
+    file.add_command(label="...")
+    topmenu.add_cascade(label="Edit", menu=file)
+
+    file = tk.Menu(topmenu, tearoff="off")
+
+    t = tk.Menu(file, tearoff="off")
+    t.add_command(label="Recent properties will show here", state="disabled")
+    file.add_cascade(label="Recent", menu=t)
+    file.add_separator()
+
+    t = tk.Menu(file, tearoff="off")
+    t.add_command(label="FrameGroup", command=lambda: CreationPrompt(TOP, FrameGroup))
+    t.add_command(label="Frame", command=lambda: CreationPrompt(TOP, Frame))
+    t.add_separator()
+    t.add_command(label="TextureGroup")
+    t.add_command(label="Texture")
+    t.add_separator()
+    t.add_command(label="TileMap")
+    t.add_command(label="Tile")
+    file.add_cascade(label="Texture", menu=t)
+    file.add_separator()
+
+    t = tk.Menu(file, tearoff="off")
+    t.add_command(label="GameLevel")
+    t.add_separator()
+    t.add_command(label="TileArrangement")
+    t.add_command(label="HitboxArrangement")
+    file.add_cascade(label="World", menu=t)
+
+    topmenu.add_cascade(label="New Property", menu=file)
+
+    imports = tk.Menu(topmenu, tearoff="off")
+    imports.add_command(label="Image", command=lambda: import_image())
+    topmenu.add_cascade(label="Import", menu=imports)
+
     TOP.columnconfigure(0, weight=1)
     TOP.columnconfigure(1, weight=8)
     TOP.columnconfigure(2, weight=1)
@@ -162,6 +170,8 @@ def mainloop(root):
     tree = ttk.Treeview(root)
     tree.heading("#0", text="File Structure")
     tree.grid(column=0, row=0, sticky="news", rowspan=2)
+
+    temp2.TREE_HANDLER = tree
 
     FRAME = tk.Frame(root)
     FRAME.grid(column=1, row=0, sticky="news", rowspan=1)

@@ -6,6 +6,9 @@ os.environ["PN_PROTOCOL_VERSION"] = "144"
 from PIL import ImageTk
 from PIL import Image as ImageUtils
 
+from screen import AutoScrollbar, ImageBrowser, ObjectSelectButton, PathSelectButton, CreationPrompt
+import screen as temp
+
 import random
 import tkinter.ttk as ttk
 import tkinter as tk
@@ -86,16 +89,6 @@ class Property:
 
         self.parent = None
         self.set_parent(parent)
-
-
-
-
-
-
-
-
-
-
     def remove_children(self, obj):
         self.children.remove(obj)
 
@@ -123,6 +116,8 @@ class Property:
         del DICT_ID_TO_OBJ[str(self._treeview_id)]
 
     def selected(self, root):
+        for child in root.winfo_children():
+            child.destroy()
         pass
 
     def __repr__(self):
@@ -143,54 +138,50 @@ class Image(Property):
         super().__init__(parent)
 
         self.path = path
-        self.buffer = ImageUtils.open(path)
-        self.tkbuffer = ImageTk.PhotoImage(self.buffer)
 
-        self._tk_pressed = set()
 
     def selected(self, root):
         for child in root.winfo_children():
             child.destroy()
 
-        self._browser = tk.Canvas(root, background="white")
-        self._container = self._browser.create_image(0, 0, anchor=tk.NW, image=self.tkbuffer)
-        self._browser.pack(expand=True, fill="both")
-        self._browser.bind_all("<MouseWheel>", self._on_mousewheel)
-        self.delta = 0.3
-        self.imscale = 0
+        self._browser = ImageBrowser(root, path=self.path)
 
-    def _on_mousewheel(self, event):
-        print(PRESSED)
+class FramedTexture(Property):
 
-        if "Control_L" in PRESSED or "Control_R" in PRESSED:
+    def __init__(self, parent):
+        super().__init__(parent)
 
-            if self.imscale <= -5 or self.imscale >= 5:
-                self.imscale -= 1
-                return
+    @staticmethod
+    def prompt_creation():
+        pass
 
-            x = self._browser.canvasx(event.x)
-            y = self._browser.canvasy(event.y)
+class FrameGroup(Property):
 
-            if event.delta > 0:
-                m = self.delta
-                self.imscale += 1
-            else:
-                m = -self.delta
-                self.imscale -= 1
+    def __init__(self, parent):
+        super().__init__(parent)
 
+    @staticmethod
+    def prompt_creation():
+        pass
 
+class Frame(Property):
 
-            self._browser.delete(self._container)
-            self.buffer = ImageUtils.open(self.path).resize((int(self.buffer.width + (self.buffer.width * m)), int(self.buffer.height + (self.buffer.height * m))), resample=ImageUtils.BOX)
-            self.tkbuffer = ImageTk.PhotoImage(self.buffer)
-            self._container = self._browser.create_image(0, 0, anchor=tk.NW, image=self.tkbuffer)
+    def __init__(self, parent, fro, to):
+        super().__init__(parent)
 
+temp.ALL_OBJECTS = {
+    "Image": Image,
+    "FrameGroup": FrameGroup,
+    "Frame": Frame
+}
 
-        else:
-            if "Shift_L" in PRESSED or "Shift_R" in PRESSED:
-                self._browser.xview_scroll(int(-1 * (event.delta / 120)), "units")
-            else:
-                self._browser.yview_scroll(int(-1 * (event.delta / 120)), "units")
+temp.OBJECT_TYPING_HINTS = {
+    "Image": ("object", "path"),
+    "FrameGroup": ("object",),
+    "Frame": ("object", "iterable int", "iterable int")
+}
+
+temp.DICT_ID_TO_OBJ = DICT_ID_TO_OBJ
 
 
 
