@@ -6,6 +6,8 @@ from PIL import Image as ImageUtils, ImageTk
 import inspect
 import tkinter.filedialog as filedialog
 
+import tkinter.messagebox as tkmsg
+
 #https://stackoverflow.com/questions/41656176/tkinter-canvas-zoom-move-pan
 
 class AutoScrollbar(ttk.Scrollbar):
@@ -23,6 +25,80 @@ class AutoScrollbar(ttk.Scrollbar):
 
     def place(self, **kw):
         raise tk.TclError('Cannot use place with this widget')
+
+from pyopengltk import OpenGLFrame
+from OpenGL.GL import *
+import numpy as np
+
+class GLImageBrowser(OpenGLFrame):
+
+    def set_path(self, path):
+        self.path = path
+
+        self.image = ImageUtils.open(self.path)
+        self.data = np.array(list(self.image.getdata()), np.uint8)
+
+    def initgl(self):
+        """Initalize gl states when the frame is created"""
+        print("init")
+        glViewport(0, 0, 500, 500)
+        glClearColor(0.0, 1.0, 0.0, 0.0)
+
+    def redraw(self):
+        """Render a single frame"""
+        self.real()
+        print("draw")
+
+
+
+    def real(self):
+
+        if self.path is not None and not self.set:
+            id = glGenTextures(1)
+            self.gl_bind_id = id
+
+            glBindTexture(GL_TEXTURE_2D, id)
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, self.image.width, self.image.height, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                         None)
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, self.image.width, self.image.height, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                         self.data)
+            glBindTexture(GL_TEXTURE_2D, 0)
+
+            print("image loaded")
+
+        if self.path is None:
+            return
+
+        glBindTexture(GL_TEXTURE_2D, self.gl_bind_id)
+        glBegin(GL_QUADS)
+
+        posx = self.x
+        posy = self.y
+
+        deltax = self.image.width
+        deltay = self.image.height
+
+        deltax *= self.scale
+        deltay *= self.scale
+        deltax = int(deltax)
+        deltay = int(deltay)
+
+        # print(i.photosize, deltax, deltay)
+
+        glTexCoord2f(0, 0)
+        glVertex2f(posx, posy)
+        glTexCoord2f(1, 0)
+        glVertex2f(posx + deltax, posy)
+        glTexCoord2f(1, 1)
+        glVertex2f(posx + deltax, posy + deltay)
+        glTexCoord2f(0, 1)
+        glVertex2f(posx, posy + deltay)
+        glEnd()
+        glBindTexture(GL_TEXTURE_2D, 0)
+
+
 
 class ImageBrowser(ttk.Frame):
     ''' Advanced zoom of the image '''
@@ -214,32 +290,29 @@ class PathSelectButton(tk.Button):
     def value(self):
         return self.path
 
-# https://stackoverflow.com/questions/27820178/how-to-add-placeholder-to-an-entry-in-tkinter
-class EntryWithPlaceholder(tk.Entry):
-    def __init__(self, master=None, placeholder="PLACEHOLDER", color='grey'):
-        super().__init__(master)
+class DirectorySelectButton(tk.Button):
 
-        self.placeholder = placeholder
-        self.placeholder_color = color
-        self.default_fg_color = self['fg']
+    def __init__(self, root, default=None, *args, **kwargs):
+        super().__init__(root, *args, **kwargs)
+        self.root = root
 
-        self.bind("<FocusIn>", self.foc_in)
-        self.bind("<FocusOut>", self.foc_out)
+        self.path = default
 
-        self.put_placeholder()
+        if self.path is None:
+            self["text"] = "Select Directory"
+        else:
+            self["text"] = self.path
 
-    def put_placeholder(self):
-        self.insert(0, self.placeholder)
-        self['fg'] = self.placeholder_color
+        self["command"] = self.choose
 
-    def foc_in(self, *args):
-        if self['fg'] == self.placeholder_color:
-            self.delete('0', 'end')
-            self['fg'] = self.default_fg_color
+    def choose(self):
+        self.path = filedialog.askdirectory(title="Select Directory")
+        self["text"] = self.path
 
-    def foc_out(self, *args):
-        if not self.get():
-            self.put_placeholder()
+    @property
+    def value(self):
+        return self.path
+
 
 class IterableMakerList(tk.Frame):
 
@@ -250,21 +323,27 @@ class IterableMakerList(tk.Frame):
 
         self["width"] = 8
 
-        self.rowconfigure((0, 1, 2), weight=1)
+        self.columnconfigure((0, 1, 2), weight=1)
+        self.columnconfigure(3, weight=1)
 
         self.view = tk.Listbox(self, height=4)
         self.view.grid(row=0, column=0, columnspan=3, sticky="news")
 
-        self.inp = EntryWithPlaceholder(self, placeholder="Enter Value...")
+        self.scroll = tk.Scrollbar(self)
+        self.scroll.grid(row=0, column=2, sticky="nse")
+        self.view.config(yscrollcommand=self.scroll.set)
+        self.scroll.config(command=self.view.yview)
+
+        self.inp = tk.Entry(self)
         self.inp.grid(row=1, column=0, columnspan=3, sticky="news")
 
-        self.add = tk.Button(self, text='Add', width=8)
+        self.add = tk.Button(self, text='Add', width=8, command=self.add)
         self.add.grid(row=2, column=0)
 
-        self.sub = tk.Button(self, text='Delete',  width=8)
+        self.sub = tk.Button(self, text='Delete',  width=8, command=self.remove)
         self.sub.grid(row=2, column=1)
 
-        self.clr = tk.Button(self, text='Clear',  width=8)
+        self.clr = tk.Button(self, text='Clear',  width=8, command=self.clear)
         self.clr.grid(row=2, column=2)
 
         self.contents = default
@@ -272,24 +351,34 @@ class IterableMakerList(tk.Frame):
         if self.contents is None:
             self.contents = []
 
-    def choose(self):
-        self.path = filedialog.askopenfilename(title="Select File")
-        self["text"] = self.path
-
     def add(self):
+
         val = self.inp.get()
+        if len(val) == 0:
+            return
+        self.inp.delete(0, tk.END)
         if self.type is not None:
-            val = self.type(val)
+            try:
+                val = self.type(val)
+            except:
+
+                tkmsg.showerror("Invalid Type", f"This array requires an {self.type.__name__} type input!")
+                return
 
         self.view.insert("end", val)
-
-        self.contents.add(val)
+        self.contents.append(val)
 
     def remove(self):
-        val = self.view.focus()
-        print(val)
+        if len(self.view.curselection()) == 0:
+            return
+        ind = self.view.curselection()[0]
+
+        self.contents.pop(ind)
+        self.view.delete(ind)
 
     def clear(self):
+        self.view.delete(0, len(self.contents))
+        self.contents = []
 
 
     @property
@@ -372,7 +461,11 @@ class CreationPrompt:
 
             elif h[i].startswith("iterable"):
 
-                content = IterableMakerList(self.prompt)
+                typ = h[i].split(" ")[1]
+                if typ == "int":
+                    x = int
+
+                content = IterableMakerList(self.prompt, type=x)
 
             content.grid(row=i + 1, column=1, sticky="w", padx=8, pady=4)
             self.kwargs[k.args[i + 1]] = content

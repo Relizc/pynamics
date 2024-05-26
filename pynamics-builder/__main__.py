@@ -7,6 +7,6 @@ w, h = root.winfo_screenwidth(), root.winfo_screenheight()
 
 root.geometry(f"800x450")
 
-root.after(500, lambda: mainloop(root))
+root.after(100, lambda: mainloop(root))
 root.mainloop()
 

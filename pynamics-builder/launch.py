@@ -25,22 +25,29 @@ def import_image():
     img = Image(WORKSPACE, path)
     print(img)
 
-
+import os
+import tkinter.messagebox as tkmsg
 
 def load_workspace(content, root):
 
     global FBO, TOP
 
-    target = content.selection_get()
+    if content.startswith("None"):
+        tkmsg.showerror("Cannot create workspace!",
+                        "Please select a directory first!")
+        return
+    if os.path.isdir(content):
+        tkmsg.showerror("Cannot create workspace!", f"The following directory already exists. Please delete the directory to create a new one: \n{content}")
+        return
+
     root.destroy()
 
-    if target == "FramedTexture":
-        FBO = FramedTextureFile()
+    os.mkdir(content)
 
-    TOP.title(f"PyNamics Furnace - {FBO.name}.{FBO.attribute}")
+    WORKSPACE.directory = content
+    WORKSPACE.create_info()
 
-
-
+    TOP.title(f"PyNamics Furnace - {content}")
 
 
 def process(root, id=0):
@@ -48,12 +55,38 @@ def process(root, id=0):
     [child.destroy() for child in root.winfo_children()]
 
     if id ==0:
-        tk.Label(root, text="Select what to create.").pack()
-        d = tk.Listbox(root)
-        d.insert(tk.END, 
-                                "FramedTexture", "GameLevel" )
-        d.bind("<Double-1>", lambda e: load_workspace(d, root))
-        d.pack(expand=True, fill=tk.BOTH)
+        tk.Label(root, text="Select which directory to create").pack()
+
+        c = DirectorySelectButton(root)
+        c.pack()
+
+        tk.Label(root, text="Enter Workspace Name").pack()
+
+        x = tk.Label(root, text=f"Directory will be created as: Select Directory First!")
+
+        def mod(name, index, mode):
+
+            if c.value is None:
+                x.config(text=f"Directory will be created as: Select Directory First!")
+            else:
+                x.config(text=f"Directory will be created as: {c.value}/{var.get()}")
+
+        var = tk.StringVar()
+        var.trace("w", mod)
+
+        f = tk.Entry(root, textvariable=var, width=32)
+        f.insert(0, "New PyNamics Workspace")
+        f.pack()
+
+
+
+
+        x.pack()
+
+
+
+        don = tk.Button(root, text="Create", command=lambda: load_workspace(f"{c.value}/{var.get()}", root))
+        don.pack()
 
 
     elif id == 1:
@@ -71,7 +104,7 @@ def ask_open_option(root):
     selectmenu = tk.Toplevel(root)
     selectmenu.grab_set()
     selectmenu.geometry("300x200")
-    selectmenu.title("New or Open Projects")
+    selectmenu.title("New or Open Workspace")
 
     new = tk.Button(selectmenu, text="Create New", command=lambda: process(selectmenu, 0))
     new.pack()
