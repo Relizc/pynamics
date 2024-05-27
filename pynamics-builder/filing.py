@@ -3,44 +3,43 @@ import json
 
 from pynamics_legacy import metadata
 import os
+
+
 class File(metadata.FileStruct):
 
-    def __init__(self, path):
-        if not os.path.exists(path):
-            json.dump()
-        self.content = json.load(open(path, "r"))
+    def __init__(self, path, filetype=metadata.FileType.CUSTOM):
+
+        self.path = path
+
+        print("create", path)
+
+        if os.path.exists(path):
+            super().__init__(open(path, "rb"), filetype=filetype)
+            self.read_header()
+        else:
+
+            super().__init__(open(path, "wb"), filetype=filetype)
+            self.write_header()
+            self.close()
+
+            super().__init__(open(path, "rb"), filetype=filetype)
+            self.read_header()
 
 
-class WorkspaceFile:
+class WorkspaceFile(File):
 
-    type = "PyNamicsObject"
+    def __init__(self, dir=None, name="Untitled", attribute="pndef"):
+        super().__init__(path=f"{dir}/{name}.{attribute}", filetype=metadata.FileType.WORKSPACE)
 
-    def __init__(self, name="Untitled", attribute="pnobj", op=False):
         self.name = name
         self.attribute = attribute
 
-        if op:
-            self.content = json.load(open(f"{name}.{attribute}", "r"))
-        else:
-            self.content = {"version": int(os.environ["PN_PROTOCOL_VERSION"]), "filetype": self.type, "attribute": attribute, "contents": {}}
+class TextureFile(File):
 
-        self.save()
+    def __init__(self, dir=None, name="Untitled", attribute="pntexture", filetype=metadata.FileType.STATIC_TEXTURE):
+        super().__init__(path=f"{dir}/{name}.{attribute}", filetype=filetype)
 
-
-
-    def save(self):
-        json.dump(self.content, open(f"{self.name}.{self.attribute}", "w"))
-
-    def write_uint32(self, val: int):
-        self.stream.write(val.to_bytes(4, "little"))
-
-    def write_uint16(self, val: int):
-        self.stream.write(val.to_bytes(2, "little"))
+        self.name = name
+        self.attribute = attribute
 
 
-class FramedTextureFile(WorkspaceFile):
-
-    type = "FramedTexture"
-
-    def __init__(self, name="UntitledFramedTexture", attribute="pntexture"):
-        super().__init__(name, attribute)
