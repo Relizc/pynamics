@@ -383,6 +383,12 @@ class IterableMakerList(tk.Frame):
     def value(self):
         return self.contents
 
+class TkEntry(tk.Entry):
+
+    @property
+    def value(self):
+        return self.get()
+
 
 class CreationPrompt:
 
@@ -457,6 +463,9 @@ class CreationPrompt:
             elif h[i] == "path":
                 content = PathSelectButton(self.prompt)
 
+            elif h[i] == "str":
+                content = TkEntry(self.prompt)
+
             elif h[i].startswith("iterable"):
 
                 typ = h[i].split(" ")[1]
@@ -478,6 +487,7 @@ class CreationPrompt:
             processed[i] = self.kwargs[i].value
 
         obj = self.clazz(**processed)
+        obj.create_info()
 
         self.prompt.destroy()
         del self

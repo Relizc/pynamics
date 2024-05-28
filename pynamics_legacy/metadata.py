@@ -3,10 +3,39 @@ from .logger import Logger
 import os
 
 
+class FileType:
+
+    CUSTOM = 0
+
+    STATIC_TEXTURE = 0x01
+    FRAMED_TEXTURE = 0x02
+
+
+    WORKSPACE = 0x10
+
+
 class FileStruct:
 
-    def __init__(self, stream):
+    def __init__(self, stream, filetype=FileType.CUSTOM):
         self.io = stream
+        self.filetype = filetype
+
+    def close(self):
+        self.io.close()
+
+    def write_header(self):
+        self.io.write(b"PN")
+        self.write_uint32(int(os.environ["PN_PROTOCOL_VERSION"]))
+        self.write_uint16(self.filetype)
+
+    def write_uint32(self, value: int):
+        self.io.write(value.to_bytes(4, byteorder="little"))
+
+    def write_uint16(self, value: int):
+        self.io.write(value.to_bytes(2, byteorder="little"))
+
+    def write_uint8(self, value: int):
+        self.io.write(value.to_bytes(1, byteorder="little"))
 
     def read_header(self):
         self.io.read(2)

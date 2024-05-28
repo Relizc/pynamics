@@ -22,8 +22,8 @@ def import_image():
     global WORKSPACE
     path = ask_open_file()
 
-    img = Image(WORKSPACE, path)
-    print(img)
+    img = Image(WORKSPACE, path, name=os.path.splitext(os.path.basename(path))[0])
+    img.create_info()
 
 import os
 import tkinter.messagebox as tkmsg
@@ -45,7 +45,14 @@ def load_workspace(content, root):
     os.mkdir(content)
 
     WORKSPACE.directory = content
-    WORKSPACE.create_info()
+
+    f = MainScript(WORKSPACE)
+    f.create_info()
+
+    f = PropertySettings(WORKSPACE)
+    f.create_info()
+
+
 
     TOP.title(f"PyNamics Furnace - {content}")
 
@@ -171,6 +178,11 @@ def mainloop(root):
     file.add_separator()
 
     t = tk.Menu(file, tearoff="off")
+    t.add_command(label="Folder", command=lambda: CreationPrompt(TOP, Folder))
+    t.add_command(label="Script", command=lambda: CreationPrompt(TOP, Script))
+    file.add_cascade(label="Miscellaneous", menu=t)
+
+    t = tk.Menu(file, tearoff="off")
     t.add_command(label="FrameGroup", command=lambda: CreationPrompt(TOP, FrameGroup))
     t.add_command(label="Frame", command=lambda: CreationPrompt(TOP, Frame))
     t.add_separator()
@@ -188,6 +200,8 @@ def mainloop(root):
     t.add_command(label="TileArrangement")
     t.add_command(label="HitboxArrangement")
     file.add_cascade(label="World", menu=t)
+
+
 
     topmenu.add_cascade(label="New Property", menu=file)
 

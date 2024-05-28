@@ -4,6 +4,9 @@ import os
 
 from launch import mainloop
 
+import os
+os.environ["PN_PROTOCOL_VERSION"] = "144"
+
 root = tk.Tk()
 
 w, h = root.winfo_screenwidth(), root.winfo_screenheight()
