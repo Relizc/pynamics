@@ -3,17 +3,6 @@ import json
 import importlib.util
 
 import os
-<<<<<<< HEAD
-import sys
-
-
-# class File(metadata.FileStruct):
-
-#     def __init__(self, path):
-#         if not os.path.exists(path):
-#             json.dump()
-#         self.content = json.load(open(path, "r"))
-=======
 
 
 class File(metadata.FileStruct):
@@ -35,7 +24,6 @@ class File(metadata.FileStruct):
 
             super().__init__(open(path, "rb"), filetype=filetype)
             self.read_header()
->>>>>>> 56da336628102faffa2a97d392f3054adb35c9d7
 
 
 class WorkspaceFile(File):
