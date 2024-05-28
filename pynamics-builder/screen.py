@@ -25,10 +25,8 @@ class AutoScrollbar(ttk.Scrollbar):
 
     def place(self, **kw):
         raise tk.TclError('Cannot use place with this widget')
-
-from pyopengltk import OpenGLFrame
-from OpenGL.GL import *
-import numpy as np
+    
+OpenGLFrame = object
 
 class GLImageBrowser(OpenGLFrame):
 

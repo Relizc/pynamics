@@ -1,14 +1,17 @@
 
 import json
+import importlib.util
 
-from pynamics_legacy import metadata
 import os
-class File(metadata.FileStruct):
+import sys
 
-    def __init__(self, path):
-        if not os.path.exists(path):
-            json.dump()
-        self.content = json.load(open(path, "r"))
+
+# class File(metadata.FileStruct):
+
+#     def __init__(self, path):
+#         if not os.path.exists(path):
+#             json.dump()
+#         self.content = json.load(open(path, "r"))
 
 
 class WorkspaceFile:
