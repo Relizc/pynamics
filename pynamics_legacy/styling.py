@@ -1,4 +1,5 @@
 from .logger import Logger
+from .dimensions import Color
 
 class DisplayEnum:
     AUTO = 0
@@ -46,5 +47,5 @@ def color_alias(color: str):
         if args[i] == "tint":
             for i in range(4):
                 base[i] = base[i] + (1 - base[i]) * 0.5
-    return tuple(base)
+    return Color(base)
 

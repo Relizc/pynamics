@@ -1,10 +1,9 @@
 import pynamics_legacy as pn
 import os
 
+os.environ["PN_WINDOW_MODE"] = "legacy"
+
 import mainloop
-
-os.environ["PN_WINDOW_MODE"] = "opengl"
-
 ctx = pn.GameManager(dimensions=pn.Dim(256, 240), event_tracker=True, tps=128)
 view = pn.ProjectWindow(ctx, size=pn.Dim(512, 480), title="Megaman 2", color="black", scale=2)
 

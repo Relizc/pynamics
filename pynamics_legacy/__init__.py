@@ -41,7 +41,9 @@ VERSION = "1.0.0"
 
 # Typing Hint implementation
 class ProjectWindow:
-    pass
+    
+    def __init__(self) -> None:
+        pass
 
 if os.environ.get("PN_WINDOW_MODE", "opengl") == "legacy":
     ProjectWindow = LegacyProjectWindow
