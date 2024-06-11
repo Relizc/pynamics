@@ -504,7 +504,7 @@ class PhysicsBody(GameObject):
         self.use_airres = use_airres
         self.use_gravity = use_gravity
         self.acceleration = Vector2d(0, 0)
-        self.coeff = 0.5
+        self.coefficient = 0.5
         self.rectitude = rectitude
         self.row = row
         self.use_mass = use_mass
@@ -516,8 +516,7 @@ class PhysicsBody(GameObject):
         self.past_positions = LimitedArray(PyNamical.MAIN_GAMEMANAGER.tps)
 
         # self.timeB = time.time()
-        # self.timeA = time.time()
-
+        # self.timeA = time.tokl;,
         if self.use_gravity: self.force = Vector2d(90, self.gravity * self.mass)
         if self.use_mass:
             self.attach_movement_thread()
@@ -681,68 +680,68 @@ class PhysicsBody(GameObject):
                             break
                     if collision:
                         break
-            if collision:
-                #self.call_event_listeners(event=EventType.COLLIDE, object=i)
-                x, y = self.velocity.cart()
-                x += self.position.x
-                y -= self.position.y
-                # pointx, pointy = self.position.x, self.position.y
-                # if pointx - x == 0:
-                #     num = pointx
-                #     collisions = []
-                #     collDist = 0
-                #
-                #     for k in self.points:
-                #         q11 = (k[0][0] + self.position.x, (k[0][1] + self.position.y) * -1)
-                #         q22 = (k[1][0] + self.position.x, (k[1][1] + self.position.y) * -1)
-                #         if min(q11[0], q22[0]) <= num <= max(q11[0], q22[0]):
-                #             if q11[0] == q22[0]:
-                #
-                #                 collDist = max(abs(-self.position.y - min(q11[1], q22[1])), collDist)
-                #
-                #
-                #             else:
-                #                 q1x, q1y = (q11[0], q11[1])
-                #                 q2x, q2y = (q22[0], q22[1])
-                #                 m = (q1y - q2y) / (q1x - q2x)
-                #                 b = q2y - m * q2x
-                #
-                #                 # intersection
-                #                 yd = m * num + b
-                #                 intersection = (num, yd)
-                #                 if min(q11[0], q22[0]) <= intersection[0] <= max(q11[0], q22[0]) and min(q11[1],
-                #                                                                                          q22[1]) <= \
-                #                         intersection[1] <= max(q11[1], q22[1]):
-                #                     collDist = max(collDist, abs(-self.position.y - intersection[1]))
+                if collision:
+                    #self.call_event_listeners(event=EventType.COLLIDE, object=i)
+                    x, y = self.velocity.cart()
+                    x += self.position.x
+                    y -= self.position.y
+                    # pointx, pointy = self.position.x, self.position.y
+                    # if pointx - x == 0:
+                    #     num = pointx
+                    #     collisions = []
+                    #     collDist = 0
+                    #
+                    #     for k in self.points:
+                    #         q11 = (k[0][0] + self.position.x, (k[0][1] + self.position.y) * -1)
+                    #         q22 = (k[1][0] + self.position.x, (k[1][1] + self.position.y) * -1)
+                    #         if min(q11[0], q22[0]) <= num <= max(q11[0], q22[0]):
+                    #             if q11[0] == q22[0]:
+                    #
+                    #                 collDist = max(abs(-self.position.y - min(q11[1], q22[1])), collDist)
+                    #
+                    #
+                    #             else:
+                    #                 q1x, q1y = (q11[0], q11[1])
+                    #                 q2x, q2y = (q22[0], q22[1])
+                    #                 m = (q1y - q2y) / (q1x - q2x)
+                    #                 b = q2y - m * q2x
+                    #
+                    #                 # intersection
+                    #                 yd = m * num + b
+                    #                 intersection = (num, yd)
+                    #                 if min(q11[0], q22[0]) <= intersection[0] <= max(q11[0], q22[0]) and min(q11[1],
+                    #                                                                                          q22[1]) <= \
+                    #                         intersection[1] <= max(q11[1], q22[1]):
+                    #                     collDist = max(collDist, abs(-self.position.y - intersection[1]))
 
-                self.position = self.past_positions.arr[-1]
-                vixself = self.velocity.cart()[0]
-                viyself = self.velocity.cart()[1]
-                vixi = i.velocity.cart()[0]
-                viyi = i.velocity.cart()[1]
-                xmomentuminitial = vixself*self.mass + vixi * i.mass
-                ymomentuminitial = viyself * self.mass + viyi * i.mass
+                    self.position = self.past_positions.arr[-1]
+                    vixself = self.velocity.cart()[0]
+                    viyself = self.velocity.cart()[1]
+                    vixi = i.velocity.cart()[0]
+                    viyi = i.velocity.cart()[1]
+                    xmomentuminitial = vixself*self.mass + vixi * i.mass
+                    ymomentuminitial = viyself * self.mass + viyi * i.mass
 
-                # print(vixself, viyself, vixi, viyi, i.mass, self.mass)
+                    # print(vixself, viyself, vixi, viyi, i.mass, self.mass)
 
-                vfxself = -(((self.mass - i.mass) / (self.mass + i.mass)) * vixself + (
-                        (2 * i.mass) / (self.mass + i.mass)) * vixi) * min(self.rectitude, i.rectitude)
-                vfyself = (((self.mass - i.mass) / (self.mass + i.mass)) * viyself + (
-                        (2 * i.mass) / (self.mass + i.mass)) * viyi) * min(self.rectitude, i.rectitude)
-                vfxi = (xmomentuminitial - self.mass * vfxself)/i.mass
-                vfyi = (ymomentuminitial - self.mass*vfyself)/i.mass
+                    vfxself = -(((self.mass - i.mass) / (self.mass + i.mass)) * vixself + (
+                            (2 * i.mass) / (self.mass + i.mass)) * vixi) * min(self.rectitude, i.rectitude)
+                    vfyself = (((self.mass - i.mass) / (self.mass + i.mass)) * viyself + (
+                            (2 * i.mass) / (self.mass + i.mass)) * viyi) * min(self.rectitude, i.rectitude)
+                    vfxi = (xmomentuminitial - self.mass * vfxself)/i.mass
+                    vfyi = (ymomentuminitial - self.mass*vfyself)/i.mass
 
-                rho = np.sqrt(vfxself ** 2 + vfyself ** 2)
-                phi = np.arctan2(vfyself, vfxself) * 180 / np.pi
+                    rho = np.sqrt(vfxself ** 2 + vfyself ** 2)
+                    phi = np.arctan2(vfyself, vfxself) * 180 / np.pi
 
-                self.velocity.r = phi
-                self.velocity.f = rho
+                    self.velocity.r = phi
+                    self.velocity.f = rho
 
-                rho2 = np.sqrt(vfxi ** 2 + vfyi ** 2)
-                phi2 = np.arctan2(vfyi, vfxi) * 180 / np.pi
+                    rho2 = np.sqrt(vfxi ** 2 + vfyi ** 2)
+                    phi2 = np.arctan2(vfyi, vfxi) * 180 / np.pi
 
-                i.velocity.r = phi2
-                i.velocity.f = rho2
+                    i.velocity.r = phi2
+                    i.velocity.f = rho2
 
                 # time.sleep(self.parent._epoch_tps)
 
