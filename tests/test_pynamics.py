@@ -4,7 +4,6 @@ import random
 
 ctx = pynamics_legacy.GameManager(pynamics_legacy.Dim(10000, 10000), tps=128, fps=0, event_tracker=True)
 window = pynamics_legacy.ProjectWindow(ctx)
-camera = pynamics_legacy.ViewPort(window, position=pynamics_legacy.Dimension(0, 0))
 
 
 

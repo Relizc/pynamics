@@ -454,7 +454,7 @@ class OpenGLProjectWindow(PyNamical):
 class LegacyProjectWindow(PyNamical):
 
     def __init__(self, parent: GameManager, size: Dimension = Dimension(1000, 1000), title: str = "ViewPort Frame",
-                 color: Color = Color(255, 255, 255), scale=1):
+                 color: tuple = Color(255, 255, 255), scale=1):
         super().__init__(parent)
         self.parent.window = self
 

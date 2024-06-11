@@ -3,6 +3,9 @@ import time
 import random
 import threading
 
+import os
+os.environ["PN_DISPLAY_MODE"] = "legacy"
+
 ctx = pn.GameManager(pn.Dim(800, 400), tps=128, fps=0, event_tracker=True)
 window = pn.ProjectWindow(ctx, size=pn.Dimension(800, 400))
 
