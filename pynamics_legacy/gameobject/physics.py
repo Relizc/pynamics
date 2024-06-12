@@ -389,7 +389,6 @@ class RigidBody(PhysicsBody):
 
 
         self.angular_velocity = 0
-        self.angular_acceleration = 0
         self.torque = 0
 
         self.attach_update_thread()
@@ -404,3 +403,7 @@ class RigidBody(PhysicsBody):
         for i in self.geometry:
             x, y = np.cos(self.rotation) * i[0] + np.sin(self.rotation) * i[1], -np.sin(self.rotation) * i[0] + np.cos(self.rotation) * i[1]
             self.points.append((x, y))
+
+        self.angular_velocity += self.torque
+        self.torque = 0
+        self.rotation += self.angular_velocity
