@@ -1,19 +1,15 @@
-import tkinter as tk
 from .gamemanager import GameManager
-from .dimensions import Dimension, Dimension2d, Color
-from .interface import PyNamical
-from .logger import Logger
 from .styling import StyleLoader
-from .gameobject import *
-from PIL import ImageTk
-from tkinter import NW
+from .gameobject.gameobject import *
+from .gameobject.physics import *
 import time
 import math
-import traceback
 import os
 
 USE_OPENGL = False
 USE_OPENGLTK = False
+
+import traceback
 
 try:
     from OpenGL.GL import *

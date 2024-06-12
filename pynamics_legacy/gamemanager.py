@@ -1,15 +1,11 @@
-import tkinter
-
 from .socket import DedicatedServer, DedicatedServerV2
 
-from .gameobject import *
+from pynamics_legacy.gameobject.gameobject import *
 from .interface import PyNamical
-from .events import EventType, Executable, KeyEvaulator, change_debug_attacher
-from .debugger import Debugger, Sandbox
+from .events import EventType, Executable, change_debug_attacher
+from .debugger import Debugger
 from .logger import Logger
-import ctypes
 import threading
-import random
 import time
 
 
@@ -294,3 +290,21 @@ class GameManager(PyNamical):
 
     def delete_draws(self, id):
         self.window.surface.delete(id)
+
+    def attach_update_thread(self, object: GameObject):
+        self.ticksteplisteners += 1
+
+        def update_self():
+            while self.terminated == False:
+
+                while self.debug != None and self.debug.tickchanger_paused:
+                    time.sleep(0.01)
+                    if self.debug.tickchanger_stepping:
+                        self.debug.tickchanger_stepping = 0
+                        break
+                    continue
+
+                object.update()
+                time.sleep(self._epoch_tps)
+
+        threading.Thread(target=update_self).start()

@@ -3,8 +3,9 @@ os.environ["PN_PROTOCOL_VERSION"] = "144"
 
 
 from .display import OpenGLProjectWindow, LegacyProjectWindow, USE_OPENGL, ImageTexture
-from .gameobject import GameObject, TopViewPhysicsBody, Image, Text, TextFont, Particle, FramedTexture, AnimatedSprite
-from .gamemanager import GameManager,PhysicsBody
+from .gameobject.gameobject import GameObject, Image, Text, TextFont, FramedTexture, AnimatedSprite
+from .gameobject.physics import RigidBody, PhysicsBody, TopViewPhysicsBody, Particle
+from .gamemanager import GameManager
 from .dimensions import Dimension, Dimension2d, Vector2d, Vector, Color
 from .events import EventHolder, EventType, KeyEvaulator
 from .logger import Logger

@@ -5,6 +5,9 @@ import random
 ctx = pynamics_legacy.GameManager(pynamics_legacy.Dim(10000, 10000), tps=128, fps=0, event_tracker=True)
 window = pynamics_legacy.ProjectWindow(ctx)
 
+import os
+os.environ["PN_WINDOW_MODE"] = "legacy"
+
 
 bob = pynamics_legacy.PhysicsBody(ctx, 100, 100, 100, 100, 2,
                                   from_points=(((0, 0), (0, 100)),
@@ -71,6 +74,9 @@ def listen(self, key):
 def listen(self, key):
     bob.position.set(10, 10)
     bob.velocity.clear()
+
+    nooo.position.set(300, 10)
+    nooo.velocity.clear()
 
 
 
