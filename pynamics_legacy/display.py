@@ -558,11 +558,17 @@ class LegacyProjectWindow(PyNamical):
 
                     # If its a regular gameobject
                     elif len(i.points) > 0:
+
+                        last = None
+
                         for j in i.points:
-                            pos1 = j[0]
-                            pos2 = j[1]
-                            self.surface.create_line(pos1[0] + i.x, pos1[1] + i.y, pos2[0] + i.x, pos2[1] + i.y,
-                                                     tags=f"ID{g}", fill=i.color)
+
+                            if last is not None:
+                                pos1 = j[0]
+                                pos2 = j[1]
+                                self.surface.create_line(last[0] + i.x, last[1] + i.y, pos1 + i.x, pos2 + i.y,
+                                                         tags=f"ID{g}", fill=i.color)
+                            last = j
 
                     i.last_display_position = Dimension(i.position.x, i.position.y)
                     i.last_display_rotation = i.rotation

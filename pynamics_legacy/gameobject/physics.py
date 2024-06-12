@@ -9,6 +9,8 @@ import threading
 import copy
 import numpy as np
 
+import
+
 class PhysicsBody(GameObject):
     def __init__(self, parent: PyNamical, x: float = 0, y: float = 0, width: float = 10, height: float = 10,
                  mass: int = 1,
@@ -381,6 +383,8 @@ class RigidBody(PhysicsBody):
 
         self.points = points
 
+        self._display_points = list(points)
+
         self.rotation = 0
         self.angular_velocity = 0
         self.angular_acceleration = 0
@@ -389,4 +393,6 @@ class RigidBody(PhysicsBody):
         self.attach_update_thread()
 
     def update(self):
-        pass
+        self._display_points = []
+        for i in self.points:
+            x, y =
