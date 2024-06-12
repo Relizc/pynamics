@@ -8,8 +8,7 @@ import time
 import threading
 import copy
 import numpy as np
-
-import
+import math
 
 class PhysicsBody(GameObject):
     def __init__(self, parent: PyNamical, x: float = 0, y: float = 0, width: float = 10, height: float = 10,
@@ -379,13 +378,16 @@ class Particle(PhysicsBody):
 class RigidBody(PhysicsBody):
 
     def __init__(self, parent, x, y, points=[]):
-        super().__init__(parent, x, y)
-
-        self.points = points
-
-        self._display_points = list(points)
 
         self.rotation = 0
+
+        super().__init__(parent, x, y)
+
+        self.geometry = points
+
+        self.points = list(points)
+
+
         self.angular_velocity = 0
         self.angular_acceleration = 0
         self.torque = 0
@@ -393,6 +395,12 @@ class RigidBody(PhysicsBody):
         self.attach_update_thread()
 
     def update(self):
-        self._display_points = []
-        for i in self.points:
-            x, y =
+
+        if self.rotation is None:
+            self.rotation = 0
+            return
+
+        self.points = []
+        for i in self.geometry:
+            x, y = np.cos(self.rotation) * i[0] + np.sin(self.rotation) * i[1], -np.sin(self.rotation) * i[0] + np.cos(self.rotation) * i[1]
+            self.points.append((x, y))
