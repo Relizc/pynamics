@@ -377,18 +377,17 @@ class Particle(PhysicsBody):
 
 class RigidBody(PhysicsBody):
 
-    def __init__(self, parent, x, y, points=[]):
+    def __init__(self, parent, x, y, angular_velocity=0, points=[], collide_borders=False, *args, **kwargs):
 
-        self.rotation = 0
-
-        super().__init__(parent, x, y)
+        super().__init__(parent, x, y, *args, **kwargs)
+        self.collide_borders = collide_borders
 
         self.geometry = points
 
         self.points = list(points)
 
 
-        self.angular_velocity = 0
+        self.angular_velocity = angular_velocity
         self.torque = 0
 
         self.attach_update_thread()
@@ -407,3 +406,43 @@ class RigidBody(PhysicsBody):
         self.angular_velocity += self.torque
         self.torque = 0
         self.rotation += self.angular_velocity
+
+        if self.use_gravity:
+            self.force.add_self(Vector2d(90, self.gravity * self.mass))
+
+        self.acceleration.r = self.force.r
+        self.acceleration.f = self.force.f / self.mass
+
+        self.velocity.add_self(Vector2d(self.acceleration.r, self.acceleration.f))
+
+        x3, y3 = self.velocity.cart()
+
+        self.position.x += x3
+        self.position.y -= y3
+
+        self.force.clear()
+
+        # Collision for every points:
+        for point in self.points:
+            dx, dy = point[0] + self.position.x, point[1] + self.position.y
+            outside_y = dx < 0 or dx > PyNamical.MAIN_GAMEMANAGER.width
+            outside_x = dy < 0 or dy > PyNamical.MAIN_GAMEMANAGER.height
+
+            if outside_x or outside_y:
+                self.angular_velocity *= -1
+
+                # Collide Upwards
+                if outside_x:
+                    if dy < 0:
+                        self.position.y = point[1]
+                    else:
+                        self.position.y = PyNamical.MAIN_GAMEMANAGER.height - point[1]
+                    self.velocity.r = -self.velocity.r
+                    self.velocity.f = self.velocity.f * self.rectitude
+                if outside_y:
+                    if dx < 0:
+                        self.position.x = point[0]
+                    else:
+                        self.position.x = PyNamical.MAIN_GAMEMANAGER.width - point[0]
+                    self.velocity.r = 180 - self.velocity.r
+                    self.velocity.f = self.velocity.f * self.rectitude
