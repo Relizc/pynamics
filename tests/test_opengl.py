@@ -1,4 +1,4 @@
-import pynamics_legacy as pn
+import pynamics as pn
 
 ctx = pn.GameManager(pn.Dim(10000, 10000), tps=128, fps=0, event_tracker=True)
 window = pn.OpenGLWindow(ctx)

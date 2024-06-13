@@ -4,7 +4,7 @@ import importlib.util
 
 import os
 
-from pynamics_legacy import metadata
+from pynamics import metadata
 
 
 class File(metadata.FileStruct):

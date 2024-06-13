@@ -96,6 +96,12 @@ class PyNamical(EventHolder):
     def debug_highlight(self):
         pass
 
+    def update(self):
+        pass
+
+    def attach_update_thread(self):
+        PyNamical.MAIN_GAMEMANAGER.attach_thread(self, self.update)
+
     def edit_uuid(self, new):
         del PyNamical.LINKER[self.uuid]
         PyNamical.LINKER[new] = self

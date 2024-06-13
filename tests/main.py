@@ -7,7 +7,7 @@ import time
 import os
 os.environ["PN_WINDOW_MODE"] = "opengl"
 
-import pynamics_legacy as pn
+import pynamics as pn
 
 MIN_VERSION = "1.0.0"
 

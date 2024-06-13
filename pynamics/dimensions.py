@@ -129,34 +129,26 @@ class Color(object):
 
 
 class Vector():
-    def __init__(self, r, f):
+    def __init__(self, rotation, scale):
         """
 
-        :param r: the rotation of the object from the origin.
-            |
-            O
-        ----|----           =90 degrees
-            |
-            |
-            |
-            |
-        --O-|----           =180 degrees
-            |
-            |
-            etc.
-        :param f: the value of the vector
+        :param rotation: the rotation (in radians) of the object from the origin.
+        :param scale: the value of the vector
         """
-        self.r = round(r, 2)
-        self.f = round(f, 2)
+        self.r = round(rotation, 2)
+        self.f = round(scale, 2)
 
+    @staticmethod
     def format_space_str(target):
         a = list(map(float, target.split(",")))
         return Vector(a[0], a[1])
 
+    @staticmethod
     def from_xy(x, y):
         value = math.sqrt(x ** 2 + y ** 2)
         angle = math.degrees(math.atan2(y, x))
         return Vector2d(angle, value)
+
 
     def add_self(self, vector):
         q = self.add(vector)
@@ -164,17 +156,17 @@ class Vector():
         self.f = q.f
 
     def add(self, b):
-        x = self.f * math.cos(math.radians(self.r))
-        y = self.f * math.sin(math.radians(self.r))
+        x = self.f * math.cos(self.r)
+        y = self.f * math.sin(self.r)
 
-        x1 = b.f * math.cos(math.radians(b.r))
-        y1 = b.f * math.sin(math.radians(b.r))
+        x1 = b.f * math.cos(b.r)
+        y1 = b.f * math.sin(b.r)
 
         xf = x + x1
         yf = y + y1
 
         r = (xf ** 2 + yf ** 2) ** .5
-        theta = math.degrees(math.atan2(yf, xf))
+        theta = math.atan2(yf, xf)
         p = Vector2d(theta, r)
         self.r = theta
         self.f = r
@@ -185,24 +177,24 @@ class Vector():
         fb = b1.f
         b = Vector2d(rb, fb)
 
-        x = self.f * math.cos(math.radians(self.r))
-        y = self.f * math.sin(math.radians(self.r))
+        x = self.f * math.cos(self.r)
+        y = self.f * math.sin(self.r)
 
-        x1 = b.f * math.cos(math.radians(b.r))
-        y1 = b.f * math.sin(math.radians(b.r))
+        x1 = b.f * math.cos(b.r)
+        y1 = b.f * math.sin(b.r)
 
         xf = x + x1
         yf = y + y1
 
         r = (xf ** 2 + yf ** 2) ** .5
-        theta = math.degrees(math.atan2(yf, xf))
+        theta = math.atan2(yf, xf)
         self.r = theta
         self.f = r
         return Vector2d(theta, r)
 
     def cart(self) -> tuple:
-        x = self.f * math.cos(math.radians(self.r))
-        y = self.f * math.sin(math.radians(self.r))
+        x = self.f * math.cos(self.r)
+        y = self.f * math.sin(self.r)
 
         return x, y
 
@@ -222,7 +214,7 @@ class Vector():
         self.f = 0
 
     def __repr__(self):
-        return f"Vector(Angle: {self.r}, Value: {self.f})"
+        return f"Vector(Angle: {self.r} rads, Scale: {self.f})"
 
     def __eq__(self, other):
         if not isinstance(other, Vector2d):

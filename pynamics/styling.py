@@ -1,4 +1,5 @@
 from .logger import Logger
+from .dimensions import Color
 
 class DisplayEnum:
     AUTO = 0

@@ -4,12 +4,12 @@ import time
 
 import numpy as np
 import copy
-from .events import EventPriority, EventType, KeyEvaulator
-from .interface import PyNamical, network_transferrable
-from .dimensions import Dimension, Vector2d, Color
-from .styling import color_alias
-from .metadata import PyNamicsTexture
-from .logger import Logger
+from pynamics.events import EventPriority, EventType, KeyEvaulator
+from pynamics.interface import PyNamical, network_transferrable
+from pynamics.dimensions import Dimension, Vector2d, Color
+from pynamics.styling import color_alias
+from pynamics.metadata import PyNamicsTexture
+from pynamics.logger import Logger
 import math
 import cmath
 import tkinter as tk

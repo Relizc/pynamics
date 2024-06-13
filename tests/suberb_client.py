@@ -1,4 +1,4 @@
-import pynamics_legacy as pn
+import pynamics as pn
 import sys
 import random
 port = int(sys.argv[1])

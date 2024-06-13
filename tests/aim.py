@@ -1,2 +1,2 @@
-import pynamics_legacy as pn
+import pynamics as pn
 

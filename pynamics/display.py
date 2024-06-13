@@ -1,12 +1,7 @@
-import tkinter as tk
 from .gamemanager import GameManager
-from .dimensions import Dimension, Dimension2d, Color
-from .interface import PyNamical
-from .logger import Logger
+from .gameobject.physics import RigidBody
 from .styling import StyleLoader
-from .gameobject import *
-from PIL import ImageTk
-from tkinter import NW
+from pynamics.gameobject.gameobject import *
 import time
 import math
 import traceback
@@ -254,6 +249,12 @@ class _base_OpenGL_Frame(OpenGLFrame):
         elif isinstance(i, Text):
             pass
 
+        elif isinstance(i, RigidBody):
+            glBegin(GL_POLYGON)
+            for j in i.momentum_points:
+                glVertex2f(j[0] + i.x, j[1] + i.y)
+            glEnd()
+
         elif isinstance(i, GameObject):
             glBegin(GL_POLYGON)
             glColor3f(1.0, 1.0, 1.0)
@@ -261,6 +262,8 @@ class _base_OpenGL_Frame(OpenGLFrame):
                 a = j[0]
                 glVertex2f(a[0] + i.x, a[1] + i.y)
             glEnd()
+
+
 
         if i.start_debug_highlight_tracking:
             glBegin(GL_POLYGON)
@@ -325,7 +328,7 @@ class _base_OpenGL_Frame(OpenGLFrame):
 class OpenGLProjectWindow(PyNamical):
 
     def __init__(self, parent: GameManager, size: Dimension = Dimension(1000, 1000), title: str = "ViewPort Frame",
-                 color: Color = Color(255, 255, 255), scale=1):
+                 color: Color = (255, 255, 255, 1), scale=1):
         super().__init__(parent)
         self.parent.window = self
 

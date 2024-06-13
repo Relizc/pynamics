@@ -1,4 +1,4 @@
-import pynamics_legacy as pn
+import pynamics as pn
 import random
 
 def encode(number):

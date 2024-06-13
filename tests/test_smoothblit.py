@@ -1,4 +1,4 @@
-import pynamics_legacy as pn
+import pynamics as pn
 
 a = pn.Vector(180, 3)
 b = pn.Vector(90, 4)
