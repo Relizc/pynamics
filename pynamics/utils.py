@@ -1,4 +1,4 @@
-from pynamics.gameobject.gameobject import GameObject
+from pynamics_legacy.gameobject.gameobject import GameObject
 from .gamemanager import GameManager
 from .interface import PyNamical
 from .events import EventType, KeyEvaulator

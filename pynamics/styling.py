@@ -33,7 +33,8 @@ _COLORMAP = {
 
 def color_alias(color: str):
 
-    if isinstance(color, tuple): return color
+    if isinstance(color, tuple): return Color(*color)
+    if isinstance(color, Color): return color
 
     args = color.lower().split(" ")
     if _COLORMAP.get(args[0], None) is None:
@@ -47,5 +48,6 @@ def color_alias(color: str):
         if args[i] == "tint":
             for i in range(4):
                 base[i] = base[i] + (1 - base[i]) * 0.5
-    return tuple(base)
+
+    return Color(*base)
 

@@ -1,6 +1,6 @@
 from .socket import DedicatedServer, DedicatedServerV2
 
-from pynamics.gameobject.gameobject import *
+from pynamics_legacy.gameobject.gameobject import *
 from .interface import PyNamical
 from .events import EventType, Executable, change_debug_attacher
 from .debugger import Debugger
@@ -127,7 +127,7 @@ class GameManager(PyNamical):
             self.window
         except AttributeError:
             err = RuntimeError(
-                "No ViewPort Object found for this specific GameManager instance. Create a viewport by using pynamics.ProjectWindow.")
+                "No ViewPort Object found for this specific GameManager instance. Create a viewport by using pynamics_legacy.ProjectWindow.")
             raise err
 
         self.starttime = time.time()
@@ -146,26 +146,6 @@ class GameManager(PyNamical):
             self.window._tk.bind("<Button-2>", lambda i: self._click(i, 1))
             self.window._tk.bind("<Button-3>", lambda i: self._click(i, 2))
             self.window.start()
-
-    def attach_thread(self, object, function):
-
-        self.ticksteplisteners += 1
-
-        def update_self():
-            while self.terminated == False:
-
-                while self.debug != None and self.debug.tickchanger_paused:
-                    time.sleep(0.01)
-                    if self.debug.tickchanger_stepping:
-                        self.debug.tickchanger_stepping = 0
-                        break
-                    continue
-
-                object.update()
-
-                time.sleep(self._epoch_tps)
-
-        threading.Thread(target=update_self).start()
 
     def _click(self, event, click_type):
         if click_type == 0:
@@ -310,3 +290,21 @@ class GameManager(PyNamical):
 
     def delete_draws(self, id):
         self.window.surface.delete(id)
+
+    def attach_update_thread(self, object: GameObject):
+        self.ticksteplisteners += 1
+
+        def update_self():
+            while self.terminated == False:
+
+                while self.debug != None and self.debug.tickchanger_paused:
+                    time.sleep(0.01)
+                    if self.debug.tickchanger_stepping:
+                        self.debug.tickchanger_stepping = 0
+                        break
+                    continue
+
+                object.update()
+                time.sleep(self._epoch_tps)
+
+        threading.Thread(target=update_self).start()

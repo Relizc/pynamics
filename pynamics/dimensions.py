@@ -124,6 +124,7 @@ class Color(object):
         r, g, b, a = self.r + 1, self.g + 1, self.b + 1, self.a + 1
         return (r/256, g/256, b/256, a/256)
 
+    @staticmethod
     def from_float(r, g, b, a):
         return Color(r * 256 - 1, g * 256 - 1, b * 256 - 1, a * 256 - 1)
 

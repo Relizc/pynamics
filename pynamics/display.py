@@ -1,19 +1,34 @@
 from .gamemanager import GameManager
-from .gameobject.physics import RigidBody
 from .styling import StyleLoader
-from pynamics.gameobject.gameobject import *
+from .gameobject.gameobject import *
+from .gameobject.physics import *
 import time
 import math
-import traceback
 import os
 
 USE_OPENGL = False
+USE_OPENGLTK = False
+
+import traceback
 
 try:
     from OpenGL.GL import *
-    from pyopengltk import OpenGLFrame
+    from OpenGL.GLUT import *
+    from OpenGL.GLU import *
+
     USE_OPENGL = True
-except ModuleNotFoundError:
+
+    try:
+        from pyopengltk import OpenGLFrame
+        USE_OPENGLTK = True
+    except Exception as e:
+        Logger.warn(f"PyOpenGL occured an error. Attempting to use native GLFW window: {e}")
+
+    
+    USE_OPENGL = True
+    
+except ModuleNotFoundError as e:
+    Logger.print(f"PyOpenGL: {e}", channel=4)
     Logger.print("PyOpenGL is not found. ProjectWindow is using legacy tkinter canvas.", channel=3)
 except ImportError as e:
     Logger.print(f"PyOpenGL: {e}", channel=4)
@@ -54,49 +69,22 @@ class ViewPort(PyNamical):
 def rgb_to_hex(i):
     return f"#%02x%02x%02x" % (i.r, i.g, i.b)
 
-class Renderable:
 
-    LINE = 0
-    IMAGE = 1
-    TEXT = 2
-
-    property = 0
-
-    def __init__(self):
-        pass
-
-class _RenderableLine(Renderable):
-
-    property = Renderable.LINE
-
-    def __init__(self, a, b, x, y):
-        super().__init__()
-        self.a = a
-        self.b = b
-        self.x = x
-        self.y = y
-
-class _RenderableImage(Renderable):
-
-    property = Renderable.IMAGE
-
-    def __init__(self, x, y, t):
-        super().__init__()
-        self.x = x
-        self.y = y
-        self.texture = t
-
-class _RenderableImage(Renderable):
-
-    property = Renderable.TEXT
-
-
-if not USE_OPENGL:
+if not USE_OPENGL or not USE_OPENGLTK:
 
     class Dummy:
 
         def __init__(self, arg0, width, height):
-            pass
+            self.root = arg0
+            # glutInit()
+            # glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH)
+            # glutInitWindowSize(width, height)
+            # glutInitWindowPosition(100, 100)
+            # glutCreateWindow(b'Simple PyOpenGL Window')
+            # glutDisplayFunc(draw)
+            # glutIdleFunc(draw)
+            # glutMainLoop()
+            
 
     OpenGLFrame = Dummy
 
@@ -129,6 +117,17 @@ class _base_OpenGL_Frame(OpenGLFrame):
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
         glEnable(GL_BLEND)
         #glEnable(GL_LINE_SMOOTH)
+
+    def initgl_glut(self):
+
+        glutInit()
+        glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH)
+        glutInitWindowSize(800, 600)
+        glutInitWindowPosition(100, 100)
+        glutCreateWindow(b'Simple PyOpenGL Window')
+        glutDisplayFunc(draw)
+        glutIdleFunc(draw)
+        glutMainLoop()
 
 
     # Overriding OpenGLFrame
@@ -247,13 +246,7 @@ class _base_OpenGL_Frame(OpenGLFrame):
 
 
         elif isinstance(i, Text):
-            pass
-
-        elif isinstance(i, RigidBody):
-            glBegin(GL_POLYGON)
-            for j in i.momentum_points:
-                glVertex2f(j[0] + i.x, j[1] + i.y)
-            glEnd()
+            pass    
 
         elif isinstance(i, GameObject):
             glBegin(GL_POLYGON)
@@ -262,8 +255,6 @@ class _base_OpenGL_Frame(OpenGLFrame):
                 a = j[0]
                 glVertex2f(a[0] + i.x, a[1] + i.y)
             glEnd()
-
-
 
         if i.start_debug_highlight_tracking:
             glBegin(GL_POLYGON)
@@ -328,7 +319,7 @@ class _base_OpenGL_Frame(OpenGLFrame):
 class OpenGLProjectWindow(PyNamical):
 
     def __init__(self, parent: GameManager, size: Dimension = Dimension(1000, 1000), title: str = "ViewPort Frame",
-                 color: Color = (255, 255, 255, 1), scale=1):
+                 color: Color = Color(255, 255, 255), scale=1):
         super().__init__(parent)
         self.parent.window = self
 
@@ -459,7 +450,7 @@ class OpenGLProjectWindow(PyNamical):
 class LegacyProjectWindow(PyNamical):
 
     def __init__(self, parent: GameManager, size: Dimension = Dimension(1000, 1000), title: str = "ViewPort Frame",
-                 color: Color = Color(255, 255, 255)):
+                 color: tuple = Color(255, 255, 255), scale=1):
         super().__init__(parent)
         self.parent.window = self
 
@@ -472,8 +463,9 @@ class LegacyProjectWindow(PyNamical):
         self._tk.geometry(f"{size.x}x{size.y}")
         self._tk.resizable(False, False)
         self._tk.title(title)
+
         self.color = color_alias(color)
-        self._curcolor = Color(*self.color)
+        self._curcolor = Color(self.color.r, self.color.g, self.color.b)
         self.surface = tk.Canvas(self._tk, width=size.x, height=size.y, bg=str(color), highlightthickness=0)
         self.surface.pack()
         self.ignore_render = []
@@ -487,6 +479,7 @@ class LegacyProjectWindow(PyNamical):
         try:
             self.real_blit()
         except Exception as e:
+            print(traceback.format_exc())
             Logger.print(f"Error in printing object: {e}", channel=4)
 
     def real_blit(self):
@@ -549,7 +542,7 @@ class LegacyProjectWindow(PyNamical):
                     if isinstance(i, Image):
                         # if rotated:
                         #     i.content = ImageTk.PhotoImage(i.image.rotate(i.rotation))
-                        self.surface.create_image(cam.x, cam.y, i.image)
+                        self.surface.create_image(cam.x, cam.y, image=i.image.texture)
 
                     # If its text
                     elif isinstance(i, Text):
@@ -565,11 +558,17 @@ class LegacyProjectWindow(PyNamical):
 
                     # If its a regular gameobject
                     elif len(i.points) > 0:
+
+                        last = None
+
                         for j in i.points:
-                            pos1 = j[0]
-                            pos2 = j[1]
-                            self.surface.create_line(pos1[0] + i.x, pos1[1] + i.y, pos2[0] + i.x, pos2[1] + i.y,
-                                                     tags=f"ID{g}", fill=i.color)
+
+                            if last is not None:
+                                pos1 = j[0]
+                                pos2 = j[1]
+                                self.surface.create_line(last[0] + i.x, last[1] + i.y, pos1 + i.x, pos2 + i.y,
+                                                         tags=f"ID{g}", fill=i.color)
+                            last = j
 
                     i.last_display_position = Dimension(i.position.x, i.position.y)
                     i.last_display_rotation = i.rotation
