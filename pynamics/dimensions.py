@@ -115,7 +115,7 @@ class Color(object):
         return "#%02x%02x%02x" % (int(self.r), int(self.g), int(self.b))
 
     def __iter__(self):
-        return (self.r, self.g, self.b)
+        return self.r, self.g, self.b
 
     def __eq__(self, other):
         return self.r == other.r and self.g == other.g and self.b == other.b

@@ -118,20 +118,10 @@ class _base_OpenGL_Frame(OpenGLFrame):
         glEnable(GL_BLEND)
         #glEnable(GL_LINE_SMOOTH)
 
-    def initgl_glut(self):
-
-        glutInit()
-        glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH)
-        glutInitWindowSize(800, 600)
-        glutInitWindowPosition(100, 100)
-        glutCreateWindow(b'Simple PyOpenGL Window')
-        glutDisplayFunc(draw)
-        glutIdleFunc(draw)
-        glutMainLoop()
-
 
     # Overriding OpenGLFrame
     def redraw(self):
+
         glClear(GL_COLOR_BUFFER_BIT)
 
         self.parent.parent.f += 1
@@ -145,7 +135,7 @@ class _base_OpenGL_Frame(OpenGLFrame):
                 glColor4f(1.0, 1.0, 1.0, 1.0)
                 overridecolor = StyleLoader.get_style(i, "color")
                 if overridecolor is not None:
-                    glColor4f(*overridecolor)
+                    glColor4f(overridecolor.r, overridecolor.g, overridecolor.b, overridecolor.a)
 
                 self.draw(i)
             except Exception as e:
@@ -332,7 +322,7 @@ class OpenGLProjectWindow(PyNamical):
         self._tk.geometry(f"{size.x}x{size.y}")
         self._tk.resizable(False, False)
         self._tk.title(title)
-        self.color = Color.from_float(*color_alias(color))
+        self.color = color_alias(color)
         self._curcolor = Color(self.color.r, self.color.g, self.color.b)
         self.surface = _base_OpenGL_Frame(self, self._tk, size, scale=scale)
         self.surface.pack(fill=tk.BOTH, expand=tk.YES)

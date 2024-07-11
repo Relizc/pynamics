@@ -1,6 +1,7 @@
+from .crane import Crane2
 from .socket import DedicatedServer, DedicatedServerV2
 
-from pynamics_legacy.gameobject.gameobject import *
+from .gameobject.gameobject import *
 from .interface import PyNamical
 from .events import EventType, Executable, change_debug_attacher
 from .debugger import Debugger
@@ -96,7 +97,8 @@ class GameManager(PyNamical):
 
             if self.debug == None:
                 Logger.print("Debugger not found! Creating window instance", channel=5)
-                self.debug = Debugger(self, enable_event_listener=self.event_track)
+                #self.debug = Debugger(self, enable_event_listener=self.event_track)
+                self.debug = Crane2(self)
 
                 change_debug_attacher(self.debug._call_callevent)
 

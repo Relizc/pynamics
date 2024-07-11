@@ -149,10 +149,34 @@ class Script(Property):
 
             self.buffer = open(self.path, "r")
 
+    def selected(self, root):
+        for child in root.winfo_children():
+            child.destroy()
+
+        x = tk.Button(root, text="Open in Visual Studio Code", command=lambda: os.system(f"code \"{self.path}\""))
+        x.pack()
+
 class MainScript(Script):
 
     def __init__(self, parent):
         super().__init__(parent, name="__main__")
+
+    def write_example(self):
+        k = os.environ["PN_PROTOCOL_VERSION"]
+        self.buffer.writelines([
+            "# PyNamics Furnace Auto Created\n",
+            f"# PyNamics Version: {k}\n",
+            f"# File Name: {self.name}.py\n",
+            "\n"
+        ])
+
+        self.buffer.writelines([
+            "\nimport pynamics as pn\n\n",
+            "ctx = pn.GameManager(pn.Dim(500, 500))\n",
+            "window = pn.ProjectWindow(ctx, size=pn.Dim(500, 500))\n",
+            "\n",
+            "ctx.start()"
+        ])
 
 class PropertySettings(Property):
 

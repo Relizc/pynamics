@@ -25,6 +25,14 @@ def import_image():
     img = Image(WORKSPACE, path, name=os.path.splitext(os.path.basename(path))[0])
     img.create_info()
 
+def run_main():
+    global WORKSPACE
+    sc: MainScript = WORKSPACE.mainscript
+
+    os.system(f'start python "{sc.path}"')
+
+
+
 import os
 import tkinter.messagebox as tkmsg
 
@@ -47,6 +55,7 @@ def load_workspace(content, root):
     WORKSPACE.directory = content
 
     f = MainScript(WORKSPACE)
+    WORKSPACE.mainscript = f
     f.create_info()
 
     f = PropertySettings(WORKSPACE)
@@ -208,6 +217,15 @@ def mainloop(root):
     imports = tk.Menu(topmenu, tearoff="off")
     imports.add_command(label="Image", command=lambda: import_image())
     topmenu.add_cascade(label="Import", menu=imports)
+
+    run = tk.Menu(topmenu, tearoff="off")
+    run.add_command(label="Run Main (__main__.py)", command=lambda: run_main())
+    run.add_command(label="Run with Furnace Debugger")
+    run.add_separator()
+    run.add_command(label="Run Advanced Options")
+    run.add_separator()
+    run.add_command(label="Run Configurations will show here...", state="disabled")
+    topmenu.add_cascade(label="Run", menu=run)
 
     TOP.columnconfigure(0, weight=1)
     TOP.columnconfigure(1, weight=8)
